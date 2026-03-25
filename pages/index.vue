@@ -1,41 +1,41 @@
 <template>
   <div class="max-w-2xl mx-auto px-4 py-8">
-    <h1 class="text-2xl font-bold text-center mb-8">Voice to Linear</h1>
+    <h1 class="text-2xl font-bold text-center mb-8">{{ t('app.title') }}</h1>
 
     <!-- Config banner -->
     <div
       v-if="!isConfigured"
-      class="mb-6 p-4 bg-yellow-950 border border-yellow-800 rounded-lg text-yellow-200 text-sm flex items-center gap-3"
+      class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-950 border border-yellow-200 dark:border-yellow-800 rounded-lg text-yellow-800 dark:text-yellow-200 text-sm flex items-center gap-3"
     >
       <svg class="w-5 h-5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.964-.833-2.732 0L4.082 16.5c-.77.833.192 2.5 1.732 2.5z" />
       </svg>
-      <span>Configura tu equipo de Linear antes de empezar.</span>
-      <NuxtLink to="/config" class="ml-auto text-yellow-400 hover:text-yellow-300 underline text-sm whitespace-nowrap">
-        Ir a Config
+      <span>{{ t('index.configBanner') }}</span>
+      <NuxtLink to="/config" class="ml-auto text-yellow-600 dark:text-yellow-400 hover:text-yellow-700 dark:hover:text-yellow-300 underline text-sm whitespace-nowrap">
+        {{ t('index.goToConfig') }}
       </NuxtLink>
     </div>
 
     <!-- Browser support warning -->
     <div
       v-if="!isSupported && config.sttEngine === 'browser'"
-      class="mb-6 p-4 bg-red-950 border border-red-800 rounded-lg text-red-200 text-sm flex items-center gap-3"
+      class="mb-6 p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200 text-sm flex items-center gap-3"
     >
-      <span>Tu navegador no soporta la Web Speech API.</span>
+      <span>{{ t('index.browserWarning') }}</span>
       <button
-        class="ml-auto text-red-300 hover:text-red-200 underline text-sm whitespace-nowrap"
+        class="ml-auto text-red-600 dark:text-red-300 hover:text-red-700 dark:hover:text-red-200 underline text-sm whitespace-nowrap"
         @click="config.sttEngine = 'groq'; saveConfig()"
       >
-        Cambiar a Groq Whisper
+        {{ t('index.switchApi') }}
       </button>
     </div>
 
     <!-- STT error -->
     <div
       v-if="sttError"
-      class="mb-6 p-4 bg-red-950 border border-red-800 rounded-lg text-red-200 text-sm"
+      class="mb-6 p-4 bg-red-50 dark:bg-red-950 border border-red-200 dark:border-red-800 rounded-lg text-red-800 dark:text-red-200 text-sm"
     >
-      Error: {{ sttError }}
+      {{ t('index.error') }}: {{ sttError }}
     </div>
 
     <!-- Record button -->
@@ -62,12 +62,12 @@
         </button>
       </div>
       <p class="mt-3 text-sm text-gray-500">
-        {{ isListening ? 'Escuchando... pulsa para detener' : 'Pulsa para grabar' }}
+        {{ isListening ? t('index.listening') : t('index.tapToRecord') }}
       </p>
-      <p class="mt-1 text-xs text-gray-700">
-        {{ config.sttEngine === 'groq' ? 'Groq Whisper' : 'Web Speech API' }}
+      <p class="mt-1 text-xs text-gray-400 dark:text-gray-700">
+        {{ config.sttEngine === 'zai' ? 'ZAI GLM-ASR' : config.sttEngine === 'groq' ? 'Groq Whisper' : 'Web Speech API' }}
       </p>
-      <p v-if="interimText" class="mt-2 text-sm text-gray-600 italic text-center max-w-md">
+      <p v-if="interimText" class="mt-2 text-sm text-gray-500 dark:text-gray-600 italic text-center max-w-md">
         {{ interimText }}
       </p>
     </div>
@@ -77,24 +77,24 @@
       <button
         class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors border"
         :class="config.autoMode
-          ? 'bg-emerald-950 border-emerald-700 text-emerald-300'
-          : 'bg-gray-900 border-gray-700 text-gray-500 hover:text-gray-400'"
+          ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300'
+          : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'"
         @click="config.autoMode = !config.autoMode; saveConfig()"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
         </svg>
-        Modo auto{{ config.autoMode ? ': ON' : '' }}
+        {{ config.autoMode ? t('index.autoModeOn') : t('index.autoMode') }}
       </button>
-      <span v-if="config.autoMode" class="ml-3 text-xs text-gray-600">
-        Grabar &rarr; Plan &rarr; Linear
+      <span v-if="config.autoMode" class="ml-3 text-xs text-gray-400 dark:text-gray-600">
+        {{ t('index.autoFlow') }}
       </span>
     </div>
 
     <!-- Auto mode progress -->
     <div
       v-if="autoStep"
-      class="mb-6 p-3 bg-indigo-950 border border-indigo-800 rounded-lg text-indigo-200 text-sm flex items-center gap-3"
+      class="mb-6 p-3 bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 rounded-lg text-indigo-700 dark:text-indigo-200 text-sm flex items-center gap-3"
     >
       <svg class="w-4 h-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -109,38 +109,25 @@
         ref="textareaRef"
         v-model="editableText"
         rows="6"
-        class="w-full bg-gray-900 border border-gray-700 rounded-lg px-4 py-3 text-gray-200 placeholder-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-y text-sm leading-relaxed"
-        placeholder="El texto transcrito aparecera aqui. Tambien puedes escribir directamente..."
+        class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-y text-sm leading-relaxed"
+        :placeholder="t('index.placeholder')"
       />
-      <span class="absolute bottom-2 right-3 text-xs text-gray-600">
-        {{ editableText.length }} caracteres
+      <span class="absolute bottom-2 right-3 text-xs text-gray-400 dark:text-gray-600">
+        {{ editableText.length }} {{ t('index.chars') }}
       </span>
     </div>
 
     <!-- Actions -->
     <div class="flex items-center gap-3">
       <button
-        class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm transition-colors"
+        class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition-colors"
         :disabled="!editableText && !isListening"
         @click="clearAll"
       >
         <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
-        Limpiar
-      </button>
-      <button
-        class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm transition-colors disabled:opacity-40"
-        :disabled="!editableText.trim()"
-        @click="copyToClipboard"
-      >
-        <svg v-if="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-        </svg>
-        <svg v-else class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        </svg>
-        {{ copied ? 'Copiado' : 'Copiar' }}
+        {{ t('index.clear') }}
       </button>
       <button
         class="flex items-center gap-2 px-4 py-2 bg-amber-700 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
@@ -154,7 +141,21 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
-        {{ generatingPlan ? 'Generando...' : 'Generar plan' }}
+        {{ generatingPlan ? t('index.generating') : t('index.generatePlan') }}
+      </button>
+      <button
+        class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-40 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition-colors"
+        :disabled="!editableText.trim()"
+        @click="copyToClipboard"
+      >
+        <!-- Robot icon -->
+        <svg v-if="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+        </svg>
+        <svg v-else class="w-4 h-4 text-green-500 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        {{ copied ? t('index.copied') : t('index.copyPrompt') }}
       </button>
       <button
         class="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
@@ -168,25 +169,25 @@
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
-        {{ sending ? 'Enviando...' : 'Enviar a Linear' }}
+        {{ sending ? t('index.sending') : t('index.sendLinear') }}
       </button>
     </div>
 
     <!-- Success mini-summary -->
     <div
       v-if="lastCreated"
-      class="mt-4 p-3 bg-green-950 border border-green-800 rounded-lg flex items-center gap-2 text-sm text-green-200"
+      class="mt-4 p-3 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg flex items-center gap-2 text-sm text-green-700 dark:text-green-200"
     >
       <span>&#10003;</span>
       <a
         :href="lastCreated.url"
         target="_blank"
         rel="noopener"
-        class="font-medium text-green-300 hover:text-green-200 underline"
+        class="font-medium text-green-600 dark:text-green-300 hover:text-green-700 dark:hover:text-green-200 underline"
       >
         {{ lastCreated.identifier }}
       </a>
-      <span>creada</span>
+      <span>{{ t('index.created') }}</span>
     </div>
   </div>
 </template>
@@ -194,12 +195,14 @@
 <script setup lang="ts">
 const { config, isConfigured, loadConfig, saveConfig } = useConfig()
 const { success: toastSuccess, error: toastError } = useToast()
+const { t } = useI18n()
 
 const lang = computed(() => config.value.language || 'es-ES')
+const sttEngine = computed(() => config.value.sttEngine || 'browser')
 const browserSTT = useSpeechToText(lang)
-const groqSTT = useGroqSpeechToText(lang)
+const apiSTT = useGroqSpeechToText(lang, sttEngine)
 
-const stt = computed(() => config.value.sttEngine === 'groq' ? groqSTT : browserSTT)
+const stt = computed(() => config.value.sttEngine === 'browser' ? browserSTT : apiSTT)
 const transcript = computed(() => stt.value.transcript.value)
 const interimText = computed(() => stt.value.interimText.value)
 const isListening = computed(() => stt.value.isListening.value)
@@ -226,7 +229,6 @@ watch(transcript, (val) => {
 onMounted(() => {
   loadConfig()
 
-  // Keyboard shortcut: space to toggle recording when textarea not focused
   document.addEventListener('keydown', (e: KeyboardEvent) => {
     if (e.code === 'Space' && document.activeElement !== textareaRef.value) {
       e.preventDefault()
@@ -248,7 +250,6 @@ function toggleRecording() {
 }
 
 async function runAutoFlow() {
-  // Wait for transcript to settle (Groq engine transcribes after stop)
   await waitForTranscript()
 
   const text = editableText.value.trim()
@@ -258,15 +259,13 @@ async function runAutoFlow() {
   }
 
   try {
-    // Step 1: Generate plan
-    autoStep.value = 'Generando plan de accion...'
+    autoStep.value = t('index.generatingPlan')
     await generatePlan()
 
-    // Step 2: Send to Linear
-    autoStep.value = 'Enviando a Linear...'
+    autoStep.value = t('index.sendingLinear')
     await sendToLinear()
   } catch {
-    // Errors are handled inside each function via toasts
+    // Errors handled inside each function via toasts
   } finally {
     autoStep.value = ''
   }
@@ -274,19 +273,16 @@ async function runAutoFlow() {
 
 function waitForTranscript(): Promise<void> {
   return new Promise((resolve) => {
-    // If text already exists, resolve immediately
     if (editableText.value.trim()) {
       resolve()
       return
     }
-    // Otherwise watch for changes (Groq transcribes async after stop)
     const unwatch = watch(editableText, (val) => {
       if (val.trim()) {
         unwatch()
         resolve()
       }
     })
-    // Timeout after 30s
     setTimeout(() => { unwatch(); resolve() }, 30000)
   })
 }
@@ -297,7 +293,7 @@ async function copyToClipboard() {
     copied.value = true
     setTimeout(() => { copied.value = false }, 2000)
   } catch {
-    toastError('No se pudo copiar al portapapeles')
+    toastError('Clipboard error')
   }
 }
 
@@ -318,15 +314,18 @@ async function generatePlan() {
       body: {
         text,
         language: config.value.language?.split('-')[0] || 'es',
-        model: config.value.groqModel || 'openai/gpt-oss-120b',
+        engine: config.value.sttEngine === 'zai' ? 'zai' : 'groq',
+        model: config.value.sttEngine === 'zai'
+          ? (config.value.zaiModel || 'glm-4-plus')
+          : (config.value.groqModel || 'openai/gpt-oss-120b'),
         contextIds: config.value.activeContextIds || [],
       },
     })
 
     editableText.value = result.title + '\n\n' + result.plan
-    toastSuccess('Plan generado')
+    toastSuccess(t('index.planGenerated'))
   } catch (err: any) {
-    toastError(`Error al generar plan: ${err.data?.message || err.message || 'Error desconocido'}`)
+    toastError(`${t('index.errorPlan')}: ${err.data?.message || err.message || 'Unknown'}`)
   } finally {
     generatingPlan.value = false
   }
@@ -340,18 +339,15 @@ async function sendToLinear() {
   lastCreated.value = null
 
   try {
-    // 1. Create draft entry
     const entry = await $fetch('/api/entries', {
       method: 'POST',
       body: { text },
     })
 
-    // 2. Parse title/description
     const lines = text.split('\n')
     const title = lines[0].slice(0, 200)
     const description = lines.slice(1).join('\n').trim() || undefined
 
-    // 3. Send to Linear
     try {
       const result = await $fetch('/api/linear/create-issue', {
         method: 'POST',
@@ -363,7 +359,6 @@ async function sendToLinear() {
         },
       })
 
-      // 4. Update entry with Linear data
       await $fetch(`/api/entries/${(entry as any).id}`, {
         method: 'PATCH',
         body: {
@@ -379,28 +374,26 @@ async function sendToLinear() {
         url: result.issue.url,
       }
 
-      toastSuccess(`${result.issue.identifier} creada`, {
+      toastSuccess(`${result.issue.identifier} ${t('index.created')}`, {
         url: result.issue.url,
-        label: 'Abrir en Linear',
+        label: t('index.openLinear'),
       })
 
-      // 5. Clear form
       reset()
       editableText.value = ''
     } catch (err: any) {
-      toastError(`Error al crear tarea: ${err.data?.message || err.message || 'Error desconocido'}`)
+      toastError(`${t('index.errorCreate')}: ${err.data?.message || err.message || 'Unknown'}`)
     }
   } catch (err: any) {
-    toastError(`Error al guardar: ${err.data?.message || err.message || 'Error desconocido'}`)
+    toastError(`${t('index.errorSave')}: ${err.data?.message || err.message || 'Unknown'}`)
   } finally {
     sending.value = false
   }
 }
 
-// Warn before leaving with unsaved text
 onBeforeRouteLeave(() => {
   if (editableText.value.trim()) {
-    return confirm('Tienes texto sin enviar. ¿Seguro que quieres salir?')
+    return confirm(t('index.unsavedWarning'))
   }
 })
 </script>

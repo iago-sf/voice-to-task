@@ -1,3 +1,5 @@
+export type TaskStatus = 'TRIAGE' | 'TODO' | 'IN_PROGRESS' | 'DONE'
+
 export interface Entry {
   id: number
   text: string
@@ -5,9 +7,24 @@ export interface Entry {
   linear_issue_key: string | null
   linear_issue_url: string | null
   status: 'draft' | 'sent'
+  task_status: TaskStatus
+  assigned_to: string | null
   created_at: string
   updated_at: string
 }
+
+export interface Task {
+  id: number
+  text: string
+  task_status: TaskStatus
+  assigned_to: string | null
+  linear_issue_key: string | null
+  linear_issue_url: string | null
+  created_at: string
+  updated_at: string
+}
+
+export type LinearStateType = 'triage' | 'backlog' | 'unstarted' | 'started' | 'completed' | 'canceled'
 
 export interface AppConfig {
   teamId: string
@@ -15,10 +32,14 @@ export interface AppConfig {
   assigneeId: string
   assigneeName: string
   language: string
-  sttEngine: 'browser' | 'groq'
+  sttEngine: 'browser' | 'groq' | 'zai'
   groqModel: string
+  zaiModel: string
   autoMode: boolean
   activeContextIds: number[]
+  uiLanguage: 'en' | 'es'
+  theme: 'system' | 'light' | 'dark'
+  linearStateMap: Record<TaskStatus, LinearStateType>
 }
 
 export interface Context {

@@ -6,9 +6,9 @@
         :key="toast.id"
         :class="[
           'rounded-lg px-4 py-3 shadow-lg border text-sm',
-          toast.type === 'success' && 'bg-green-950 border-green-800 text-green-200',
-          toast.type === 'error' && 'bg-red-950 border-red-800 text-red-200',
-          toast.type === 'info' && 'bg-blue-950 border-blue-800 text-blue-200',
+          toast.type === 'success' && 'bg-green-50 dark:bg-green-950 border-green-200 dark:border-green-800 text-green-700 dark:text-green-200',
+          toast.type === 'error' && 'bg-red-50 dark:bg-red-950 border-red-200 dark:border-red-800 text-red-700 dark:text-red-200',
+          toast.type === 'info' && 'bg-blue-50 dark:bg-blue-950 border-blue-200 dark:border-blue-800 text-blue-700 dark:text-blue-200',
         ]"
       >
         <div class="flex items-start gap-2">

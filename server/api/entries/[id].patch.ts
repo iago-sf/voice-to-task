@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   const fields: string[] = []
   const values: any[] = []
 
-  for (const key of ['text', 'linear_issue_id', 'linear_issue_key', 'linear_issue_url', 'status']) {
+  for (const key of ['text', 'linear_issue_id', 'linear_issue_key', 'linear_issue_url', 'status', 'task_status', 'assigned_to']) {
     if (body[key] !== undefined) {
       fields.push(`${key} = ?`)
       values.push(body[key])

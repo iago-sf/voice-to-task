@@ -3,10 +3,6 @@ import { useDB } from '~/server/utils/db'
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
 
-  if (!config.groqApiKey) {
-    throw createError({ statusCode: 500, message: 'GROQ_API_KEY not configured' })
-  }
-
   const body = await readBody(event)
 
   if (!body.text || typeof body.text !== 'string') {
@@ -15,6 +11,7 @@ export default defineEventHandler(async (event) => {
 
   const language = body.language || 'es'
   const model = body.model || 'openai/gpt-oss-120b'
+  const engine = body.engine || 'groq'
   const contextIds: number[] = body.contextIds || []
 
   // Load active contexts from DB
@@ -60,6 +57,26 @@ Context documents:
 
 ${contextBlock}` : ''}`
 
+  const messages = [
+    { role: 'system', content: systemPrompt },
+    { role: 'user', content: body.text },
+  ]
+
+  if (engine === 'zai') {
+    return callZai(config, model, messages)
+  }
+  return callGroq(config, model, messages)
+})
+
+async function callGroq(
+  config: ReturnType<typeof useRuntimeConfig>,
+  model: string,
+  messages: { role: string; content: string }[],
+) {
+  if (!config.groqApiKey) {
+    throw createError({ statusCode: 500, message: 'GROQ_API_KEY not configured' })
+  }
+
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
@@ -67,15 +84,7 @@ ${contextBlock}` : ''}`
         'Authorization': `Bearer ${config.groqApiKey}`,
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        model,
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: body.text },
-        ],
-        temperature: 0.3,
-        max_tokens: 1024,
-      }),
+      body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: 1024 }),
     })
 
     if (!response.ok) {
@@ -83,21 +92,47 @@ ${contextBlock}` : ''}`
       throw new Error(`Groq API error: ${response.status} ${err}`)
     }
 
-    const result = await response.json()
-    const content = result.choices?.[0]?.message?.content || ''
-
-    // Parse title and plan from response
-    const titleMatch = content.match(/TITLE:\s*(.+)/i)
-    const planMatch = content.match(/PLAN:\s*\n([\s\S]+)/i)
-
-    const title = titleMatch?.[1]?.trim() || content.split('\n')[0]
-    const plan = planMatch?.[1]?.trim() || content
-
-    return { title, plan }
+    return parseResponse(await response.json())
   } catch (error: any) {
-    throw createError({
-      statusCode: 500,
-      message: error.message || 'Failed to generate action plan',
-    })
+    throw createError({ statusCode: 500, message: error.message || 'Failed to generate action plan' })
   }
-})
+}
+
+async function callZai(
+  config: ReturnType<typeof useRuntimeConfig>,
+  model: string,
+  messages: { role: string; content: string }[],
+) {
+  if (!config.zaiApiKey) {
+    throw createError({ statusCode: 500, message: 'ZAI_API_KEY not configured' })
+  }
+
+  try {
+    const response = await fetch('https://api.z.ai/api/paas/v4/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${config.zaiApiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: 1024 }),
+    })
+
+    if (!response.ok) {
+      const err = await response.text()
+      throw new Error(`ZAI API error: ${response.status} ${err}`)
+    }
+
+    return parseResponse(await response.json())
+  } catch (error: any) {
+    throw createError({ statusCode: 500, message: error.message || 'Failed to generate action plan' })
+  }
+}
+
+function parseResponse(result: any) {
+  const content = result.choices?.[0]?.message?.content || ''
+  const titleMatch = content.match(/TITLE:\s*(.+)/i)
+  const planMatch = content.match(/PLAN:\s*\n([\s\S]+)/i)
+  const title = titleMatch?.[1]?.trim() || content.split('\n')[0]
+  const plan = planMatch?.[1]?.trim() || content
+  return { title, plan }
+}

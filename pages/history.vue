@@ -1,44 +1,52 @@
 <template>
   <div class="max-w-2xl mx-auto px-4 py-8">
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold">Historial</h1>
+      <h1 class="text-2xl font-bold">{{ t('history.title') }}</h1>
       <span v-if="entries.length" class="text-sm text-gray-500">
-        {{ entries.length }} entries ({{ sentCount }} enviadas)
+        {{ entries.length }} {{ t('history.entries') }} ({{ sentCount }} {{ t('history.sent') }})
       </span>
     </div>
 
-    <!-- Filter -->
-    <div class="flex gap-2 mb-6">
+    <div class="flex gap-2 mb-3">
       <button
         v-for="f in filters"
         :key="f.value"
         class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
         :class="filter === f.value
           ? 'bg-indigo-600 text-white'
-          : 'bg-gray-800 text-gray-400 hover:text-gray-300'"
+          : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300'"
         @click="filter = f.value"
       >
         {{ f.label }}
       </button>
     </div>
 
-    <!-- Loading -->
-    <div v-if="loading" class="text-center py-12 text-gray-500">
-      Cargando...
+    <div class="flex gap-2 mb-6">
+      <button
+        v-for="f in taskStatusFilters"
+        :key="f.value"
+        class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
+        :class="taskStatusFilter === f.value
+          ? 'bg-indigo-600 text-white'
+          : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300'"
+        @click="taskStatusFilter = f.value"
+      >
+        {{ f.label }}
+      </button>
     </div>
 
-    <!-- Empty state -->
+    <div v-if="loading" class="text-center py-12 text-gray-500">{{ t('history.loading') }}</div>
+
     <div v-else-if="filteredEntries.length === 0" class="text-center py-12">
-      <svg class="w-12 h-12 mx-auto text-gray-700 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+      <svg class="w-12 h-12 mx-auto text-gray-300 dark:text-gray-700 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
       </svg>
-      <p class="text-gray-500 text-sm">No hay entries todavia</p>
-      <NuxtLink to="/" class="inline-block mt-3 text-indigo-400 hover:text-indigo-300 text-sm underline">
-        Crear primera entry
+      <p class="text-gray-500 text-sm">{{ t('history.empty') }}</p>
+      <NuxtLink to="/" class="inline-block mt-3 text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 text-sm underline">
+        {{ t('history.createFirst') }}
       </NuxtLink>
     </div>
 
-    <!-- Entry list -->
     <div v-else class="flex flex-col gap-3">
       <EntryCard
         v-for="entry in filteredEntries"
@@ -56,20 +64,36 @@ import type { Entry } from '~/types'
 
 const { config, loadConfig, isConfigured } = useConfig()
 const { success: toastSuccess, error: toastError } = useToast()
+const { t } = useI18n()
 
 const entries = ref<Entry[]>([])
 const loading = ref(true)
 const filter = ref<'all' | 'draft' | 'sent'>('all')
+const taskStatusFilter = ref<'all' | 'TRIAGE' | 'TODO' | 'IN_PROGRESS' | 'DONE'>('all')
 
-const filters = [
-  { label: 'Todos', value: 'all' as const },
-  { label: 'Borradores', value: 'draft' as const },
-  { label: 'Enviados', value: 'sent' as const },
-]
+const filters = computed(() => [
+  { label: t('history.all'), value: 'all' as const },
+  { label: t('history.drafts'), value: 'draft' as const },
+  { label: t('history.sentFilter'), value: 'sent' as const },
+])
+
+const taskStatusFilters = computed(() => [
+  { label: t('history.taskStatusAll'), value: 'all' as const },
+  { label: t('taskStatus.TRIAGE'), value: 'TRIAGE' as const },
+  { label: t('taskStatus.TODO'), value: 'TODO' as const },
+  { label: t('taskStatus.IN_PROGRESS'), value: 'IN_PROGRESS' as const },
+  { label: t('taskStatus.DONE'), value: 'DONE' as const },
+])
 
 const filteredEntries = computed(() => {
-  if (filter.value === 'all') return entries.value
-  return entries.value.filter(e => e.status === filter.value)
+  let result = entries.value
+  if (filter.value !== 'all') {
+    result = result.filter(e => e.status === filter.value)
+  }
+  if (taskStatusFilter.value !== 'all') {
+    result = result.filter(e => e.task_status === taskStatusFilter.value)
+  }
+  return result
 })
 
 const sentCount = computed(() => entries.value.filter(e => e.status === 'sent').length)
@@ -79,25 +103,25 @@ async function fetchEntries() {
   try {
     entries.value = await $fetch<Entry[]>('/api/entries')
   } catch {
-    toastError('Error al cargar el historial')
+    toastError(t('history.errorLoad'))
   } finally {
     loading.value = false
   }
 }
 
 async function handleDelete(entry: Entry) {
-  if (!confirm('¿Eliminar esta entry?')) return
+  if (!confirm(t('history.deleteConfirm'))) return
   try {
     await $fetch(`/api/entries/${entry.id}`, { method: 'DELETE' })
     entries.value = entries.value.filter(e => e.id !== entry.id)
   } catch {
-    toastError('Error al eliminar')
+    toastError(t('history.errorDelete'))
   }
 }
 
 async function handleRetry(entry: Entry) {
   if (!isConfigured.value) {
-    toastError('Configura tu equipo de Linear primero')
+    toastError(t('history.configFirst'))
     return
   }
 
@@ -108,33 +132,20 @@ async function handleRetry(entry: Entry) {
 
     const result = await $fetch('/api/linear/create-issue', {
       method: 'POST',
-      body: {
-        title,
-        description,
-        teamId: config.value.teamId,
-        assigneeId: config.value.assigneeId,
-      },
+      body: { title, description, teamId: config.value.teamId, assigneeId: config.value.assigneeId },
     })
 
     const updated = await $fetch<Entry>(`/api/entries/${entry.id}`, {
       method: 'PATCH',
-      body: {
-        linear_issue_id: result.issue.id,
-        linear_issue_key: result.issue.identifier,
-        linear_issue_url: result.issue.url,
-        status: 'sent',
-      },
+      body: { linear_issue_id: result.issue.id, linear_issue_key: result.issue.identifier, linear_issue_url: result.issue.url, status: 'sent' },
     })
 
     const idx = entries.value.findIndex(e => e.id === entry.id)
     if (idx !== -1) entries.value[idx] = updated
 
-    toastSuccess(`${result.issue.identifier} creada`, {
-      url: result.issue.url,
-      label: 'Abrir en Linear',
-    })
+    toastSuccess(`${result.issue.identifier} ${t('index.created')}`, { url: result.issue.url, label: t('index.openLinear') })
   } catch (err: any) {
-    toastError(`Error: ${err.data?.message || err.message || 'Error desconocido'}`)
+    toastError(`${t('history.errorRetry')}: ${err.data?.message || err.message || 'Unknown'}`)
   }
 }
 

@@ -9,8 +9,8 @@ export default defineEventHandler(async (event) => {
 
   const db = useDB()
   const result = db.prepare(
-    'INSERT INTO entries (text, status) VALUES (?, ?)'
-  ).run(body.text.trim(), 'draft')
+    'INSERT INTO entries (text, status, task_status) VALUES (?, ?, ?)'
+  ).run(body.text.trim(), 'draft', 'TRIAGE')
 
   return db.prepare('SELECT * FROM entries WHERE id = ?').get(result.lastInsertRowid)
 })

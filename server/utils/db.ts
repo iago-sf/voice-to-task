@@ -33,5 +33,23 @@ export function useDB(): Database.Database {
     )
   `)
 
+  // Idempotent migration: add task_status and assigned_to columns to entries
+  const columns = db.pragma('table_info(entries)') as { name: string }[]
+  const columnNames = columns.map(c => c.name)
+
+  if (!columnNames.includes('task_status')) {
+    db.exec(`ALTER TABLE entries ADD COLUMN task_status TEXT NOT NULL DEFAULT 'TRIAGE'`)
+  }
+  if (!columnNames.includes('assigned_to')) {
+    db.exec(`ALTER TABLE entries ADD COLUMN assigned_to TEXT`)
+  }
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS settings (
+      key TEXT PRIMARY KEY,
+      value TEXT
+    )
+  `)
+
   return db
 }

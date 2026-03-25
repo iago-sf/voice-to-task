@@ -1,4 +1,4 @@
-export function useGroqSpeechToText(language: Ref<string> | string = 'es-ES') {
+export function useGroqSpeechToText(language: Ref<string> | string = 'es-ES', engine: Ref<string> | string = 'groq') {
   const transcript = ref('')
   const interimText = ref('')
   const isListening = ref(false)
@@ -51,7 +51,7 @@ export function useGroqSpeechToText(language: Ref<string> | string = 'es-ES') {
           formData.append('file', audioBlob, 'audio.webm')
           formData.append('language', unref(language))
 
-          const result = await $fetch<{ text: string }>('/api/transcribe', {
+          const result = await $fetch<{ text: string }>(`/api/transcribe?engine=${unref(engine)}`, {
             method: 'POST',
             body: formData,
           })

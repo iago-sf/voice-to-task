@@ -10,8 +10,12 @@ const defaultConfig: AppConfig = {
   language: 'es-ES',
   sttEngine: 'browser',
   groqModel: 'openai/gpt-oss-120b',
+  zaiModel: 'glm-4-plus',
   autoMode: false,
   activeContextIds: [],
+  uiLanguage: 'en',
+  theme: 'system',
+  linearStateMap: { TRIAGE: 'triage', TODO: 'unstarted', IN_PROGRESS: 'started', DONE: 'completed' },
 }
 
 export function useConfig() {
