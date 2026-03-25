@@ -130,6 +130,19 @@
         Limpiar
       </button>
       <button
+        class="flex items-center gap-2 px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-lg text-sm transition-colors disabled:opacity-40"
+        :disabled="!editableText.trim()"
+        @click="copyToClipboard"
+      >
+        <svg v-if="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+        </svg>
+        <svg v-else class="w-4 h-4 text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
+        </svg>
+        {{ copied ? 'Copiado' : 'Copiar' }}
+      </button>
+      <button
         class="flex items-center gap-2 px-4 py-2 bg-amber-700 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
         :disabled="!editableText.trim() || generatingPlan"
         @click="generatePlan"
@@ -203,6 +216,7 @@ const generatingPlan = ref(false)
 const lastCreated = ref<{ identifier: string; url: string } | null>(null)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const autoStep = ref('')
+const copied = ref(false)
 
 // Sync transcript into editable text
 watch(transcript, (val) => {
@@ -275,6 +289,16 @@ function waitForTranscript(): Promise<void> {
     // Timeout after 30s
     setTimeout(() => { unwatch(); resolve() }, 30000)
   })
+}
+
+async function copyToClipboard() {
+  try {
+    await navigator.clipboard.writeText(editableText.value)
+    copied.value = true
+    setTimeout(() => { copied.value = false }, 2000)
+  } catch {
+    toastError('No se pudo copiar al portapapeles')
+  }
 }
 
 function clearAll() {
