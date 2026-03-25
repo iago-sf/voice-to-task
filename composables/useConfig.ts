@@ -8,6 +8,10 @@ const defaultConfig: AppConfig = {
   assigneeId: '',
   assigneeName: '',
   language: 'es-ES',
+  sttEngine: 'browser',
+  groqModel: 'openai/gpt-oss-120b',
+  autoMode: false,
+  activeContextIds: [],
 }
 
 export function useConfig() {

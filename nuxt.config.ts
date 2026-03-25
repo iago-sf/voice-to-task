@@ -4,6 +4,7 @@ export default defineNuxtConfig({
 
   runtimeConfig: {
     linearApiKey: process.env.LINEAR_API_KEY || '',
+    groqApiKey: process.env.GROQ_API_KEY || '',
   },
 
   app: {

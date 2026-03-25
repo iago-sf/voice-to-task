@@ -15,6 +15,18 @@ export interface AppConfig {
   assigneeId: string
   assigneeName: string
   language: string
+  sttEngine: 'browser' | 'groq'
+  groqModel: string
+  autoMode: boolean
+  activeContextIds: number[]
+}
+
+export interface Context {
+  id: number
+  name: string
+  content: string
+  created_at: string
+  updated_at: string
 }
 
 export interface LinearTeam {

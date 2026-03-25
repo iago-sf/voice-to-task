@@ -18,10 +18,24 @@
 
     <!-- Browser support warning -->
     <div
-      v-if="!isSupported"
+      v-if="!isSupported && config.sttEngine === 'browser'"
+      class="mb-6 p-4 bg-red-950 border border-red-800 rounded-lg text-red-200 text-sm flex items-center gap-3"
+    >
+      <span>Tu navegador no soporta la Web Speech API.</span>
+      <button
+        class="ml-auto text-red-300 hover:text-red-200 underline text-sm whitespace-nowrap"
+        @click="config.sttEngine = 'groq'; saveConfig()"
+      >
+        Cambiar a Groq Whisper
+      </button>
+    </div>
+
+    <!-- STT error -->
+    <div
+      v-if="sttError"
       class="mb-6 p-4 bg-red-950 border border-red-800 rounded-lg text-red-200 text-sm"
     >
-      Tu navegador no soporta la Web Speech API. Usa Chrome o Edge.
+      Error: {{ sttError }}
     </div>
 
     <!-- Record button -->
@@ -50,9 +64,43 @@
       <p class="mt-3 text-sm text-gray-500">
         {{ isListening ? 'Escuchando... pulsa para detener' : 'Pulsa para grabar' }}
       </p>
+      <p class="mt-1 text-xs text-gray-700">
+        {{ config.sttEngine === 'groq' ? 'Groq Whisper' : 'Web Speech API' }}
+      </p>
       <p v-if="interimText" class="mt-2 text-sm text-gray-600 italic text-center max-w-md">
         {{ interimText }}
       </p>
+    </div>
+
+    <!-- Auto mode toggle -->
+    <div class="flex items-center justify-center mb-6">
+      <button
+        class="flex items-center gap-2 px-4 py-2 rounded-lg text-sm transition-colors border"
+        :class="config.autoMode
+          ? 'bg-emerald-950 border-emerald-700 text-emerald-300'
+          : 'bg-gray-900 border-gray-700 text-gray-500 hover:text-gray-400'"
+        @click="config.autoMode = !config.autoMode; saveConfig()"
+      >
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
+        </svg>
+        Modo auto{{ config.autoMode ? ': ON' : '' }}
+      </button>
+      <span v-if="config.autoMode" class="ml-3 text-xs text-gray-600">
+        Grabar &rarr; Plan &rarr; Linear
+      </span>
+    </div>
+
+    <!-- Auto mode progress -->
+    <div
+      v-if="autoStep"
+      class="mb-6 p-3 bg-indigo-950 border border-indigo-800 rounded-lg text-indigo-200 text-sm flex items-center gap-3"
+    >
+      <svg class="w-4 h-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+      </svg>
+      <span>{{ autoStep }}</span>
     </div>
 
     <!-- Text area -->
@@ -80,6 +128,20 @@
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
         </svg>
         Limpiar
+      </button>
+      <button
+        class="flex items-center gap-2 px-4 py-2 bg-amber-700 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
+        :disabled="!editableText.trim() || generatingPlan"
+        @click="generatePlan"
+      >
+        <svg v-if="!generatingPlan" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+        <svg v-else class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+        </svg>
+        {{ generatingPlan ? 'Generando...' : 'Generar plan' }}
       </button>
       <button
         class="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
@@ -117,16 +179,30 @@
 </template>
 
 <script setup lang="ts">
-const { config, isConfigured, loadConfig } = useConfig()
-const { transcript, interimText, isListening, isSupported, start, stop, reset } = useSpeechToText(
-  computed(() => config.value.language || 'es-ES')
-)
+const { config, isConfigured, loadConfig, saveConfig } = useConfig()
 const { success: toastSuccess, error: toastError } = useToast()
+
+const lang = computed(() => config.value.language || 'es-ES')
+const browserSTT = useSpeechToText(lang)
+const groqSTT = useGroqSpeechToText(lang)
+
+const stt = computed(() => config.value.sttEngine === 'groq' ? groqSTT : browserSTT)
+const transcript = computed(() => stt.value.transcript.value)
+const interimText = computed(() => stt.value.interimText.value)
+const isListening = computed(() => stt.value.isListening.value)
+const isSupported = computed(() => stt.value.isSupported.value)
+const sttError = computed(() => stt.value.error.value)
+
+function start() { stt.value.start() }
+function stop() { stt.value.stop() }
+function reset() { stt.value.reset() }
 
 const editableText = ref('')
 const sending = ref(false)
+const generatingPlan = ref(false)
 const lastCreated = ref<{ identifier: string; url: string } | null>(null)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
+const autoStep = ref('')
 
 // Sync transcript into editable text
 watch(transcript, (val) => {
@@ -135,21 +211,101 @@ watch(transcript, (val) => {
 
 onMounted(() => {
   loadConfig()
+
+  // Keyboard shortcut: space to toggle recording when textarea not focused
+  document.addEventListener('keydown', (e: KeyboardEvent) => {
+    if (e.code === 'Space' && document.activeElement !== textareaRef.value) {
+      e.preventDefault()
+      toggleRecording()
+    }
+  })
 })
 
 function toggleRecording() {
   if (isListening.value) {
     stop()
+    if (config.value.autoMode && isConfigured.value) {
+      runAutoFlow()
+    }
   } else {
     lastCreated.value = null
     start()
   }
 }
 
+async function runAutoFlow() {
+  // Wait for transcript to settle (Groq engine transcribes after stop)
+  await waitForTranscript()
+
+  const text = editableText.value.trim()
+  if (!text) {
+    autoStep.value = ''
+    return
+  }
+
+  try {
+    // Step 1: Generate plan
+    autoStep.value = 'Generando plan de accion...'
+    await generatePlan()
+
+    // Step 2: Send to Linear
+    autoStep.value = 'Enviando a Linear...'
+    await sendToLinear()
+  } catch {
+    // Errors are handled inside each function via toasts
+  } finally {
+    autoStep.value = ''
+  }
+}
+
+function waitForTranscript(): Promise<void> {
+  return new Promise((resolve) => {
+    // If text already exists, resolve immediately
+    if (editableText.value.trim()) {
+      resolve()
+      return
+    }
+    // Otherwise watch for changes (Groq transcribes async after stop)
+    const unwatch = watch(editableText, (val) => {
+      if (val.trim()) {
+        unwatch()
+        resolve()
+      }
+    })
+    // Timeout after 30s
+    setTimeout(() => { unwatch(); resolve() }, 30000)
+  })
+}
+
 function clearAll() {
   reset()
   editableText.value = ''
   lastCreated.value = null
+}
+
+async function generatePlan() {
+  const text = editableText.value.trim()
+  if (!text) return
+
+  generatingPlan.value = true
+  try {
+    const result = await $fetch<{ title: string; plan: string }>('/api/ai/action-plan', {
+      method: 'POST',
+      body: {
+        text,
+        language: config.value.language?.split('-')[0] || 'es',
+        model: config.value.groqModel || 'openai/gpt-oss-120b',
+        contextIds: config.value.activeContextIds || [],
+      },
+    })
+
+    editableText.value = result.title + '\n\n' + result.plan
+    toastSuccess('Plan generado')
+  } catch (err: any) {
+    toastError(`Error al generar plan: ${err.data?.message || err.message || 'Error desconocido'}`)
+  } finally {
+    generatingPlan.value = false
+  }
 }
 
 async function sendToLinear() {
@@ -215,16 +371,6 @@ async function sendToLinear() {
   } finally {
     sending.value = false
   }
-}
-
-// Keyboard shortcut: space to toggle recording when textarea not focused
-if (import.meta.client) {
-  useEventListener(document, 'keydown', (e: KeyboardEvent) => {
-    if (e.code === 'Space' && document.activeElement !== textareaRef.value) {
-      e.preventDefault()
-      toggleRecording()
-    }
-  })
 }
 
 // Warn before leaving with unsaved text
