@@ -2,10 +2,12 @@
 
 Local app that captures voice via the browser microphone, transcribes it to text, and creates tasks in [Linear](https://linear.app). Optionally generates an AI-powered action plan before sending. All transcriptions are saved locally in SQLite with direct links to the created Linear issues.
 
-Built with **Nuxt 3**, **Vue 3**, **better-sqlite3**, **Linear SDK**, **Groq API**, and **Z.ai API**.
+Built with **Nuxt 3**, **Vue 3**, **better-sqlite3**, **Linear SDK**, **Groq API**, **Z.ai API**, and **nuxt-auth-utils**.
 
 ## Features
 
+- **Google OAuth authentication** — login with your Google account; all data is isolated per user
+- **Per-user API key management** — each user configures their own Linear, Groq, and Z.ai keys from the Config page (encrypted at rest)
 - **Voice-to-text** via Web Speech API (Chrome/Edge), Groq Whisper, or Z.ai GLM-ASR (any browser)
 - **AI action plan generation** — turns raw voice notes into structured task plans with a summary title (powered by Groq LLM or Z.ai GLM, model configurable)
 - **Auto mode** — record, generate plan, and send to Linear in one step
@@ -16,13 +18,14 @@ Built with **Nuxt 3**, **Vue 3**, **better-sqlite3**, **Linear SDK**, **Groq API
 - **Local history** in SQLite with status tracking, Linear issue links, and retry for failed sends
 - **Theme support** — system, light, and dark mode
 - **i18n** — English and Spanish UI
-- **Tabbed config** — settings organized into Linear, AI Models, and User preferences tabs
+- **Tabbed config** — settings organized into Linear, AI Models, API Keys, and User preferences tabs
 
 ## Prerequisites
 
 - **Node.js** >= 18
-- A **Linear API key**
-- A **Groq API key** and/or a **Z.ai API key** (for transcription and AI plan generation)
+- A **Google OAuth** client ID and secret (for authentication)
+- A **Linear API key** (per user, configured in-app)
+- A **Groq API key** and/or a **Z.ai API key** (per user, configured in-app)
 
 ## Setup
 
@@ -48,16 +51,16 @@ cp .env.example .env
 Edit `.env`:
 
 ```env
-LINEAR_API_KEY=lin_api_XXXXXXXXXXXXXXXXXXXXXXXXX
-GROQ_API_KEY=gsk_XXXXXXXXXXXXXXXXXXXXXXXXX
-ZAI_API_KEY=your_zai_api_key_here
+# Auth (Google OAuth)
+NUXT_SESSION_PASSWORD=at-least-32-characters-long-random-string
+NUXT_OAUTH_GOOGLE_CLIENT_ID=your_google_client_id
+NUXT_OAUTH_GOOGLE_CLIENT_SECRET=your_google_client_secret
 ```
 
-- **Linear API key** — [Linear Settings > API](https://linear.app/settings/api), create a new personal key
-- **Groq API key** — [console.groq.com/keys](https://console.groq.com/keys), free tier available
-- **Z.ai API key** — [z.ai](https://z.ai), provides GLM-ASR (speech-to-text) and GLM chat models
+- **Session password** — a random string of at least 32 characters used to encrypt session cookies
+- **Google OAuth** — create credentials at [Google Cloud Console](https://console.cloud.google.com/apis/credentials). Set the authorized redirect URI to `http://localhost:3000/auth/google` for local development.
 
-You only need one of Groq or Z.ai — configure whichever you prefer.
+API keys for Linear, Groq, and Z.ai are no longer set as environment variables — each user configures their own keys from the **Config > API Keys** tab after logging in.
 
 ### 4. Start the development server
 
@@ -65,11 +68,16 @@ You only need one of Groq or Z.ai — configure whichever you prefer.
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000).
+Open [http://localhost:3000](http://localhost:3000). You'll be redirected to the login page.
 
 ### 5. Initial configuration
 
-Go to the **Config** page (gear icon). Settings are organized in three tabs:
+After logging in with Google, go to the **Config** page (gear icon). Settings are organized in tabs:
+
+**API Keys tab:**
+1. Enter your **Linear API key** — [Linear Settings > API](https://linear.app/settings/api)
+2. Enter your **Groq API key** (optional) — [console.groq.com/keys](https://console.groq.com/keys)
+3. Enter your **Z.ai API key** (optional) — [z.ai](https://z.ai)
 
 **Linear tab:**
 1. Select your Linear **team**
@@ -142,9 +150,18 @@ The **History** page shows all entries with:
 
 ### Agent Task API
 
-REST endpoints at `/api/tasks` allow AI agents to discover, claim, and update tasks. See the **API** page in the app for full documentation, or copy the docs as Markdown to give to any model.
+REST endpoints at `/api/tasks` allow AI agents to discover, claim, and update tasks. All endpoints require authentication. See the **API** page in the app for full documentation, or copy the docs as Markdown to give to any model.
 
 Task status changes automatically sync to Linear using the configurable state mapping.
+
+### Data isolation
+
+Each authenticated user sees only their own data:
+
+- **Entries** and **contexts** are scoped by `user_email` in the database
+- **Settings** (like Linear state mapping) use a separate `user_settings` table keyed by `(user_email, key)`
+- **API keys** are stored encrypted per user in `user_api_keys`
+- **Client-side config** in localStorage is keyed by user email
 
 ### Keyboard shortcuts
 
@@ -155,25 +172,32 @@ Task status changes automatically sync to Linear using the configurable state ma
 ```
 ├── pages/
 │   ├── index.vue          # Record + generate plan + send to Linear
+│   ├── login.vue          # Google OAuth login page
 │   ├── history.vue        # Entry history with filters
 │   ├── contexts.vue       # Manage markdown context documents
-│   ├── config.vue         # Tabbed settings (Linear, AI Models, User prefs)
+│   ├── config.vue         # Tabbed settings (Linear, AI Models, API Keys, User prefs)
 │   └── api-docs.vue       # Agent Task API documentation
+├── middleware/
+│   └── auth.global.ts     # Redirect unauthenticated users to /login
 ├── server/
-│   ├── api/entries/        # SQLite CRUD for entries
-│   ├── api/contexts/       # SQLite CRUD for context documents
+│   ├── routes/auth/        # Google OAuth callback + logout
+│   ├── api/entries/        # SQLite CRUD for entries (scoped by user)
+│   ├── api/contexts/       # SQLite CRUD for context documents (scoped by user)
 │   ├── api/tasks/          # Agent Task API (list, get, update status)
-│   ├── api/settings/       # Server-side settings (GET, PATCH)
+│   ├── api/settings/       # Per-user settings (GET, PATCH)
+│   ├── api/user-keys/      # Per-user encrypted API key management
 │   ├── api/linear/         # Linear SDK endpoints (create-issue, teams, me)
 │   ├── api/ai/             # LLM action plan generation (Groq / ZAI)
 │   ├── api/transcribe.post.ts  # Audio transcription (Groq Whisper / ZAI GLM-ASR)
 │   └── utils/
-│       ├── db.ts           # SQLite connection, migrations, settings table
+│       ├── db.ts           # SQLite connection, migrations, user_settings table
+│       ├── session-email.ts # Helper to extract user email from session
+│       ├── user-keys.ts    # Encrypted API key storage/retrieval
 │       └── linear-sync.ts  # Sync task status to Linear workflow states
 ├── composables/
 │   ├── useSpeechToText.ts      # Web Speech API wrapper
 │   ├── useGroqSpeechToText.ts  # MediaRecorder + API transcription (Groq/ZAI)
-│   ├── useConfig.ts            # App config in localStorage
+│   ├── useConfig.ts            # App config in localStorage (keyed by user email)
 │   ├── useTheme.ts             # System/light/dark theme management
 │   ├── useI18n.ts              # i18n (en/es)
 │   └── useToast.ts             # Toast notification system
@@ -184,6 +208,7 @@ Task status changes automatically sync to Linear using the configurable state ma
 ## Tech stack
 
 - **Nuxt 3** — Full-stack Vue framework
+- **nuxt-auth-utils** — Google OAuth authentication + session management
 - **better-sqlite3** — Local SQLite database (`data/voice-linear.db`)
 - **@linear/sdk** — Linear GraphQL API client
 - **Groq API** — Whisper transcription + LLM plan generation
