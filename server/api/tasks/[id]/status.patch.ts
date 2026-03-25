@@ -1,10 +1,13 @@
 import { useDB } from '~/server/utils/db'
+import { getSessionEmail } from '~/server/utils/session-email'
 import { syncTaskStatusToLinear } from '~/server/utils/linear-sync'
+import { getUserApiKey } from '~/server/utils/user-keys'
 import type { Task, TaskStatus } from '~/types'
 
 const VALID_STATUSES: TaskStatus[] = ['TRIAGE', 'TODO', 'IN_PROGRESS', 'DONE']
 
 export default defineEventHandler(async (event) => {
+  const userEmail = await getSessionEmail(event)
   const id = getRouterParam(event, 'id')
   const body = await readBody(event)
 
@@ -14,7 +17,7 @@ export default defineEventHandler(async (event) => {
 
   const db = useDB()
 
-  const existing = db.prepare('SELECT * FROM entries WHERE id = ?').get(id) as any
+  const existing = db.prepare('SELECT * FROM entries WHERE id = ? AND user_email = ?').get(id, userEmail) as any
   if (!existing) {
     throw createError({ statusCode: 404, message: 'Task not found' })
   }
@@ -27,13 +30,16 @@ export default defineEventHandler(async (event) => {
     values.push(body.assigned_to)
   }
 
-  values.push(id)
+  values.push(id, userEmail)
 
-  db.prepare(`UPDATE entries SET ${fields.join(', ')} WHERE id = ?`).run(...values)
+  db.prepare(`UPDATE entries SET ${fields.join(', ')} WHERE id = ? AND user_email = ?`).run(...values)
 
   // Best-effort sync to Linear (non-blocking, errors logged)
   if (existing.linear_issue_id) {
-    syncTaskStatusToLinear(existing.linear_issue_id, body.task_status).catch(() => {})
+    const linearApiKey = getUserApiKey(userEmail, 'linear_api_key')
+    if (linearApiKey) {
+      syncTaskStatusToLinear(linearApiKey, existing.linear_issue_id, body.task_status, userEmail).catch(() => {})
+    }
   }
 
   const task = db.prepare(

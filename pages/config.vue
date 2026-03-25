@@ -3,11 +3,11 @@
     <h1 class="text-2xl font-bold mb-6">{{ t('config.title') }}</h1>
 
     <!-- Tabs -->
-    <div class="flex border-b border-gray-200 dark:border-gray-800 mb-6">
+    <div class="flex border-b border-gray-200 dark:border-gray-800 mb-6 overflow-x-auto">
       <button
         v-for="tab in tabs"
         :key="tab.value"
-        class="px-4 py-2.5 text-sm font-medium transition-colors relative"
+        class="px-4 py-2.5 text-sm font-medium transition-colors relative whitespace-nowrap"
         :class="activeTab === tab.value
           ? 'text-indigo-600 dark:text-indigo-400'
           : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
@@ -21,6 +21,60 @@
       </button>
     </div>
 
+    <!-- ═══════ API KEYS TAB ═══════ -->
+    <div v-if="activeTab === 'keys'">
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ t('config.apiKeysDesc') }}</p>
+
+      <div class="space-y-4">
+        <div
+          v-for="keyDef in apiKeyDefs"
+          :key="keyDef.name"
+          class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4"
+        >
+          <div class="flex items-center justify-between mb-2">
+            <label class="text-sm font-medium text-gray-800 dark:text-gray-200">{{ keyDef.label }}</label>
+            <span
+              class="text-xs px-2 py-0.5 rounded-full"
+              :class="keyStatus[keyDef.name]
+                ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                : 'bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400'"
+            >
+              {{ keyStatus[keyDef.name] ? t('config.keyConfigured') : t('config.keyNotSet') }}
+            </span>
+          </div>
+
+          <div class="flex gap-2">
+            <input
+              v-model="keyInputs[keyDef.name]"
+              type="password"
+              class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 placeholder-gray-400 dark:placeholder-gray-600"
+              :placeholder="t('config.keyPlaceholder')"
+            />
+            <button
+              class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
+              :disabled="!keyInputs[keyDef.name] || savingKey === keyDef.name"
+              @click="saveKey(keyDef.name)"
+            >
+              {{ t('config.keySave') }}
+            </button>
+            <button
+              v-if="keyStatus[keyDef.name]"
+              class="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition-colors"
+              :disabled="savingKey === keyDef.name"
+              @click="clearKey(keyDef.name)"
+            >
+              {{ t('config.keyClear') }}
+            </button>
+          </div>
+
+          <p class="mt-2 text-xs text-gray-400 dark:text-gray-600">
+            {{ keyDef.hint }}
+            <a v-if="keyDef.url" :href="keyDef.url" target="_blank" rel="noopener" class="text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 underline">{{ keyDef.urlLabel }}</a>
+          </p>
+        </div>
+      </div>
+    </div>
+
     <!-- ═══════ LINEAR TAB ═══════ -->
     <div v-if="activeTab === 'linear'">
       <div class="space-y-4">
@@ -28,8 +82,8 @@
         <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
           <label class="block text-xs text-gray-500 mb-1">{{ t('config.currentUser') }}</label>
           <div v-if="loadingUser" class="text-sm text-gray-500">{{ t('config.loading') }}</div>
-          <div v-else-if="user" class="text-sm text-gray-800 dark:text-gray-200">
-            {{ user.name }} <span class="text-gray-500">({{ user.email }})</span>
+          <div v-else-if="linearUser" class="text-sm text-gray-800 dark:text-gray-200">
+            {{ linearUser.name }} <span class="text-gray-500">({{ linearUser.email }})</span>
           </div>
           <div v-else class="text-sm text-red-500 dark:text-red-400">
             {{ t('config.noConnect') }}
@@ -126,22 +180,20 @@
           </div>
         </div>
 
-        <!-- Groq info -->
+        <!-- API key needed info -->
         <div
-          v-if="config.sttEngine === 'groq'"
-          class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-400"
+          v-if="config.sttEngine === 'groq' && !keyStatus.groq_api_key"
+          class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-sm text-amber-700 dark:text-amber-400"
         >
-          {{ t('config.groqInfo') }} <code class="text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-800 px-1 rounded">GROQ_API_KEY</code> {{ t('config.groqInfoFile') }} <code class="text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-800 px-1 rounded">.env</code>{{ t('config.groqInfoFile2') }}
-          {{ t('config.groqInfoGet') }} <a href="https://console.groq.com/keys" target="_blank" rel="noopener" class="text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 underline">console.groq.com/keys</a>.
+          {{ t('config.needKey') }}
+          <button class="underline ml-1" @click="activeTab = 'keys'">API Keys</button>
         </div>
-
-        <!-- ZAI info -->
         <div
-          v-if="config.sttEngine === 'zai'"
-          class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 text-sm text-gray-600 dark:text-gray-400"
+          v-if="config.sttEngine === 'zai' && !keyStatus.zai_api_key"
+          class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-sm text-amber-700 dark:text-amber-400"
         >
-          {{ t('config.zaiInfo') }} <code class="text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-800 px-1 rounded">ZAI_API_KEY</code> {{ t('config.groqInfoFile') }} <code class="text-gray-700 dark:text-gray-300 bg-gray-200 dark:bg-gray-800 px-1 rounded">.env</code>{{ t('config.groqInfoFile2') }}
-          {{ t('config.groqInfoGet') }} <a href="https://z.ai" target="_blank" rel="noopener" class="text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 underline">z.ai</a>.
+          {{ t('config.needKey') }}
+          <button class="underline ml-1" @click="activeTab = 'keys'">API Keys</button>
         </div>
 
         <!-- Groq LLM model -->
@@ -262,16 +314,79 @@ const { success: toastSuccess, error: toastError } = useToast()
 const { t } = useI18n()
 const { applyTheme } = useTheme()
 
-const activeTab = ref<'linear' | 'ai' | 'user'>('linear')
+const activeTab = ref<'keys' | 'linear' | 'ai' | 'user'>('keys')
 
 const tabs = computed(() => [
+  { value: 'keys' as const, label: t('config.apiKeys') },
   { value: 'linear' as const, label: t('config.linear') },
   { value: 'ai' as const, label: t('config.aiModels') },
   { value: 'user' as const, label: t('config.userConfig') },
 ])
 
+// ── API Keys ──
+const keyStatus = ref<Record<string, boolean>>({
+  linear_api_key: false,
+  groq_api_key: false,
+  zai_api_key: false,
+})
+const keyInputs = ref<Record<string, string>>({
+  linear_api_key: '',
+  groq_api_key: '',
+  zai_api_key: '',
+})
+const savingKey = ref<string | null>(null)
+
+const apiKeyDefs = computed(() => [
+  { name: 'linear_api_key', label: t('config.linearApiKey'), hint: t('config.keyHintLinear'), url: 'https://linear.app/settings/api', urlLabel: 'linear.app/settings/api' },
+  { name: 'groq_api_key', label: t('config.groqApiKey'), hint: t('config.keyHintGroq'), url: 'https://console.groq.com/keys', urlLabel: 'console.groq.com/keys' },
+  { name: 'zai_api_key', label: t('config.zaiApiKey'), hint: t('config.keyHintZai'), url: 'https://z.ai', urlLabel: 'z.ai' },
+])
+
+async function loadKeyStatus() {
+  try {
+    const data = await $fetch<Record<string, boolean>>('/api/user-keys')
+    keyStatus.value = data
+  } catch {
+    // not logged in or error
+  }
+}
+
+async function saveKey(keyName: string) {
+  savingKey.value = keyName
+  try {
+    await $fetch('/api/user-keys', {
+      method: 'PUT',
+      body: { [keyName]: keyInputs.value[keyName] },
+    })
+    keyInputs.value[keyName] = ''
+    keyStatus.value[keyName] = true
+    toastSuccess(t('config.keySaved'))
+  } catch {
+    toastError(t('config.keyError'))
+  } finally {
+    savingKey.value = null
+  }
+}
+
+async function clearKey(keyName: string) {
+  savingKey.value = keyName
+  try {
+    await $fetch('/api/user-keys', {
+      method: 'PUT',
+      body: { [keyName]: '' },
+    })
+    keyStatus.value[keyName] = false
+    toastSuccess(t('config.keyCleared'))
+  } catch {
+    toastError(t('config.keyError'))
+  } finally {
+    savingKey.value = null
+  }
+}
+
+// ── Linear ──
 const teams = ref<LinearTeam[]>([])
-const user = ref<LinearUser | null>(null)
+const linearUser = ref<LinearUser | null>(null)
 const loadingTeams = ref(true)
 const loadingUser = ref(true)
 const testing = ref(false)
@@ -344,6 +459,9 @@ onMounted(async () => {
   loadConfig()
   selectedTeamId.value = config.value.teamId
 
+  // Load key status
+  await loadKeyStatus()
+
   // Load teams and user in parallel
   const [teamsResult, userResult] = await Promise.allSettled([
     $fetch<LinearTeam[]>('/api/linear/teams'),
@@ -356,7 +474,7 @@ onMounted(async () => {
   loadingTeams.value = false
 
   if (userResult.status === 'fulfilled') {
-    user.value = userResult.value
+    linearUser.value = userResult.value
     config.value.assigneeId = userResult.value.id
     config.value.assigneeName = userResult.value.name
     saveConfig()

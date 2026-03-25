@@ -43,11 +43,40 @@ export function useDB(): Database.Database {
   if (!columnNames.includes('assigned_to')) {
     db.exec(`ALTER TABLE entries ADD COLUMN assigned_to TEXT`)
   }
+  if (!columnNames.includes('user_email')) {
+    db.exec(`ALTER TABLE entries ADD COLUMN user_email TEXT DEFAULT ''`)
+  }
+
+  // Idempotent migration: add user_email column to contexts
+  const contextColumns = db.pragma('table_info(contexts)') as { name: string }[]
+  const contextColumnNames = contextColumns.map(c => c.name)
+  if (!contextColumnNames.includes('user_email')) {
+    db.exec(`ALTER TABLE contexts ADD COLUMN user_email TEXT DEFAULT ''`)
+  }
 
   db.exec(`
     CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT
+    )
+  `)
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_settings (
+      user_email TEXT NOT NULL,
+      key TEXT NOT NULL,
+      value TEXT,
+      PRIMARY KEY (user_email, key)
+    )
+  `)
+
+  db.exec(`
+    CREATE TABLE IF NOT EXISTS user_api_keys (
+      user_email TEXT NOT NULL,
+      key_name TEXT NOT NULL,
+      encrypted_value TEXT NOT NULL,
+      updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (user_email, key_name)
     )
   `)
 

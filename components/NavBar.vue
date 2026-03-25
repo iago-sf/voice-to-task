@@ -52,10 +52,49 @@
         </svg>
         <span>{{ t('nav.config') }}</span>
       </NuxtLink>
+      <button
+        v-if="loggedIn && user"
+        @click="showUserMenu = !showUserMenu"
+        class="relative flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-xs transition-colors text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300"
+      >
+        <img
+          v-if="user.avatar"
+          :src="user.avatar"
+          :alt="user.name"
+          class="w-5 h-5 rounded-full"
+        />
+        <svg v-else class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+        </svg>
+        <span class="hidden sm:inline truncate max-w-[60px]">{{ user.name?.split(' ')[0] }}</span>
+        <div
+          v-if="showUserMenu"
+          class="absolute bottom-full sm:top-full sm:bottom-auto mb-2 sm:mb-0 sm:mt-2 right-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50"
+        >
+          <div class="px-3 py-2 border-b border-gray-100 dark:border-gray-700">
+            <p class="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{{ user.name }}</p>
+            <p class="text-xs text-gray-500 dark:text-gray-400 truncate">{{ user.email }}</p>
+          </div>
+          <button
+            @click.stop="logout"
+            class="w-full text-left px-3 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700"
+          >
+            {{ t('nav.logout') }}
+          </button>
+        </div>
+      </button>
     </div>
   </nav>
 </template>
 
 <script setup lang="ts">
 const { t } = useI18n()
+const { loggedIn, user, clear } = useUserSession()
+const showUserMenu = ref(false)
+
+async function logout() {
+  showUserMenu.value = false
+  await clear()
+  navigateTo('/login')
+}
 </script>

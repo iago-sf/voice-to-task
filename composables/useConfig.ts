@@ -1,7 +1,5 @@
 import type { AppConfig } from '~/types'
 
-const CONFIG_KEY = 'voice-to-linear-config'
-
 const defaultConfig: AppConfig = {
   teamId: '',
   teamName: '',
@@ -19,6 +17,12 @@ const defaultConfig: AppConfig = {
 }
 
 export function useConfig() {
+  const { user } = useUserSession()
+  const configKey = computed(() => {
+    const email = user.value?.email || 'anonymous'
+    return `voice-to-task-config-${email}`
+  })
+
   const config = useState<AppConfig>('app-config', () => ({ ...defaultConfig }))
 
   const isConfigured = computed(() => {
@@ -27,7 +31,7 @@ export function useConfig() {
 
   function loadConfig() {
     if (!import.meta.client) return
-    const stored = localStorage.getItem(CONFIG_KEY)
+    const stored = localStorage.getItem(configKey.value)
     if (stored) {
       try {
         Object.assign(config.value, JSON.parse(stored))
@@ -39,7 +43,7 @@ export function useConfig() {
 
   function saveConfig() {
     if (!import.meta.client) return
-    localStorage.setItem(CONFIG_KEY, JSON.stringify(config.value))
+    localStorage.setItem(configKey.value, JSON.stringify(config.value))
   }
 
   return {

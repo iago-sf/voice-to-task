@@ -1,5 +1,4 @@
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
   const query = getQuery(event)
   const engine = (query.engine as string) || 'groq'
 
@@ -28,20 +27,18 @@ export default defineEventHandler(async (event) => {
   const language = langMap[rawLang] || rawLang.split('-')[0]
 
   if (engine === 'zai') {
-    return transcribeWithZai(config, audioFile, language)
+    const apiKey = await requireUserApiKey(event, 'zai_api_key')
+    return transcribeWithZai(apiKey, audioFile, language)
   }
-  return transcribeWithGroq(config, audioFile, language)
+  const apiKey = await requireUserApiKey(event, 'groq_api_key')
+  return transcribeWithGroq(apiKey, audioFile, language)
 })
 
 async function transcribeWithGroq(
-  config: ReturnType<typeof useRuntimeConfig>,
+  apiKey: string,
   audioFile: { data: Buffer; type?: string },
   language: string,
 ) {
-  if (!config.groqApiKey) {
-    throw createError({ statusCode: 500, message: 'GROQ_API_KEY not configured' })
-  }
-
   const blob = new Blob([audioFile.data], { type: audioFile.type || 'audio/webm' })
   const form = new FormData()
   form.append('file', blob, 'audio.webm')
@@ -52,7 +49,7 @@ async function transcribeWithGroq(
   try {
     const response = await fetch('https://api.groq.com/openai/v1/audio/transcriptions', {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${config.groqApiKey}` },
+      headers: { 'Authorization': `Bearer ${apiKey}` },
       body: form,
     })
 
@@ -69,14 +66,10 @@ async function transcribeWithGroq(
 }
 
 async function transcribeWithZai(
-  config: ReturnType<typeof useRuntimeConfig>,
+  apiKey: string,
   audioFile: { data: Buffer; type?: string },
   language: string,
 ) {
-  if (!config.zaiApiKey) {
-    throw createError({ statusCode: 500, message: 'ZAI_API_KEY not configured' })
-  }
-
   const blob = new Blob([audioFile.data], { type: audioFile.type || 'audio/webm' })
   const form = new FormData()
   form.append('file', blob, 'audio.webm')
@@ -86,7 +79,7 @@ async function transcribeWithZai(
   try {
     const response = await fetch('https://api.z.ai/api/paas/v4/audio/transcriptions', {
       method: 'POST',
-      headers: { 'Authorization': `Bearer ${config.zaiApiKey}` },
+      headers: { 'Authorization': `Bearer ${apiKey}` },
       body: form,
     })
 

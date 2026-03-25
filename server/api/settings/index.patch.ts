@@ -1,4 +1,7 @@
+import { getSessionEmail } from '~/server/utils/session-email'
+
 export default defineEventHandler(async (event) => {
+  const userEmail = await getSessionEmail(event)
   const body = await readBody<Record<string, string>>(event)
 
   if (!body || typeof body !== 'object') {
@@ -6,11 +9,11 @@ export default defineEventHandler(async (event) => {
   }
 
   const db = useDB()
-  const upsert = db.prepare('INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value')
+  const upsert = db.prepare('INSERT INTO user_settings (user_email, key, value) VALUES (?, ?, ?) ON CONFLICT(user_email, key) DO UPDATE SET value = excluded.value')
 
   const transaction = db.transaction((entries: [string, string][]) => {
     for (const [key, value] of entries) {
-      upsert.run(key, value)
+      upsert.run(userEmail, key, value)
     }
   })
 

@@ -1,19 +1,15 @@
 import { LinearClient } from '@linear/sdk'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
+  const linearApiKey = await requireUserApiKey(event, 'linear_api_key')
   const body = await readBody(event)
-
-  if (!config.linearApiKey) {
-    throw createError({ statusCode: 500, message: 'LINEAR_API_KEY not configured' })
-  }
 
   if (!body.title || !body.teamId || !body.assigneeId) {
     throw createError({ statusCode: 400, message: 'title, teamId, and assigneeId are required' })
   }
 
   try {
-    const client = new LinearClient({ apiKey: config.linearApiKey })
+    const client = new LinearClient({ apiKey: linearApiKey })
 
     const team = await client.team(body.teamId)
     const states = await team.states()

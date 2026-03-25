@@ -1,12 +1,14 @@
 import { useDB } from '~/server/utils/db'
+import { getSessionEmail } from '~/server/utils/session-email'
 import type { Task } from '~/types'
 
-export default defineEventHandler((event) => {
+export default defineEventHandler(async (event) => {
+  const userEmail = await getSessionEmail(event)
   const query = getQuery(event)
   const db = useDB()
 
-  const conditions: string[] = []
-  const params: any[] = []
+  const conditions: string[] = ['user_email = ?']
+  const params: any[] = [userEmail]
 
   if (query.task_status) {
     conditions.push('task_status = ?')
@@ -18,7 +20,7 @@ export default defineEventHandler((event) => {
     params.push(query.assigned_to)
   }
 
-  const where = conditions.length > 0 ? `WHERE ${conditions.join(' AND ')}` : ''
+  const where = `WHERE ${conditions.join(' AND ')}`
   const limit = query.limit ? `LIMIT ?` : ''
   if (query.limit) {
     params.push(Number(query.limit))

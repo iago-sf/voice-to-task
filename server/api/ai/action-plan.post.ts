@@ -1,8 +1,6 @@
 import { useDB } from '~/server/utils/db'
 
 export default defineEventHandler(async (event) => {
-  const config = useRuntimeConfig()
-
   const body = await readBody(event)
 
   if (!body.text || typeof body.text !== 'string') {
@@ -63,25 +61,23 @@ ${contextBlock}` : ''}`
   ]
 
   if (engine === 'zai') {
-    return callZai(config, model, messages)
+    const apiKey = await requireUserApiKey(event, 'zai_api_key')
+    return callZai(apiKey, model, messages)
   }
-  return callGroq(config, model, messages)
+  const apiKey = await requireUserApiKey(event, 'groq_api_key')
+  return callGroq(apiKey, model, messages)
 })
 
 async function callGroq(
-  config: ReturnType<typeof useRuntimeConfig>,
+  apiKey: string,
   model: string,
   messages: { role: string; content: string }[],
 ) {
-  if (!config.groqApiKey) {
-    throw createError({ statusCode: 500, message: 'GROQ_API_KEY not configured' })
-  }
-
   try {
     const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${config.groqApiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: 1024 }),
@@ -99,19 +95,15 @@ async function callGroq(
 }
 
 async function callZai(
-  config: ReturnType<typeof useRuntimeConfig>,
+  apiKey: string,
   model: string,
   messages: { role: string; content: string }[],
 ) {
-  if (!config.zaiApiKey) {
-    throw createError({ statusCode: 500, message: 'ZAI_API_KEY not configured' })
-  }
-
   try {
     const response = await fetch('https://api.z.ai/api/paas/v4/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${config.zaiApiKey}`,
+        'Authorization': `Bearer ${apiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: 1024 }),

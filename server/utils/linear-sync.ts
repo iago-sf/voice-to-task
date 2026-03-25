@@ -8,10 +8,10 @@ const DEFAULT_STATE_MAP: Record<TaskStatus, string> = {
   DONE: 'completed',
 }
 
-function getStateMap(): Record<TaskStatus, string> {
+function getStateMap(userEmail: string): Record<TaskStatus, string> {
   try {
     const db = useDB()
-    const row = db.prepare('SELECT value FROM settings WHERE key = ?').get('linearStateMap') as { value: string } | undefined
+    const row = db.prepare('SELECT value FROM user_settings WHERE user_email = ? AND key = ?').get(userEmail, 'linearStateMap') as { value: string } | undefined
     if (row?.value) {
       return { ...DEFAULT_STATE_MAP, ...JSON.parse(row.value) }
     }
@@ -21,16 +21,14 @@ function getStateMap(): Record<TaskStatus, string> {
   return DEFAULT_STATE_MAP
 }
 
-export async function syncTaskStatusToLinear(linearIssueId: string, taskStatus: TaskStatus): Promise<void> {
-  const config = useRuntimeConfig()
-
-  if (!config.linearApiKey || !linearIssueId) {
+export async function syncTaskStatusToLinear(linearApiKey: string, linearIssueId: string, taskStatus: TaskStatus, userEmail: string): Promise<void> {
+  if (!linearApiKey || !linearIssueId) {
     return
   }
 
   try {
-    const stateMap = getStateMap()
-    const client = new LinearClient({ apiKey: config.linearApiKey })
+    const stateMap = getStateMap(userEmail)
+    const client = new LinearClient({ apiKey: linearApiKey })
     const issue = await client.issue(linearIssueId)
     const team = await issue.team
 

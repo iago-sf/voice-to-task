@@ -1,11 +1,20 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
+  devServer: { port: 3004 },
+
+  modules: ['nuxt-auth-utils'],
 
   runtimeConfig: {
-    linearApiKey: process.env.LINEAR_API_KEY || '',
-    groqApiKey: process.env.GROQ_API_KEY || '',
-    zaiApiKey: process.env.ZAI_API_KEY || '',
+    session: {
+      password: process.env.NUXT_SESSION_PASSWORD || '',
+    },
+    oauth: {
+      google: {
+        clientId: process.env.NUXT_OAUTH_GOOGLE_CLIENT_ID || '',
+        clientSecret: process.env.NUXT_OAUTH_GOOGLE_CLIENT_SECRET || '',
+      },
+    },
   },
 
   app: {
