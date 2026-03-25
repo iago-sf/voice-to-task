@@ -92,7 +92,7 @@ Toggle it from the main page or from Config.
 
 ### Contexts
 
-Contexts are markdown documents that provide background information to the LLM when generating action plans. This makes the plans more specific and relevant to your project.
+Contexts are markdown documents that **define your project and take priority** over the LLM's generic knowledge when generating action plans. The LLM will use them to frame the task title, choose the right terminology, and align steps with your stack, tools, and conventions.
 
 1. Go to the **Contexts** page (document icon in nav)
 2. Create a new context (e.g., "Project Stack", "Sprint Goals", "Code Conventions")
@@ -102,9 +102,12 @@ Contexts are markdown documents that provide background information to the LLM w
 
 You can have multiple contexts and activate/deactivate them as needed. Examples:
 
-- **Project overview** — stack, architecture, team conventions
-- **Sprint context** — current sprint goals, priorities
-- **Style guide** — naming conventions, commit format, PR process
+- **Project definition** — stack, architecture, repo structure, deployment pipeline
+- **Sprint context** — current sprint goals, priorities, deadlines
+- **Conventions** — naming, commit format, PR process, testing requirements
+- **Team** — roles, responsibilities, who owns what
+
+The more specific your contexts are, the better the generated plans will be. For example, if your context says "Backend in Go with Chi router, deployed on Fly.io", a task like "add user authentication" will produce steps referencing Go, Chi middleware, and Fly.io deploy — not generic advice.
 
 ### History
 

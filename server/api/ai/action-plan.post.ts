@@ -50,7 +50,13 @@ PLAN:
 
 Keep it practical, specific, and actionable. No fluff. Between 3 and 8 steps.${contextBlock ? `
 
-The user has provided the following context documents. Use them to make the plan more specific and relevant:
+IMPORTANT — The user has provided context documents that define the project, its conventions, technologies, and constraints. These documents take PRIORITY over any generic assumptions. You MUST use them to:
+- Frame the task title using the project's domain and terminology
+- Define steps that align with the project's stack, tools, and workflows
+- Follow any conventions or guidelines specified in the context (naming, testing, deployment, etc.)
+- Reference specific technologies, libraries, or patterns mentioned in the context
+
+Context documents:
 
 ${contextBlock}` : ''}`
 
