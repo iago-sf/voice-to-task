@@ -39,7 +39,9 @@ export interface AppConfig {
   activeContextIds: number[]
   uiLanguage: 'en' | 'es'
   theme: 'system' | 'light' | 'dark'
+  audioDeviceId: string
   linearStateMap: Record<TaskStatus, LinearStateType>
+  lastSendAction?: 'linear' | 'copy' | 'save'
 }
 
 export interface Context {

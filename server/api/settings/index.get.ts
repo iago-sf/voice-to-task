@@ -1,11 +1,15 @@
+import { ensureDB } from '~/server/utils/db'
 import { getSessionEmail } from '~/server/utils/session-email'
 
 export default defineEventHandler(async (event) => {
   const userEmail = await getSessionEmail(event)
-  const db = useDB()
-  const rows = db.prepare('SELECT key, value FROM user_settings WHERE user_email = ?').all(userEmail) as { key: string; value: string }[]
+  const db = await ensureDB()
+  const { rows } = await db.execute({
+    sql: 'SELECT key, value FROM user_settings WHERE user_email = ?',
+    args: [userEmail],
+  })
   const result: Record<string, string> = {}
-  for (const row of rows) {
+  for (const row of rows as any[]) {
     result[row.key] = row.value
   }
   return result

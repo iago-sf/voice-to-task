@@ -1,4 +1,4 @@
 export default defineEventHandler(async (event) => {
   const session = await requireUserSession(event)
-  return getUserApiKeys(session.user.email)
+  return await getUserApiKeys(session.user.email)
 })

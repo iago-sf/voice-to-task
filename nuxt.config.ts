@@ -6,6 +6,10 @@ export default defineNuxtConfig({
   modules: ['nuxt-auth-utils'],
 
   runtimeConfig: {
+    turso: {
+      url: process.env.TURSO_DATABASE_URL || 'file:data/voice-linear.db',
+      authToken: process.env.TURSO_AUTH_TOKEN || '',
+    },
     session: {
       password: process.env.NUXT_SESSION_PASSWORD || '',
     },

@@ -46,8 +46,11 @@
           <div class="flex gap-2">
             <input
               v-model="keyInputs[keyDef.name]"
-              type="password"
-              class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 placeholder-gray-400 dark:placeholder-gray-600"
+              type="text"
+              autocomplete="off"
+              data-1p-ignore
+              data-lpignore="true"
+              class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 placeholder-gray-400 dark:placeholder-gray-600 input-mask"
               :placeholder="t('config.keyPlaceholder')"
             />
             <button
@@ -243,6 +246,75 @@
       </div>
     </div>
 
+    <!-- ═══════ TOKENS TAB ═══════ -->
+    <div v-if="activeTab === 'tokens'">
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ t('config.apiTokensDesc') }}</p>
+
+      <!-- Generate form -->
+      <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 mb-4">
+        <label class="block text-xs text-gray-500 mb-2">{{ t('config.tokenName') }}</label>
+        <div class="flex gap-2">
+          <input
+            v-model="tokenName"
+            type="text"
+            class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 placeholder-gray-400 dark:placeholder-gray-600"
+            :placeholder="t('config.tokenNamePlaceholder')"
+            @keyup.enter="generateToken"
+          />
+          <button
+            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
+            :disabled="generatingToken"
+            @click="generateToken"
+          >
+            {{ t('config.tokenGenerate') }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Newly created token (shown once) -->
+      <div
+        v-if="newToken"
+        class="mb-4 p-4 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg"
+      >
+        <p class="text-sm text-amber-700 dark:text-amber-400 mb-2">{{ t('config.tokenCreated') }}</p>
+        <div class="flex gap-2">
+          <code class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 break-all select-all">{{ newToken }}</code>
+          <button
+            class="px-3 py-2 bg-gray-200 dark:bg-gray-700 hover:bg-gray-300 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition-colors whitespace-nowrap"
+            @click="copyToken"
+          >
+            {{ tokenCopied ? t('config.tokenCopied') : t('config.tokenCopy') }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Token list -->
+      <div v-if="apiTokens.length" class="space-y-2">
+        <div
+          v-for="tok in apiTokens"
+          :key="tok.id"
+          class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4 flex items-center justify-between gap-4"
+        >
+          <div class="min-w-0">
+            <div class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{{ tok.name || '—' }}</div>
+            <div class="text-xs text-gray-500 mt-0.5">
+              {{ new Date(tok.created_at).toLocaleDateString() }}
+              · {{ tok.last_used_at ? new Date(tok.last_used_at).toLocaleDateString() : t('config.tokenNever') }}
+            </div>
+          </div>
+          <button
+            class="px-3 py-1.5 bg-red-100 dark:bg-red-900/30 hover:bg-red-200 dark:hover:bg-red-900/50 text-red-700 dark:text-red-400 rounded-lg text-sm transition-colors whitespace-nowrap"
+            @click="revokeToken(tok.id)"
+          >
+            {{ t('config.tokenRevoke') }}
+          </button>
+        </div>
+      </div>
+      <div v-else class="text-sm text-gray-500 dark:text-gray-400 text-center py-8">
+        {{ t('config.tokenEmpty') }}
+      </div>
+    </div>
+
     <!-- ═══════ USER CONFIG TAB ═══════ -->
     <div v-if="activeTab === 'user'">
       <div class="space-y-4">
@@ -301,6 +373,22 @@
             </button>
           </div>
         </div>
+
+        <!-- Microphone selector -->
+        <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+          <label class="block text-xs text-gray-500 mb-2">{{ t('config.microphone') }}</label>
+          <select
+            v-model="config.audioDeviceId"
+            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500"
+            @change="saveConfig"
+          >
+            <option value="">{{ t('config.micDefault') }}</option>
+            <option v-for="device in audioDevices" :key="device.deviceId" :value="device.deviceId">
+              {{ device.label || device.deviceId }}
+            </option>
+          </select>
+          <p class="mt-2 text-xs text-gray-400 dark:text-gray-600">{{ t('config.micHint') }}</p>
+        </div>
       </div>
     </div>
   </div>
@@ -314,13 +402,33 @@ const { success: toastSuccess, error: toastError } = useToast()
 const { t } = useI18n()
 const { applyTheme } = useTheme()
 
-const activeTab = ref<'keys' | 'linear' | 'ai' | 'user'>('keys')
+const activeTab = ref<'keys' | 'linear' | 'ai' | 'user' | 'tokens'>('keys')
+const audioDevices = ref<MediaDeviceInfo[]>([])
+
+async function loadAudioDevices() {
+  if (!import.meta.client || !navigator.mediaDevices?.enumerateDevices) return
+  try {
+    // Request mic permission so enumerateDevices returns labels
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+    stream.getTracks().forEach(t => t.stop())
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    audioDevices.value = devices.filter(d => d.kind === 'audioinput')
+  } catch {
+    // permission denied or not available
+  }
+}
+
+watch(activeTab, (tab) => {
+  if (tab === 'user') loadAudioDevices()
+  if (tab === 'tokens') loadTokens()
+})
 
 const tabs = computed(() => [
   { value: 'keys' as const, label: t('config.apiKeys') },
   { value: 'linear' as const, label: t('config.linear') },
   { value: 'ai' as const, label: t('config.aiModels') },
   { value: 'user' as const, label: t('config.userConfig') },
+  { value: 'tokens' as const, label: t('config.apiTokens') },
 ])
 
 // ── API Keys ──
@@ -381,6 +489,56 @@ async function clearKey(keyName: string) {
     toastError(t('config.keyError'))
   } finally {
     savingKey.value = null
+  }
+}
+
+// ── API Tokens ──
+interface ApiTokenInfo { id: number; name: string; created_at: string; last_used_at: string | null }
+const apiTokens = ref<ApiTokenInfo[]>([])
+const tokenName = ref('')
+const newToken = ref('')
+const tokenCopied = ref(false)
+const generatingToken = ref(false)
+
+async function loadTokens() {
+  try {
+    apiTokens.value = await $fetch<ApiTokenInfo[]>('/api/api-tokens')
+  } catch { /* not logged in */ }
+}
+
+async function generateToken() {
+  generatingToken.value = true
+  try {
+    const res = await $fetch<{ token: string }>('/api/api-tokens', {
+      method: 'POST',
+      body: { name: tokenName.value },
+    })
+    newToken.value = res.token
+    tokenName.value = ''
+    tokenCopied.value = false
+    await loadTokens()
+  } catch {
+    toastError('Error generating token')
+  } finally {
+    generatingToken.value = false
+  }
+}
+
+async function copyToken() {
+  await navigator.clipboard.writeText(newToken.value)
+  tokenCopied.value = true
+  toastSuccess(t('config.tokenCopied'))
+}
+
+async function revokeToken(id: number) {
+  if (!confirm(t('config.tokenRevokeConfirm'))) return
+  try {
+    await $fetch(`/api/api-tokens/${id}`, { method: 'DELETE' })
+    toastSuccess(t('config.tokenRevoked'))
+    await loadTokens()
+    if (newToken.value) newToken.value = '' // clear if it was the revoked one
+  } catch {
+    toastError('Error revoking token')
   }
 }
 
@@ -458,6 +616,7 @@ async function testConnection() {
 onMounted(async () => {
   loadConfig()
   selectedTeamId.value = config.value.teamId
+  loadAudioDevices()
 
   // Load key status
   await loadKeyStatus()

@@ -1,4 +1,5 @@
 import { LinearClient } from '@linear/sdk'
+import { ensureDB } from './db'
 import type { TaskStatus } from '~/types'
 
 const DEFAULT_STATE_MAP: Record<TaskStatus, string> = {
@@ -8,10 +9,14 @@ const DEFAULT_STATE_MAP: Record<TaskStatus, string> = {
   DONE: 'completed',
 }
 
-function getStateMap(userEmail: string): Record<TaskStatus, string> {
+async function getStateMap(userEmail: string): Promise<Record<TaskStatus, string>> {
   try {
-    const db = useDB()
-    const row = db.prepare('SELECT value FROM user_settings WHERE user_email = ? AND key = ?').get(userEmail, 'linearStateMap') as { value: string } | undefined
+    const db = await ensureDB()
+    const { rows } = await db.execute({
+      sql: 'SELECT value FROM user_settings WHERE user_email = ? AND key = ?',
+      args: [userEmail, 'linearStateMap'],
+    })
+    const row = rows[0] as unknown as { value: string } | undefined
     if (row?.value) {
       return { ...DEFAULT_STATE_MAP, ...JSON.parse(row.value) }
     }
@@ -27,7 +32,7 @@ export async function syncTaskStatusToLinear(linearApiKey: string, linearIssueId
   }
 
   try {
-    const stateMap = getStateMap(userEmail)
+    const stateMap = await getStateMap(userEmail)
     const client = new LinearClient({ apiKey: linearApiKey })
     const issue = await client.issue(linearIssueId)
     const team = await issue.team

@@ -1,5 +1,19 @@
 <template>
-  <div class="max-w-2xl mx-auto px-4 py-8">
+  <div
+    class="max-w-2xl mx-auto px-4 py-8 relative"
+    @dragover.prevent="dragging = true"
+    @dragenter.prevent="dragging = true"
+    @dragleave.prevent="onDragLeave"
+    @drop.prevent="onDrop"
+  >
+    <!-- Drop overlay -->
+    <div
+      v-if="dragging"
+      class="absolute inset-0 z-50 flex items-center justify-center bg-indigo-600/10 border-2 border-dashed border-indigo-400 rounded-xl backdrop-blur-sm pointer-events-none"
+    >
+      <span class="text-indigo-600 dark:text-indigo-300 text-lg font-medium">{{ t('contexts.dropOverlay') }}</span>
+    </div>
+
     <div class="flex items-center justify-between mb-6">
       <h1 class="text-2xl font-bold">{{ t('contexts.title') }}</h1>
       <button
@@ -80,17 +94,19 @@
           <!-- Name (editable) -->
           <div v-if="editingNameId === ctx.id" class="flex-1">
             <input
+              ref="nameInputRef"
               v-model="editingNameValue"
               type="text"
               class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-2 py-1 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500"
-              @keydown.enter="saveName(ctx)"
+              @keydown.enter="($event.target as HTMLInputElement).blur()"
               @keydown.escape="editingNameId = null"
+              @blur="saveName(ctx)"
             />
           </div>
           <button
             v-else
             class="flex-1 text-left text-sm font-medium text-gray-800 dark:text-gray-200 hover:text-gray-900 dark:hover:text-white truncate"
-            @click="editingNameId = ctx.id; editingNameValue = ctx.name"
+            @click="startEditingName(ctx)"
           >
             {{ ctx.name }}
           </button>
@@ -137,14 +153,8 @@
             :placeholder="t('contexts.editorPlaceholder')"
             @blur="saveContent(ctx)"
           />
-          <div class="flex items-center justify-between mt-2">
+          <div class="mt-2">
             <span class="text-xs text-gray-400 dark:text-gray-600">{{ ctx.content.length }} {{ t('index.chars') }}</span>
-            <button
-              class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-xs transition-colors"
-              @click="saveContent(ctx)"
-            >
-              {{ t('contexts.save') }}
-            </button>
           </div>
         </div>
       </div>
@@ -166,6 +176,53 @@ const newName = ref('')
 const expandedId = ref<number | null>(null)
 const editingNameId = ref<number | null>(null)
 const editingNameValue = ref('')
+const nameInputRef = ref<HTMLInputElement | null>(null)
+const dragging = ref(false)
+
+function startEditingName(ctx: Context) {
+  editingNameId.value = ctx.id
+  editingNameValue.value = ctx.name
+  nextTick(() => {
+    nameInputRef.value?.focus()
+    nameInputRef.value?.select()
+  })
+}
+
+function onDragLeave(e: DragEvent) {
+  const related = e.relatedTarget as Node | null
+  if (!related || !(e.currentTarget as HTMLElement).contains(related)) {
+    dragging.value = false
+  }
+}
+
+async function onDrop(e: DragEvent) {
+  dragging.value = false
+  const files = Array.from(e.dataTransfer?.files || [])
+  if (!files.length) return
+
+  let hasNonMd = false
+  for (const file of files) {
+    if (!file.name.endsWith('.md')) {
+      hasNonMd = true
+      continue
+    }
+    const content = await file.text()
+    const name = file.name.replace(/\.md$/, '')
+    try {
+      const ctx = await $fetch<Context>('/api/contexts', {
+        method: 'POST',
+        body: { name, content },
+      })
+      contexts.value.push(ctx)
+      toastSuccess(t('contexts.imported', { name }))
+    } catch {
+      toastError(t('contexts.errorCreate'))
+    }
+  }
+  if (hasNonMd) {
+    toastError(t('contexts.errorNotMd'))
+  }
+}
 
 function isActive(id: number): boolean {
   return config.value.activeContextIds.includes(id)
@@ -210,15 +267,16 @@ async function createContext() {
 }
 
 async function saveName(ctx: Context) {
-  if (!editingNameValue.value.trim()) return
+  editingNameId.value = null
+  const trimmed = editingNameValue.value.trim()
+  if (!trimmed || trimmed === ctx.name) return
   try {
     const updated = await $fetch<Context>(`/api/contexts/${ctx.id}`, {
       method: 'PATCH',
-      body: { name: editingNameValue.value.trim() },
+      body: { name: trimmed },
     })
     const idx = contexts.value.findIndex(c => c.id === ctx.id)
     if (idx !== -1) contexts.value[idx] = { ...contexts.value[idx], ...updated }
-    editingNameId.value = null
   } catch {
     toastError(t('contexts.errorRename'))
   }

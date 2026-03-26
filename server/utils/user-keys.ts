@@ -1,5 +1,6 @@
 import crypto from 'node:crypto'
 import type { H3Event } from 'h3'
+import { ensureDB } from './db'
 
 const SALT = 'voice-to-task-user-keys'
 const ALGORITHM = 'aes-256-gcm'
@@ -32,12 +33,14 @@ function decrypt(ciphertext: string): string {
   return decipher.update(encrypted) + decipher.final('utf8')
 }
 
-export function getUserApiKey(userEmail: string, keyName: string): string | null {
-  const db = useDB()
-  const row = db.prepare(
-    'SELECT encrypted_value FROM user_api_keys WHERE user_email = ? AND key_name = ?'
-  ).get(userEmail, keyName) as { encrypted_value: string } | undefined
+export async function getUserApiKey(userEmail: string, keyName: string): Promise<string | null> {
+  const db = await ensureDB()
+  const { rows } = await db.execute({
+    sql: 'SELECT encrypted_value FROM user_api_keys WHERE user_email = ? AND key_name = ?',
+    args: [userEmail, keyName],
+  })
 
+  const row = rows[0] as unknown as { encrypted_value: string } | undefined
   if (!row) return null
 
   try {
@@ -47,38 +50,44 @@ export function getUserApiKey(userEmail: string, keyName: string): string | null
   }
 }
 
-export function setUserApiKey(userEmail: string, keyName: string, plaintext: string): void {
-  const db = useDB()
+export async function setUserApiKey(userEmail: string, keyName: string, plaintext: string): Promise<void> {
+  const db = await ensureDB()
   const encrypted = encrypt(plaintext)
-  db.prepare(
-    `INSERT INTO user_api_keys (user_email, key_name, encrypted_value, updated_at)
+  await db.execute({
+    sql: `INSERT INTO user_api_keys (user_email, key_name, encrypted_value, updated_at)
      VALUES (?, ?, ?, CURRENT_TIMESTAMP)
-     ON CONFLICT(user_email, key_name) DO UPDATE SET encrypted_value = ?, updated_at = CURRENT_TIMESTAMP`
-  ).run(userEmail, keyName, encrypted, encrypted)
+     ON CONFLICT(user_email, key_name) DO UPDATE SET encrypted_value = ?, updated_at = CURRENT_TIMESTAMP`,
+    args: [userEmail, keyName, encrypted, encrypted],
+  })
 }
 
-export function deleteUserApiKey(userEmail: string, keyName: string): void {
-  const db = useDB()
-  db.prepare('DELETE FROM user_api_keys WHERE user_email = ? AND key_name = ?').run(userEmail, keyName)
+export async function deleteUserApiKey(userEmail: string, keyName: string): Promise<void> {
+  const db = await ensureDB()
+  await db.execute({
+    sql: 'DELETE FROM user_api_keys WHERE user_email = ? AND key_name = ?',
+    args: [userEmail, keyName],
+  })
 }
 
-export function getUserApiKeys(userEmail: string): Record<string, boolean> {
-  const db = useDB()
-  const rows = db.prepare(
-    'SELECT key_name FROM user_api_keys WHERE user_email = ?'
-  ).all(userEmail) as { key_name: string }[]
+export async function getUserApiKeys(userEmail: string): Promise<Record<string, boolean>> {
+  const db = await ensureDB()
+  const { rows } = await db.execute({
+    sql: 'SELECT key_name FROM user_api_keys WHERE user_email = ?',
+    args: [userEmail],
+  })
 
+  const keyNames = rows.map((r: any) => r.key_name)
   return {
-    linear_api_key: rows.some(r => r.key_name === 'linear_api_key'),
-    groq_api_key: rows.some(r => r.key_name === 'groq_api_key'),
-    zai_api_key: rows.some(r => r.key_name === 'zai_api_key'),
+    linear_api_key: keyNames.includes('linear_api_key'),
+    groq_api_key: keyNames.includes('groq_api_key'),
+    zai_api_key: keyNames.includes('zai_api_key'),
   }
 }
 
 export async function requireUserApiKey(event: H3Event, keyName: string): Promise<string> {
   const session = await requireUserSession(event)
   const email = session.user.email
-  const key = getUserApiKey(email, keyName)
+  const key = await getUserApiKey(email, keyName)
 
   if (!key) {
     const label = keyName.replace(/_/g, ' ').toUpperCase()

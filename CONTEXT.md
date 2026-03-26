@@ -7,10 +7,10 @@
 
 ## Project Overview
 
-A Nuxt 3 full-stack app that captures voice via the browser microphone, transcribes it to text, optionally generates an AI action plan, and creates tasks in [Linear](https://linear.app). All data is scoped per authenticated user (Google OAuth). The database is local SQLite.
+A Nuxt 3 full-stack app that captures voice via the browser microphone, transcribes it to text, optionally generates an AI action plan, and creates tasks in [Linear](https://linear.app). All data is scoped per authenticated user (Google OAuth). The database is SQLite-compatible via libSQL (local file or Turso for cloud/serverless).
 
 - **Framework:** Nuxt 3 (Vue 3) — full-stack, file-based routing
-- **Database:** SQLite via `better-sqlite3` at `data/voice-linear.db`
+- **Database:** libSQL via `@libsql/client` — local file (`file:data/voice-linear.db`) or remote Turso
 - **Auth:** Google OAuth via `nuxt-auth-utils`
 - **Styling:** Tailwind CSS (loaded from CDN) + `assets/css/main.css`
 - **i18n:** Custom composable with inline dictionaries (English + Spanish)
@@ -77,7 +77,7 @@ voice-to-task/
 │   │       ├── index.get.ts
 │   │       └── index.put.ts
 │   └── utils/
-│       ├── db.ts                   # SQLite singleton + idempotent migrations
+│       ├── db.ts                   # libSQL/Turso client singleton + async schema init
 │       ├── linear-sync.ts          # Sync task_status → Linear workflow state
 │       ├── session-email.ts        # getSessionEmail(event) helper
 │       └── user-keys.ts            # AES-256-GCM encrypt/decrypt for API keys

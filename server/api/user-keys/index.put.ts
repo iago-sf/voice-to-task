@@ -10,9 +10,9 @@ export default defineEventHandler(async (event) => {
     if (typeof value !== 'string') continue
 
     if (value === '') {
-      deleteUserApiKey(email, keyName)
+      await deleteUserApiKey(email, keyName)
     } else {
-      setUserApiKey(email, keyName, value)
+      await setUserApiKey(email, keyName, value)
     }
   }
 

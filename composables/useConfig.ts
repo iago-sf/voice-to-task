@@ -13,7 +13,9 @@ const defaultConfig: AppConfig = {
   activeContextIds: [],
   uiLanguage: 'en',
   theme: 'system',
+  audioDeviceId: '',
   linearStateMap: { TRIAGE: 'triage', TODO: 'unstarted', IN_PROGRESS: 'started', DONE: 'completed' },
+  lastSendAction: 'linear',
 }
 
 export function useConfig() {

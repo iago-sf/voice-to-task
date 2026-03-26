@@ -15,6 +15,16 @@
 
     <p class="text-sm text-gray-500 dark:text-gray-400 mb-6">{{ t('apiDocs.description') }}</p>
 
+    <!-- Authentication -->
+    <section class="mb-6">
+      <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-3">{{ t('apiDocs.authTitle') }}</h2>
+      <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+        <p class="text-sm text-gray-600 dark:text-gray-400 mb-3">{{ t('apiDocs.authDesc') }}</p>
+        <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">{{ t('apiDocs.authHeader') }}</h4>
+        <pre class="bg-gray-100 dark:bg-gray-950 rounded p-3 text-xs text-gray-700 dark:text-gray-300 overflow-x-auto">Authorization: Bearer vtk_&lt;your-token&gt;</pre>
+      </div>
+    </section>
+
     <!-- GET /api/tasks -->
     <section class="mb-6">
       <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
@@ -40,7 +50,8 @@
             </div>
           </div>
           <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">{{ t('apiDocs.example') }}</h4>
-          <pre class="bg-gray-100 dark:bg-gray-950 rounded p-3 text-xs text-gray-700 dark:text-gray-300 overflow-x-auto">curl {{ baseUrl }}/api/tasks?task_status=TODO&amp;limit=5</pre>
+          <pre class="bg-gray-100 dark:bg-gray-950 rounded p-3 text-xs text-gray-700 dark:text-gray-300 overflow-x-auto">curl -H "Authorization: Bearer $TOKEN" \
+  {{ baseUrl }}/api/tasks?task_status=TODO&amp;limit=5</pre>
         </div>
       </div>
     </section>
@@ -55,7 +66,8 @@
         <div class="px-4 py-3 text-sm text-gray-600 dark:text-gray-400">
           <p class="mb-3">{{ t('apiDocs.detailDesc') }}</p>
           <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">{{ t('apiDocs.example') }}</h4>
-          <pre class="bg-gray-100 dark:bg-gray-950 rounded p-3 text-xs text-gray-700 dark:text-gray-300 overflow-x-auto">curl {{ baseUrl }}/api/tasks/7</pre>
+          <pre class="bg-gray-100 dark:bg-gray-950 rounded p-3 text-xs text-gray-700 dark:text-gray-300 overflow-x-auto">curl -H "Authorization: Bearer $TOKEN" \
+  {{ baseUrl }}/api/tasks/7</pre>
         </div>
       </div>
     </section>
@@ -83,6 +95,7 @@
           </div>
           <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">{{ t('apiDocs.example') }}</h4>
           <pre class="bg-gray-100 dark:bg-gray-950 rounded p-3 text-xs text-gray-700 dark:text-gray-300 overflow-x-auto">curl -X PATCH {{ baseUrl }}/api/tasks/7/status \
+  -H "Authorization: Bearer $TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"task_status": "IN_PROGRESS", "assigned_to": "claude-code"}'</pre>
         </div>
@@ -171,6 +184,14 @@ const markdownContent = computed(() => `# Voice to Task — Agent Task API
 
 Base URL: \`${baseUrl.value}\`
 
+## Authentication
+
+All endpoints require a Bearer token in the \`Authorization\` header. Generate one in Config > API Tokens.
+
+\`\`\`
+Authorization: Bearer vtk_<your-token>
+\`\`\`
+
 ## Endpoints
 
 ### GET /api/tasks
@@ -186,7 +207,8 @@ List tasks with optional filters.
 
 **Example:**
 \`\`\`bash
-curl ${baseUrl.value}/api/tasks?task_status=TODO&limit=5
+curl -H "Authorization: Bearer $TOKEN" \\
+  ${baseUrl.value}/api/tasks?task_status=TODO&limit=5
 \`\`\`
 
 ---
@@ -197,7 +219,8 @@ Get a single task by ID.
 
 **Example:**
 \`\`\`bash
-curl ${baseUrl.value}/api/tasks/7
+curl -H "Authorization: Bearer $TOKEN" \\
+  ${baseUrl.value}/api/tasks/7
 \`\`\`
 
 ---
@@ -215,6 +238,7 @@ Update task status and optionally claim it. If the task is linked to a Linear is
 **Example:**
 \`\`\`bash
 curl -X PATCH ${baseUrl.value}/api/tasks/7/status \\
+  -H "Authorization: Bearer $TOKEN" \\
   -H "Content-Type: application/json" \\
   -d '{"task_status": "IN_PROGRESS", "assigned_to": "claude-code"}'
 \`\`\`
@@ -269,7 +293,7 @@ All endpoints return objects with this shape:
 - Linear sync is best-effort: if the API key is not set or the issue is not linked, status updates still succeed locally.
 - The Linear state mapping is configurable via the Config page. Default: TRIAGE → Triage, TODO → Unstarted, IN_PROGRESS → Started, DONE → Completed.
 - The \`GET /api/tasks\` endpoint returns results ordered by \`created_at DESC\`.
-- There is no authentication on these endpoints (local-first app).
+- Authentication is required. Use a Bearer token generated in Config > API Tokens.
 `)
 
 function copyMarkdown() {

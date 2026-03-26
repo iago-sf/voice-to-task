@@ -1,11 +1,11 @@
-import { useDB } from '~/server/utils/db'
+import { ensureDB } from '~/server/utils/db'
 import { getSessionEmail } from '~/server/utils/session-email'
 import type { Task } from '~/types'
 
 export default defineEventHandler(async (event) => {
   const userEmail = await getSessionEmail(event)
   const query = getQuery(event)
-  const db = useDB()
+  const db = await ensureDB()
 
   const conditions: string[] = ['user_email = ?']
   const params: any[] = [userEmail]
@@ -26,10 +26,11 @@ export default defineEventHandler(async (event) => {
     params.push(Number(query.limit))
   }
 
-  const rows = db.prepare(
-    `SELECT id, text, task_status, assigned_to, linear_issue_key, linear_issue_url, created_at, updated_at
-     FROM entries ${where} ORDER BY created_at DESC ${limit}`
-  ).all(...params) as Task[]
+  const { rows } = await db.execute({
+    sql: `SELECT id, text, task_status, assigned_to, linear_issue_key, linear_issue_url, created_at, updated_at
+     FROM entries ${where} ORDER BY created_at DESC ${limit}`,
+    args: params,
+  })
 
-  return rows
+  return rows as unknown as Task[]
 })

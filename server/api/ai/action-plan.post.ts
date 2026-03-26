@@ -1,4 +1,5 @@
-import { useDB } from '~/server/utils/db'
+import { ensureDB } from '~/server/utils/db'
+import { callGroq, callZai, parseResponse } from '~/server/utils/llm'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -15,14 +16,15 @@ export default defineEventHandler(async (event) => {
   // Load active contexts from DB
   let contextBlock = ''
   if (contextIds.length > 0) {
-    const db = useDB()
+    const db = await ensureDB()
     const placeholders = contextIds.map(() => '?').join(',')
-    const rows = db.prepare(
-      `SELECT name, content FROM contexts WHERE id IN (${placeholders})`
-    ).all(...contextIds) as { name: string; content: string }[]
+    const { rows } = await db.execute({
+      sql: `SELECT name, content FROM contexts WHERE id IN (${placeholders})`,
+      args: contextIds,
+    })
 
     if (rows.length > 0) {
-      contextBlock = rows
+      contextBlock = (rows as any[])
         .map(r => `--- Context: ${r.name} ---\n${r.content}`)
         .join('\n\n')
     }
@@ -60,71 +62,13 @@ ${contextBlock}` : ''}`
     { role: 'user', content: body.text },
   ]
 
+  let raw
   if (engine === 'zai') {
     const apiKey = await requireUserApiKey(event, 'zai_api_key')
-    return callZai(apiKey, model, messages)
+    raw = await callZai(apiKey, model, messages)
+  } else {
+    const apiKey = await requireUserApiKey(event, 'groq_api_key')
+    raw = await callGroq(apiKey, model, messages)
   }
-  const apiKey = await requireUserApiKey(event, 'groq_api_key')
-  return callGroq(apiKey, model, messages)
+  return parseResponse(raw)
 })
-
-async function callGroq(
-  apiKey: string,
-  model: string,
-  messages: { role: string; content: string }[],
-) {
-  try {
-    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: 1024 }),
-    })
-
-    if (!response.ok) {
-      const err = await response.text()
-      throw new Error(`Groq API error: ${response.status} ${err}`)
-    }
-
-    return parseResponse(await response.json())
-  } catch (error: any) {
-    throw createError({ statusCode: 500, message: error.message || 'Failed to generate action plan' })
-  }
-}
-
-async function callZai(
-  apiKey: string,
-  model: string,
-  messages: { role: string; content: string }[],
-) {
-  try {
-    const response = await fetch('https://api.z.ai/api/paas/v4/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${apiKey}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: 1024 }),
-    })
-
-    if (!response.ok) {
-      const err = await response.text()
-      throw new Error(`ZAI API error: ${response.status} ${err}`)
-    }
-
-    return parseResponse(await response.json())
-  } catch (error: any) {
-    throw createError({ statusCode: 500, message: error.message || 'Failed to generate action plan' })
-  }
-}
-
-function parseResponse(result: any) {
-  const content = result.choices?.[0]?.message?.content || ''
-  const titleMatch = content.match(/TITLE:\s*(.+)/i)
-  const planMatch = content.match(/PLAN:\s*\n([\s\S]+)/i)
-  const title = titleMatch?.[1]?.trim() || content.split('\n')[0]
-  const plan = planMatch?.[1]?.trim() || content
-  return { title, plan }
-}

@@ -1,4 +1,4 @@
-export function useGroqSpeechToText(language: Ref<string> | string = 'es-ES', engine: Ref<string> | string = 'groq') {
+export function useGroqSpeechToText(language: Ref<string> | string = 'es-ES', engine: Ref<string> | string = 'groq', deviceId: Ref<string> | string = '') {
   const transcript = ref('')
   const interimText = ref('')
   const isListening = ref(false)
@@ -20,7 +20,8 @@ export function useGroqSpeechToText(language: Ref<string> | string = 'es-ES', en
     audioChunks = []
 
     try {
-      stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const did = unref(deviceId)
+      stream = await navigator.mediaDevices.getUserMedia({ audio: did ? { deviceId: { exact: did } } : true })
       mediaRecorder = new MediaRecorder(stream, {
         mimeType: getSupportedMimeType(),
       })

@@ -22,3 +22,7 @@ body {
 .animate-pulse-ring {
   animation: pulse-ring 1.2s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
 }
+
+.input-mask {
+  -webkit-text-security: disc;
+}

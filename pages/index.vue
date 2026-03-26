@@ -118,59 +118,109 @@
     </div>
 
     <!-- Actions -->
-    <div class="flex items-center gap-3">
+    <div class="flex items-center gap-2">
       <button
-        class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition-colors"
+        class="p-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg transition-colors disabled:opacity-40"
         :disabled="!editableText && !isListening"
+        :title="t('index.clear')"
         @click="clearAll"
       >
-        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-        </svg>
-        {{ t('index.clear') }}
+        <v-icon name="md-deleteoutline-outlined" scale="1.1" />
       </button>
       <button
-        class="flex items-center gap-2 px-4 py-2 bg-amber-700 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
+        class="p-2 bg-amber-700 hover:bg-amber-600 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg transition-colors"
         :disabled="!editableText.trim() || generatingPlan"
+        :title="t('index.generatePlan')"
         @click="generatePlan"
       >
-        <svg v-if="!generatingPlan" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
-        </svg>
-        <svg v-else class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+        <v-icon v-if="!generatingPlan" name="ri-lightbulb-flash-line" scale="1.1" />
+        <svg v-else class="w-[1.1rem] h-[1.1rem] animate-spin" fill="none" viewBox="0 0 24 24">
           <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
           <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
         </svg>
-        {{ generatingPlan ? t('index.generating') : t('index.generatePlan') }}
       </button>
       <button
-        class="flex items-center gap-2 px-4 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 disabled:opacity-40 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition-colors"
-        :disabled="!editableText.trim()"
-        @click="copyToClipboard"
+        v-if="editableText.trim()"
+        class="p-2 bg-orange-100 dark:bg-orange-900 hover:bg-orange-200 dark:hover:bg-orange-800 disabled:opacity-40 disabled:cursor-not-allowed text-orange-700 dark:text-orange-300 rounded-lg transition-colors"
+        :disabled="sendingRefine"
+        :title="t('index.refine')"
+        @click="refining = !refining"
       >
-        <!-- Robot icon -->
-        <svg v-if="!copied" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.75 17L9 20l-1 1h8l-1-1-.75-3M3 13h18M5 17h14a2 2 0 002-2V5a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
-        </svg>
-        <svg v-else class="w-4 h-4 text-green-500 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7" />
-        </svg>
-        {{ copied ? t('index.copied') : t('index.copyPrompt') }}
+        <v-icon name="md-autorenew-round" scale="1.1" />
       </button>
-      <button
-        class="flex-1 flex items-center justify-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
-        :disabled="!editableText.trim() || !isConfigured || sending"
-        @click="sendToLinear"
-      >
-        <svg v-if="!sending" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
-        </svg>
-        <svg v-else class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
-          <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-          <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-        </svg>
-        {{ sending ? t('index.sending') : t('index.sendLinear') }}
-      </button>
+
+      <div class="flex-1" />
+
+      <SplitActionButton
+        :actions="sendActions"
+        :active-id="config.lastSendAction || 'linear'"
+        :disabled="!editableText.trim() || sending"
+        :loading="sending"
+        @execute="handleSendAction"
+        @update:active-id="updateLastSendAction"
+      />
+    </div>
+
+    <!-- Refine UI -->
+    <div
+      v-if="refining"
+      class="mt-4 p-4 bg-orange-50 dark:bg-orange-950 border border-orange-200 dark:border-orange-800 rounded-lg"
+    >
+      <div class="flex items-center gap-2 mb-3">
+        <button
+          v-if="!refineListening"
+          class="flex items-center gap-2 px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white rounded-lg text-sm transition-colors"
+          @click="startRefineRecording"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+          </svg>
+          {{ t('index.refineRecord') }}
+        </button>
+        <button
+          v-else
+          class="flex items-center gap-2 px-3 py-1.5 bg-red-600 hover:bg-red-700 text-white rounded-lg text-sm transition-colors"
+          @click="stopRefineRecording"
+        >
+          <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+            <rect x="6" y="6" width="12" height="12" rx="2" />
+          </svg>
+          {{ t('index.refineStop') }}
+        </button>
+        <p v-if="refineInterim" class="text-sm text-gray-500 dark:text-gray-400 italic">
+          {{ refineInterim }}
+        </p>
+      </div>
+
+      <textarea
+        v-model="refineTranscript"
+        rows="3"
+        class="w-full bg-white dark:bg-gray-900 border border-orange-300 dark:border-orange-700 rounded-lg px-3 py-2 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-600 focus:border-orange-500 focus:ring-1 focus:ring-orange-500 outline-none resize-y text-sm mb-3"
+        :placeholder="t('index.refineFeedback')"
+      />
+
+      <div class="flex items-center gap-2">
+        <button
+          class="flex items-center gap-2 px-4 py-2 bg-orange-600 hover:bg-orange-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-lg text-sm font-medium transition-colors"
+          :disabled="!refineTranscript.trim() || sendingRefine"
+          @click="submitRefine"
+        >
+          <svg v-if="!sendingRefine" class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+          </svg>
+          <svg v-else class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          {{ sendingRefine ? t('index.refining') : t('index.refineSend') }}
+        </button>
+        <button
+          class="px-4 py-2 text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200 text-sm transition-colors"
+          @click="refining = false; refineTranscript = ''"
+        >
+          {{ t('index.refineCancel') }}
+        </button>
+      </div>
     </div>
 
     <!-- Success mini-summary -->
@@ -199,8 +249,9 @@ const { t } = useI18n()
 
 const lang = computed(() => config.value.language || 'es-ES')
 const sttEngine = computed(() => config.value.sttEngine || 'browser')
+const audioDeviceId = computed(() => config.value.audioDeviceId || '')
 const browserSTT = useSpeechToText(lang)
-const apiSTT = useGroqSpeechToText(lang, sttEngine)
+const apiSTT = useGroqSpeechToText(lang, sttEngine, audioDeviceId)
 
 const stt = computed(() => config.value.sttEngine === 'browser' ? browserSTT : apiSTT)
 const transcript = computed(() => stt.value.transcript.value)
@@ -213,13 +264,20 @@ function start() { stt.value.start() }
 function stop() { stt.value.stop() }
 function reset() { stt.value.reset() }
 
+// Refine STT instance
+const refineSTT = useGroqSpeechToText(lang, sttEngine, audioDeviceId)
+const refineListening = computed(() => refineSTT.isListening.value)
+const refineInterim = computed(() => refineSTT.interimText.value)
+
 const editableText = ref('')
 const sending = ref(false)
 const generatingPlan = ref(false)
 const lastCreated = ref<{ identifier: string; url: string } | null>(null)
 const textareaRef = ref<HTMLTextAreaElement | null>(null)
 const autoStep = ref('')
-const copied = ref(false)
+const refining = ref(false)
+const refineTranscript = ref('')
+const sendingRefine = ref(false)
 
 // Sync transcript into editable text
 watch(transcript, (val) => {
@@ -229,8 +287,15 @@ watch(transcript, (val) => {
 onMounted(() => {
   loadConfig()
 
+  const recoverEntry = useState<import('~/types').Entry | null>('recover-entry', () => null)
+  if (recoverEntry.value) {
+    editableText.value = recoverEntry.value.text
+    recoverEntry.value = null
+  }
+
   document.addEventListener('keydown', (e: KeyboardEvent) => {
-    if (e.code === 'Space' && document.activeElement !== textareaRef.value) {
+    const tag = (document.activeElement as HTMLElement)?.tagName
+    if (e.code === 'Space' && tag !== 'TEXTAREA' && tag !== 'INPUT') {
       e.preventDefault()
       toggleRecording()
     }
@@ -263,7 +328,7 @@ async function runAutoFlow() {
     await generatePlan()
 
     autoStep.value = t('index.sendingLinear')
-    await sendToLinear()
+    await handleSendAction(config.value.lastSendAction || 'linear')
   } catch {
     // Errors handled inside each function via toasts
   } finally {
@@ -290,10 +355,46 @@ function waitForTranscript(): Promise<void> {
 async function copyToClipboard() {
   try {
     await navigator.clipboard.writeText(editableText.value)
-    copied.value = true
-    setTimeout(() => { copied.value = false }, 2000)
+    toastSuccess(t('index.copied'))
   } catch {
     toastError('Clipboard error')
+  }
+}
+
+const sendActions = computed(() => [
+  { id: 'linear', icon: 'ai-hal', label: t('index.sendLinear') },
+  { id: 'copy', icon: 'bi-robot', label: t('index.copyPrompt') },
+  { id: 'save', icon: 'md-save-outlined', label: t('index.saveLocal') },
+])
+
+function updateLastSendAction(id: string) {
+  config.value.lastSendAction = id as 'linear' | 'copy' | 'save'
+  saveConfig()
+}
+
+async function handleSendAction(id: string) {
+  if (id === 'linear') await sendToLinear()
+  else if (id === 'copy') await copyToClipboard()
+  else if (id === 'save') await saveLocally()
+}
+
+async function saveLocally() {
+  const text = editableText.value.trim()
+  if (!text) return
+
+  sending.value = true
+  try {
+    await $fetch('/api/entries', {
+      method: 'POST',
+      body: { text },
+    })
+    toastSuccess(t('index.saved'))
+    reset()
+    editableText.value = ''
+  } catch (err: any) {
+    toastError(`${t('index.errorSave')}: ${err.data?.message || err.message || 'Unknown'}`)
+  } finally {
+    sending.value = false
   }
 }
 
@@ -328,6 +429,77 @@ async function generatePlan() {
     toastError(`${t('index.errorPlan')}: ${err.data?.message || err.message || 'Unknown'}`)
   } finally {
     generatingPlan.value = false
+  }
+}
+
+// Refine recording
+function startRefineRecording() {
+  refineSTT.reset()
+  refineSTT.start()
+}
+
+function stopRefineRecording() {
+  refineSTT.stop()
+  // Watch for the transcript to arrive
+  const unwatch = watch(() => refineSTT.transcript.value, (val) => {
+    if (val) {
+      refineTranscript.value = val
+      unwatch()
+    }
+  }, { immediate: true })
+}
+
+async function submitRefine() {
+  const feedback = refineTranscript.value.trim()
+  if (!feedback) return
+
+  sendingRefine.value = true
+  try {
+    const result = await $fetch<{ title: string; plan: string; contextRule: string }>('/api/ai/refine-plan', {
+      method: 'POST',
+      body: {
+        currentPlan: editableText.value,
+        feedback,
+        language: config.value.language?.split('-')[0] || 'es',
+        engine: config.value.sttEngine === 'zai' ? 'zai' : 'groq',
+        model: config.value.sttEngine === 'zai'
+          ? (config.value.zaiModel || 'glm-4-plus')
+          : (config.value.groqModel || 'openai/gpt-oss-120b'),
+        contextIds: config.value.activeContextIds || [],
+      },
+    })
+
+    editableText.value = result.title + '\n\n' + result.plan
+
+    // Auto-save context rule if present
+    if (result.contextRule) {
+      try {
+        const firstWords = feedback.split(/\s+/).slice(0, 5).join(' ')
+        const ctx = await $fetch<{ id: number }>('/api/contexts', {
+          method: 'POST',
+          body: {
+            name: `Auto: ${firstWords}`,
+            content: result.contextRule,
+          },
+        })
+
+        if (!config.value.activeContextIds) {
+          config.value.activeContextIds = []
+        }
+        config.value.activeContextIds.push(ctx.id)
+        saveConfig()
+      } catch {
+        // Context save failed silently — plan was still refined
+      }
+    }
+
+    toastSuccess(t('index.refined'))
+    refining.value = false
+    refineTranscript.value = ''
+  } catch (err: any) {
+    toastError(`${t('index.errorPlan')}: ${err.data?.message || err.message || 'Unknown'}`)
+  } finally {
+    sendingRefine.value = false
   }
 }
 

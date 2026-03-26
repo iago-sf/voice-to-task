@@ -1,4 +1,4 @@
-import { useDB } from '~/server/utils/db'
+import { ensureDB } from '~/server/utils/db'
 import { getSessionEmail } from '~/server/utils/session-email'
 
 export default defineEventHandler(async (event) => {
@@ -7,7 +7,7 @@ export default defineEventHandler(async (event) => {
   const limit = Number(query.limit) || 50
   const status = query.status as string | undefined
 
-  const db = useDB()
+  const db = await ensureDB()
 
   const conditions: string[] = ['user_email = ?']
   const params: any[] = [userEmail]
@@ -20,5 +20,6 @@ export default defineEventHandler(async (event) => {
   const sql = `SELECT * FROM entries WHERE ${conditions.join(' AND ')} ORDER BY created_at DESC LIMIT ?`
   params.push(limit)
 
-  return db.prepare(sql).all(...params)
+  const { rows } = await db.execute({ sql, args: params })
+  return rows
 })

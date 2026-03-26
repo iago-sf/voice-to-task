@@ -10,12 +10,12 @@
     "postinstall": "nuxt prepare"
   },
   "dependencies": {
+    "@libsql/client": "^0.17.2",
     "@linear/sdk": "^80.0.0",
-    "@types/better-sqlite3": "^7.6.13",
     "@vueuse/core": "^14.2.1",
-    "better-sqlite3": "^12.8.0",
     "nuxt": "^3.16.0",
     "nuxt-auth-utils": "^0.5.29",
+    "oh-vue-icons": "^1.0.0-rc3",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   }

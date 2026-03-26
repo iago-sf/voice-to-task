@@ -1,16 +1,22 @@
-import { useDB } from '~/server/utils/db'
+import { ensureDB } from '~/server/utils/db'
 import { getSessionEmail } from '~/server/utils/session-email'
 
 export default defineEventHandler(async (event) => {
   const userEmail = await getSessionEmail(event)
-  const id = getRouterParam(event, 'id')
-  const db = useDB()
+  const id = getRouterParam(event, 'id')!
+  const db = await ensureDB()
 
-  const existing = db.prepare('SELECT * FROM contexts WHERE id = ? AND user_email = ?').get(id, userEmail)
+  const { rows: [existing] } = await db.execute({
+    sql: 'SELECT * FROM contexts WHERE id = ? AND user_email = ?',
+    args: [id, userEmail],
+  })
   if (!existing) {
     throw createError({ statusCode: 404, message: 'Context not found' })
   }
 
-  db.prepare('DELETE FROM contexts WHERE id = ? AND user_email = ?').run(id, userEmail)
+  await db.execute({
+    sql: 'DELETE FROM contexts WHERE id = ? AND user_email = ?',
+    args: [id, userEmail],
+  })
   return { success: true }
 })

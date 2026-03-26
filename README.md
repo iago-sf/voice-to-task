@@ -1,8 +1,8 @@
 # Voice to Task
 
-Local app that captures voice via the browser microphone, transcribes it to text, and creates tasks in [Linear](https://linear.app). Optionally generates an AI-powered action plan before sending. All transcriptions are saved locally in SQLite with direct links to the created Linear issues.
+App that captures voice via the browser microphone, transcribes it to text, and creates tasks in [Linear](https://linear.app). Optionally generates an AI-powered action plan before sending. All data is stored in a SQLite-compatible database (local file or [Turso](https://turso.tech) for cloud/serverless deployment) with direct links to the created Linear issues.
 
-Built with **Nuxt 3**, **Vue 3**, **better-sqlite3**, **Linear SDK**, **Groq API**, **Z.ai API**, and **nuxt-auth-utils**.
+Built with **Nuxt 3**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SDK**, **Groq API**, **Z.ai API**, and **nuxt-auth-utils**.
 
 ## Features
 
@@ -15,7 +15,7 @@ Built with **Nuxt 3**, **Vue 3**, **better-sqlite3**, **Linear SDK**, **Groq API
 - **Task status tracking** — entries have a task status (Triage / TODO / In Progress / Done) with colored badges and filters in history
 - **Configurable Linear state mapping** — map each task status to a Linear workflow state type (triage, backlog, unstarted, started, completed, canceled) from the config UI
 - **Agent Task API** — REST endpoints for AI agents to discover, claim, and update tasks with automatic Linear sync
-- **Local history** in SQLite with status tracking, Linear issue links, and retry for failed sends
+- **History** in SQLite/Turso with status tracking, Linear issue links, and retry for failed sends
 - **Theme support** — system, light, and dark mode
 - **i18n** — English and Spanish UI
 - **Tabbed config** — settings organized into Linear, AI Models, API Keys, and User preferences tabs
@@ -55,10 +55,15 @@ Edit `.env`:
 NUXT_SESSION_PASSWORD=at-least-32-characters-long-random-string
 NUXT_OAUTH_GOOGLE_CLIENT_ID=your_google_client_id
 NUXT_OAUTH_GOOGLE_CLIENT_SECRET=your_google_client_secret
+
+# Database (optional — defaults to local SQLite file)
+# TURSO_DATABASE_URL=libsql://your-db-name-your-org.turso.io
+# TURSO_AUTH_TOKEN=your-turso-auth-token
 ```
 
 - **Session password** — a random string of at least 32 characters used to encrypt session cookies
 - **Google OAuth** — create credentials at [Google Cloud Console](https://console.cloud.google.com/apis/credentials). Set the authorized redirect URI to `http://localhost:3000/auth/google` for local development.
+- **Turso** (optional) — for cloud/serverless deployment. Without these variables, the app uses a local SQLite file at `data/voice-linear.db`.
 
 API keys for Linear, Groq, and Z.ai are no longer set as environment variables — each user configures their own keys from the **Config > API Keys** tab after logging in.
 
@@ -190,7 +195,7 @@ Each authenticated user sees only their own data:
 │   ├── api/ai/             # LLM action plan generation (Groq / ZAI)
 │   ├── api/transcribe.post.ts  # Audio transcription (Groq Whisper / ZAI GLM-ASR)
 │   └── utils/
-│       ├── db.ts           # SQLite connection, migrations, user_settings table
+│       ├── db.ts           # libSQL/Turso connection, schema init, migrations
 │       ├── session-email.ts # Helper to extract user email from session
 │       ├── user-keys.ts    # Encrypted API key storage/retrieval
 │       └── linear-sync.ts  # Sync task status to Linear workflow states
@@ -209,7 +214,7 @@ Each authenticated user sees only their own data:
 
 - **Nuxt 3** — Full-stack Vue framework
 - **nuxt-auth-utils** — Google OAuth authentication + session management
-- **better-sqlite3** — Local SQLite database (`data/voice-linear.db`)
+- **@libsql/client** — SQLite-compatible database via [Turso](https://turso.tech)/libSQL (local file or remote)
 - **@linear/sdk** — Linear GraphQL API client
 - **Groq API** — Whisper transcription + LLM plan generation
 - **Z.ai API** — GLM-ASR transcription + GLM chat models

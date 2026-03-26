@@ -54,6 +54,7 @@
         :entry="entry"
         @delete="handleDelete"
         @retry="handleRetry"
+        @edit="handleEdit"
       />
     </div>
   </div>
@@ -117,6 +118,11 @@ async function handleDelete(entry: Entry) {
   } catch {
     toastError(t('history.errorDelete'))
   }
+}
+
+function handleEdit(entry: Entry) {
+  useState<Entry | null>('recover-entry', () => null).value = entry
+  navigateTo('/')
 }
 
 async function handleRetry(entry: Entry) {

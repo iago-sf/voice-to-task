@@ -1,17 +1,25 @@
-import Database from 'better-sqlite3'
-import { resolve } from 'path'
+import { createClient, type Client } from '@libsql/client'
 
-let db: Database.Database | null = null
+let client: Client | null = null
+let initialized = false
 
-export function useDB(): Database.Database {
-  if (db) return db
+export function useDB(): Client {
+  if (client) return client
+  const config = useRuntimeConfig()
+  client = createClient({
+    url: config.turso.url,
+    authToken: config.turso.authToken || undefined,
+  })
+  return client
+}
 
-  const dbPath = resolve(process.cwd(), 'data', 'voice-linear.db')
-  db = new Database(dbPath)
-  db.pragma('journal_mode = WAL')
+export async function ensureDB(): Promise<Client> {
+  const db = useDB()
+  if (initialized) return db
+  initialized = true
 
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS entries (
+  await db.batch([
+    `CREATE TABLE IF NOT EXISTS entries (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       text TEXT NOT NULL,
       linear_issue_id TEXT,
@@ -20,65 +28,50 @@ export function useDB(): Database.Database {
       status TEXT NOT NULL DEFAULT 'draft',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `)
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS contexts (
+    )`,
+    `CREATE TABLE IF NOT EXISTS contexts (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       name TEXT NOT NULL,
       content TEXT NOT NULL DEFAULT '',
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP
-    )
-  `)
-
-  // Idempotent migration: add task_status and assigned_to columns to entries
-  const columns = db.pragma('table_info(entries)') as { name: string }[]
-  const columnNames = columns.map(c => c.name)
-
-  if (!columnNames.includes('task_status')) {
-    db.exec(`ALTER TABLE entries ADD COLUMN task_status TEXT NOT NULL DEFAULT 'TRIAGE'`)
-  }
-  if (!columnNames.includes('assigned_to')) {
-    db.exec(`ALTER TABLE entries ADD COLUMN assigned_to TEXT`)
-  }
-  if (!columnNames.includes('user_email')) {
-    db.exec(`ALTER TABLE entries ADD COLUMN user_email TEXT DEFAULT ''`)
-  }
-
-  // Idempotent migration: add user_email column to contexts
-  const contextColumns = db.pragma('table_info(contexts)') as { name: string }[]
-  const contextColumnNames = contextColumns.map(c => c.name)
-  if (!contextColumnNames.includes('user_email')) {
-    db.exec(`ALTER TABLE contexts ADD COLUMN user_email TEXT DEFAULT ''`)
-  }
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS settings (
+    )`,
+    `CREATE TABLE IF NOT EXISTS settings (
       key TEXT PRIMARY KEY,
       value TEXT
-    )
-  `)
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS user_settings (
+    )`,
+    `CREATE TABLE IF NOT EXISTS user_settings (
       user_email TEXT NOT NULL,
       key TEXT NOT NULL,
       value TEXT,
       PRIMARY KEY (user_email, key)
-    )
-  `)
-
-  db.exec(`
-    CREATE TABLE IF NOT EXISTS user_api_keys (
+    )`,
+    `CREATE TABLE IF NOT EXISTS user_api_keys (
       user_email TEXT NOT NULL,
       key_name TEXT NOT NULL,
       encrypted_value TEXT NOT NULL,
       updated_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       PRIMARY KEY (user_email, key_name)
-    )
-  `)
+    )`,
+    `CREATE TABLE IF NOT EXISTS api_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      user_email TEXT NOT NULL,
+      name TEXT NOT NULL DEFAULT '',
+      token_hash TEXT NOT NULL UNIQUE,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      last_used_at DATETIME
+    )`,
+  ])
+
+  // Idempotent column migrations via try/catch
+  for (const stmt of [
+    "ALTER TABLE entries ADD COLUMN task_status TEXT NOT NULL DEFAULT 'TRIAGE'",
+    "ALTER TABLE entries ADD COLUMN assigned_to TEXT",
+    "ALTER TABLE entries ADD COLUMN user_email TEXT DEFAULT ''",
+    "ALTER TABLE contexts ADD COLUMN user_email TEXT DEFAULT ''",
+  ]) {
+    try { await db.execute(stmt) } catch { /* column already exists */ }
+  }
 
   return db
 }
