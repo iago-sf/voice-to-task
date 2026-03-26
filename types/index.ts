@@ -33,15 +33,19 @@ export interface AppConfig {
   assigneeName: string
   language: string
   sttEngine: 'browser' | 'groq' | 'zai'
+  llmEngine: 'groq' | 'zai' | 'minimax'
   groqModel: string
   zaiModel: string
+  minimaxModel: string
   autoMode: boolean
   activeContextIds: number[]
+  favoriteContextIds: number[]
   uiLanguage: 'en' | 'es'
   theme: 'system' | 'light' | 'dark'
   audioDeviceId: string
   linearStateMap: Record<TaskStatus, LinearStateType>
   lastSendAction?: 'linear' | 'copy' | 'save'
+  customPrompt: string
 }
 
 export interface Context {

@@ -164,12 +164,12 @@
     <!-- ═══════ AI MODELS TAB ═══════ -->
     <div v-if="activeTab === 'ai'">
       <div class="space-y-4">
-        <!-- Engine selector -->
+        <!-- ── Transcription engine ── -->
         <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-          <label class="block text-xs text-gray-500 mb-2">{{ t('config.engine') }}</label>
+          <label class="block text-xs text-gray-500 mb-2">{{ t('config.sttEngine') }}</label>
           <div class="flex gap-3">
             <button
-              v-for="engine in engines"
+              v-for="engine in sttEngines"
               :key="engine.value"
               class="flex-1 px-3 py-3 rounded-lg border text-sm text-left transition-colors"
               :class="config.sttEngine === engine.value
@@ -183,7 +183,7 @@
           </div>
         </div>
 
-        <!-- API key needed info -->
+        <!-- API key needed for STT -->
         <div
           v-if="config.sttEngine === 'groq' && !keyStatus.groq_api_key"
           class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-sm text-amber-700 dark:text-amber-400"
@@ -199,8 +199,51 @@
           <button class="underline ml-1" @click="activeTab = 'keys'">API Keys</button>
         </div>
 
+        <!-- ── Text generation engine ── -->
+        <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+          <label class="block text-xs text-gray-500 mb-2">{{ t('config.llmEngine') }}</label>
+          <p class="text-xs text-gray-400 dark:text-gray-600 mb-3">{{ t('config.llmEngineDesc') }}</p>
+          <div class="flex gap-3">
+            <button
+              v-for="engine in llmEngines"
+              :key="engine.value"
+              class="flex-1 px-3 py-3 rounded-lg border text-sm text-left transition-colors"
+              :class="config.llmEngine === engine.value
+                ? 'bg-indigo-50 dark:bg-indigo-950 border-indigo-400 dark:border-indigo-700 text-indigo-700 dark:text-indigo-200'
+                : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-600'"
+              @click="config.llmEngine = engine.value; saveConfig()"
+            >
+              <div class="font-medium mb-0.5">{{ engine.label }}</div>
+              <div class="text-xs opacity-70">{{ engine.description }}</div>
+            </button>
+          </div>
+        </div>
+
+        <!-- API key needed for LLM -->
+        <div
+          v-if="config.llmEngine === 'groq' && !keyStatus.groq_api_key"
+          class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-sm text-amber-700 dark:text-amber-400"
+        >
+          {{ t('config.needKey') }}
+          <button class="underline ml-1" @click="activeTab = 'keys'">API Keys</button>
+        </div>
+        <div
+          v-if="config.llmEngine === 'zai' && !keyStatus.zai_api_key"
+          class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-sm text-amber-700 dark:text-amber-400"
+        >
+          {{ t('config.needKey') }}
+          <button class="underline ml-1" @click="activeTab = 'keys'">API Keys</button>
+        </div>
+        <div
+          v-if="config.llmEngine === 'minimax' && !keyStatus.minimax_api_key"
+          class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-sm text-amber-700 dark:text-amber-400"
+        >
+          {{ t('config.needKey') }}
+          <button class="underline ml-1" @click="activeTab = 'keys'">API Keys</button>
+        </div>
+
         <!-- Groq LLM model -->
-        <div v-if="config.sttEngine === 'groq'" class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+        <div v-if="config.llmEngine === 'groq'" class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
           <label class="block text-xs text-gray-500 mb-2">{{ t('config.llmModel') }}</label>
           <input
             v-model="config.groqModel"
@@ -216,7 +259,7 @@
         </div>
 
         <!-- ZAI LLM model -->
-        <div v-if="config.sttEngine === 'zai'" class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+        <div v-if="config.llmEngine === 'zai'" class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
           <label class="block text-xs text-gray-500 mb-2">{{ t('config.zaiLlmModel') }}</label>
           <input
             v-model="config.zaiModel"
@@ -227,6 +270,22 @@
           />
           <p class="mt-2 text-xs text-gray-400 dark:text-gray-600">
             {{ t('config.zaiModelHint') }}
+          </p>
+        </div>
+
+        <!-- MiniMax LLM model -->
+        <div v-if="config.llmEngine === 'minimax'" class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+          <label class="block text-xs text-gray-500 mb-2">{{ t('config.minimaxLlmModel') }}</label>
+          <input
+            v-model="config.minimaxModel"
+            type="text"
+            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 placeholder-gray-400 dark:placeholder-gray-600"
+            :placeholder="t('config.minimaxModelPlaceholder')"
+            @change="saveConfig"
+          />
+          <p class="mt-2 text-xs text-gray-400 dark:text-gray-600">
+            {{ t('config.minimaxModelHint') }}
+            <a href="https://platform.minimax.io/docs/api-reference/text-post" target="_blank" rel="noopener" class="text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 underline">platform.minimax.io</a>.
           </p>
         </div>
 
@@ -242,6 +301,28 @@
               {{ lang.label }}
             </option>
           </select>
+        </div>
+
+        <!-- Custom prompt -->
+        <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+          <div class="flex items-center justify-between mb-2">
+            <label class="block text-xs text-gray-500">{{ t('config.customPrompt') }}</label>
+            <button
+              v-if="config.customPrompt"
+              class="text-xs text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+              @click="config.customPrompt = ''; saveConfig(); toastSuccess(t('config.customPromptSaved'))"
+            >
+              {{ t('config.customPromptReset') }}
+            </button>
+          </div>
+          <p class="text-xs text-gray-400 dark:text-gray-600 mb-2">{{ t('config.customPromptDesc') }}</p>
+          <textarea
+            v-model="config.customPrompt"
+            rows="10"
+            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 resize-y font-mono leading-relaxed placeholder-gray-400 dark:placeholder-gray-600"
+            :placeholder="defaultPromptPlaceholder"
+            @blur="saveConfig(); if (config.customPrompt) toastSuccess(t('config.customPromptSaved'))"
+          />
         </div>
       </div>
     </div>
@@ -436,11 +517,13 @@ const keyStatus = ref<Record<string, boolean>>({
   linear_api_key: false,
   groq_api_key: false,
   zai_api_key: false,
+  minimax_api_key: false,
 })
 const keyInputs = ref<Record<string, string>>({
   linear_api_key: '',
   groq_api_key: '',
   zai_api_key: '',
+  minimax_api_key: '',
 })
 const savingKey = ref<string | null>(null)
 
@@ -448,6 +531,7 @@ const apiKeyDefs = computed(() => [
   { name: 'linear_api_key', label: t('config.linearApiKey'), hint: t('config.keyHintLinear'), url: 'https://linear.app/settings/api', urlLabel: 'linear.app/settings/api' },
   { name: 'groq_api_key', label: t('config.groqApiKey'), hint: t('config.keyHintGroq'), url: 'https://console.groq.com/keys', urlLabel: 'console.groq.com/keys' },
   { name: 'zai_api_key', label: t('config.zaiApiKey'), hint: t('config.keyHintZai'), url: 'https://z.ai', urlLabel: 'z.ai' },
+  { name: 'minimax_api_key', label: t('config.minimaxApiKey'), hint: t('config.keyHintMinimax'), url: 'https://platform.minimax.io', urlLabel: 'platform.minimax.io' },
 ])
 
 async function loadKeyStatus() {
@@ -572,16 +656,39 @@ async function onStateMapChange(status: TaskStatus, stateType: LinearStateType) 
   }
 }
 
-const engines = computed(() => [
+const sttEngines = computed(() => [
   { value: 'browser' as const, label: t('config.engineBrowser'), description: t('config.engineBrowserDesc') },
   { value: 'groq' as const, label: t('config.engineGroq'), description: t('config.engineGroqDesc') },
   { value: 'zai' as const, label: t('config.engineZai'), description: t('config.engineZaiDesc') },
+])
+
+const llmEngines = computed(() => [
+  { value: 'groq' as const, label: t('config.llmGroq'), description: t('config.llmGroqDesc') },
+  { value: 'zai' as const, label: t('config.llmZai'), description: t('config.llmZaiDesc') },
+  { value: 'minimax' as const, label: t('config.llmMinimax'), description: t('config.llmMinimaxDesc') },
 ])
 
 const uiLanguages = [
   { value: 'en' as const, label: 'English' },
   { value: 'es' as const, label: 'Espanol' },
 ]
+
+const defaultPromptPlaceholder = `You are a task planning assistant. Given a raw task description (often from voice transcription), you must return:
+
+1. A concise summary title for the task (max 100 chars, imperative form)
+2. A structured action plan with concrete steps to execute the task
+
+Reply in the same language as the input. Use this exact format:
+
+TITLE: <concise task title>
+
+PLAN:
+- [ ] Step 1
+- [ ] Step 2
+- [ ] Step 3
+...
+
+Keep it practical, specific, and actionable. No fluff. Between 3 and 8 steps.`
 
 const languages = [
   { code: 'es-ES', label: 'Espanol (Espana)' },

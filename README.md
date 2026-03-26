@@ -2,14 +2,15 @@
 
 App that captures voice via the browser microphone, transcribes it to text, and creates tasks in [Linear](https://linear.app). Optionally generates an AI-powered action plan before sending. All data is stored in a SQLite-compatible database (local file or [Turso](https://turso.tech) for cloud/serverless deployment) with direct links to the created Linear issues.
 
-Built with **Nuxt 3**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SDK**, **Groq API**, **Z.ai API**, and **nuxt-auth-utils**.
+Built with **Nuxt 3**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SDK**, **Groq API**, **Z.ai API**, **MiniMax API**, and **nuxt-auth-utils**.
 
 ## Features
 
 - **Google OAuth authentication** — login with your Google account; all data is isolated per user
-- **Per-user API key management** — each user configures their own Linear, Groq, and Z.ai keys from the Config page (encrypted at rest)
+- **Per-user API key management** — each user configures their own Linear, Groq, Z.ai, and MiniMax keys from the Config page (encrypted at rest)
 - **Voice-to-text** via Web Speech API (Chrome/Edge), Groq Whisper, or Z.ai GLM-ASR (any browser)
-- **AI action plan generation** — turns raw voice notes into structured task plans with a summary title (powered by Groq LLM or Z.ai GLM, model configurable)
+- **AI action plan generation** — turns raw voice notes into structured task plans with a summary title (powered by Groq, Z.ai GLM, or MiniMax, model configurable)
+- **Independent STT and LLM engine selection** — choose one engine for audio transcription and a different one for text generation (e.g., browser STT + Groq LLM, or Groq Whisper + MiniMax)
 - **Auto mode** — record, generate plan, and send to Linear in one step
 - **Contexts** — create multiple markdown documents (project info, conventions, stack details) that get injected into the LLM prompt for more relevant plans
 - **Task status tracking** — entries have a task status (Triage / TODO / In Progress / Done) with colored badges and filters in history
@@ -25,7 +26,7 @@ Built with **Nuxt 3**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SD
 - **Node.js** >= 18
 - A **Google OAuth** client ID and secret (for authentication)
 - A **Linear API key** (per user, configured in-app)
-- A **Groq API key** and/or a **Z.ai API key** (per user, configured in-app)
+- A **Groq API key**, **Z.ai API key**, and/or **MiniMax API key** (per user, configured in-app)
 
 ## Setup
 
@@ -65,7 +66,7 @@ NUXT_OAUTH_GOOGLE_CLIENT_SECRET=your_google_client_secret
 - **Google OAuth** — create credentials at [Google Cloud Console](https://console.cloud.google.com/apis/credentials). Set the authorized redirect URI to `http://localhost:3000/auth/google` for local development.
 - **Turso** (optional) — for cloud/serverless deployment. Without these variables, the app uses a local SQLite file at `data/voice-linear.db`.
 
-API keys for Linear, Groq, and Z.ai are no longer set as environment variables — each user configures their own keys from the **Config > API Keys** tab after logging in.
+API keys for Linear, Groq, Z.ai, and MiniMax are no longer set as environment variables — each user configures their own keys from the **Config > API Keys** tab after logging in.
 
 ### 4. Start the development server
 
@@ -83,6 +84,7 @@ After logging in with Google, go to the **Config** page (gear icon). Settings ar
 1. Enter your **Linear API key** — [Linear Settings > API](https://linear.app/settings/api)
 2. Enter your **Groq API key** (optional) — [console.groq.com/keys](https://console.groq.com/keys)
 3. Enter your **Z.ai API key** (optional) — [z.ai](https://z.ai)
+4. Enter your **MiniMax API key** (optional) — [platform.minimax.io](https://platform.minimax.io)
 
 **Linear tab:**
 1. Select your Linear **team**
@@ -91,13 +93,14 @@ After logging in with Google, go to the **Config** page (gear icon). Settings ar
 4. Configure **Linear state mapping** — choose which Linear workflow state each task status maps to (defaults: Triage → triage, TODO → unstarted, In Progress → started, Done → completed)
 
 **AI Models tab:**
-1. Choose the **speech recognition engine**:
+1. Choose the **transcription engine** (STT):
    - **Web Speech API** — only Chrome/Edge, free, real-time transcription
    - **Groq Whisper** — any browser, requires Groq API key
-   - **Z.ai GLM** — any browser, requires Z.ai API key, uses GLM-ASR-2512 for STT and GLM models for plan generation
-2. Set the **LLM model** for plan generation:
-   - Groq: defaults to `openai/gpt-oss-120b` (see [available models](https://console.groq.com/docs/models))
-   - Z.ai: defaults to `glm-4-plus`
+   - **Z.ai GLM** — any browser, requires Z.ai API key, uses GLM-ASR-2512
+2. Choose the **text generation engine** (LLM) — independent from STT:
+   - **Groq** — inference models via API, defaults to `openai/gpt-oss-120b` (see [available models](https://console.groq.com/docs/models))
+   - **Z.ai** — GLM models, defaults to `glm-4-plus`
+   - **MiniMax** — reasoning models, defaults to `MiniMax-M2.7` (see [available models](https://platform.minimax.io/docs/api-reference/text-post))
 3. Choose the **speech recognition language** (Spanish, English, Portuguese, Catalan, Galician, Basque)
 
 **User preferences tab:**
@@ -192,7 +195,7 @@ Each authenticated user sees only their own data:
 │   ├── api/settings/       # Per-user settings (GET, PATCH)
 │   ├── api/user-keys/      # Per-user encrypted API key management
 │   ├── api/linear/         # Linear SDK endpoints (create-issue, teams, me)
-│   ├── api/ai/             # LLM action plan generation (Groq / ZAI)
+│   ├── api/ai/             # LLM action plan generation (Groq / ZAI / MiniMax)
 │   ├── api/transcribe.post.ts  # Audio transcription (Groq Whisper / ZAI GLM-ASR)
 │   └── utils/
 │       ├── db.ts           # libSQL/Turso connection, schema init, migrations
@@ -218,6 +221,7 @@ Each authenticated user sees only their own data:
 - **@linear/sdk** — Linear GraphQL API client
 - **Groq API** — Whisper transcription + LLM plan generation
 - **Z.ai API** — GLM-ASR transcription + GLM chat models
+- **MiniMax API** — MiniMax reasoning models for plan generation
 - **Web Speech API** — Browser-native speech recognition (Chromium)
 - **Tailwind CSS** — Utility-first styling (with dark mode support)
 

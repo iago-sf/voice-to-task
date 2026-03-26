@@ -50,6 +50,32 @@ export async function callZai(
   }
 }
 
+export async function callMinimax(
+  apiKey: string,
+  model: string,
+  messages: { role: string; content: string }[],
+) {
+  try {
+    const response = await fetch('https://api.minimax.io/v1/chat/completions', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${apiKey}`,
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ model, messages, temperature: 0.3, max_tokens: 1024 }),
+    })
+
+    if (!response.ok) {
+      const err = await response.text()
+      throw new Error(`MiniMax API error: ${response.status} ${err}`)
+    }
+
+    return await response.json()
+  } catch (error: any) {
+    throw createError({ statusCode: 500, message: error.message || 'Failed to call MiniMax' })
+  }
+}
+
 export function parseResponse(result: any) {
   const content = result.choices?.[0]?.message?.content || ''
   const titleMatch = content.match(/TITLE:\s*(.+)/i)

@@ -117,6 +117,24 @@
       </span>
     </div>
 
+    <!-- Favorite contexts quick toggle -->
+    <div v-if="favoriteContexts.length > 0" class="mb-3">
+      <p class="text-xs text-gray-400 dark:text-gray-600 mb-1.5">{{ t('index.favoriteContexts') }}</p>
+      <div class="flex flex-wrap gap-1.5">
+        <button
+          v-for="fav in favoriteContexts"
+          :key="fav.id"
+          class="px-2.5 py-1 text-xs rounded-full border transition-colors"
+          :class="isContextActive(fav.id)
+            ? 'bg-indigo-50 dark:bg-indigo-950 border-indigo-400 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300'
+            : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-600'"
+          @click="toggleContextActive(fav.id)"
+        >
+          {{ fav.name }}
+        </button>
+      </div>
+    </div>
+
     <!-- Actions -->
     <div class="flex items-center gap-2">
       <button
@@ -269,6 +287,32 @@ const refineSTT = useGroqSpeechToText(lang, sttEngine, audioDeviceId)
 const refineListening = computed(() => refineSTT.isListening.value)
 const refineInterim = computed(() => refineSTT.interimText.value)
 
+// Favorite contexts
+const allContexts = ref<{ id: number; name: string }[]>([])
+
+const favoriteContexts = computed(() => {
+  const favIds = config.value.favoriteContextIds || []
+  if (!favIds.length) return []
+  return allContexts.value.filter(c => favIds.includes(c.id))
+})
+
+function isContextActive(id: number): boolean {
+  return (config.value.activeContextIds || []).includes(id)
+}
+
+function toggleContextActive(id: number) {
+  if (!config.value.activeContextIds) {
+    config.value.activeContextIds = []
+  }
+  const idx = config.value.activeContextIds.indexOf(id)
+  if (idx === -1) {
+    config.value.activeContextIds.push(id)
+  } else {
+    config.value.activeContextIds.splice(idx, 1)
+  }
+  saveConfig()
+}
+
 const editableText = ref('')
 const sending = ref(false)
 const generatingPlan = ref(false)
@@ -284,8 +328,15 @@ watch(transcript, (val) => {
   editableText.value = val
 })
 
-onMounted(() => {
+onMounted(async () => {
   loadConfig()
+
+  // Fetch contexts for favorite chips
+  try {
+    allContexts.value = await $fetch<{ id: number; name: string }[]>('/api/contexts')
+  } catch {
+    // Silent — favorites just won't show
+  }
 
   const recoverEntry = useState<import('~/types').Entry | null>('recover-entry', () => null)
   if (recoverEntry.value) {
@@ -415,11 +466,14 @@ async function generatePlan() {
       body: {
         text,
         language: config.value.language?.split('-')[0] || 'es',
-        engine: config.value.sttEngine === 'zai' ? 'zai' : 'groq',
-        model: config.value.sttEngine === 'zai'
+        engine: config.value.llmEngine || 'groq',
+        model: config.value.llmEngine === 'zai'
           ? (config.value.zaiModel || 'glm-4-plus')
-          : (config.value.groqModel || 'openai/gpt-oss-120b'),
+          : config.value.llmEngine === 'minimax'
+            ? (config.value.minimaxModel || 'MiniMax-M2.7')
+            : (config.value.groqModel || 'openai/gpt-oss-120b'),
         contextIds: config.value.activeContextIds || [],
+        customPrompt: config.value.customPrompt || undefined,
       },
     })
 
@@ -461,11 +515,14 @@ async function submitRefine() {
         currentPlan: editableText.value,
         feedback,
         language: config.value.language?.split('-')[0] || 'es',
-        engine: config.value.sttEngine === 'zai' ? 'zai' : 'groq',
-        model: config.value.sttEngine === 'zai'
+        engine: config.value.llmEngine || 'groq',
+        model: config.value.llmEngine === 'zai'
           ? (config.value.zaiModel || 'glm-4-plus')
-          : (config.value.groqModel || 'openai/gpt-oss-120b'),
+          : config.value.llmEngine === 'minimax'
+            ? (config.value.minimaxModel || 'MiniMax-M2.7')
+            : (config.value.groqModel || 'openai/gpt-oss-120b'),
         contextIds: config.value.activeContextIds || [],
+        customPrompt: config.value.customPrompt || undefined,
       },
     })
 

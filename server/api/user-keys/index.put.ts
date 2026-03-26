@@ -1,4 +1,4 @@
-const ALLOWED_KEYS = ['linear_api_key', 'groq_api_key', 'zai_api_key']
+const ALLOWED_KEYS = ['linear_api_key', 'groq_api_key', 'zai_api_key', 'minimax_api_key']
 
 export default defineEventHandler(async (event) => {
   const session = await requireUserSession(event)

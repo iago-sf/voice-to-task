@@ -1,5 +1,5 @@
 import { ensureDB } from '~/server/utils/db'
-import { callGroq, callZai, parseResponse } from '~/server/utils/llm'
+import { callGroq, callZai, callMinimax, parseResponse } from '~/server/utils/llm'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -12,6 +12,7 @@ export default defineEventHandler(async (event) => {
   const model = body.model || 'openai/gpt-oss-120b'
   const engine = body.engine || 'groq'
   const contextIds: number[] = body.contextIds || []
+  const customPrompt: string = body.customPrompt || ''
 
   // Load active contexts from DB
   let contextBlock = ''
@@ -30,7 +31,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const systemPrompt = `You are a task planning assistant. Given a raw task description (often from voice transcription), you must return:
+  const defaultBasePrompt = `You are a task planning assistant. Given a raw task description (often from voice transcription), you must return:
 
 1. A concise summary title for the task (max 100 chars, imperative form)
 2. A structured action plan with concrete steps to execute the task
@@ -45,7 +46,12 @@ PLAN:
 - [ ] Step 3
 ...
 
-Keep it practical, specific, and actionable. No fluff. Between 3 and 8 steps.${contextBlock ? `
+Keep it practical, specific, and actionable. No fluff. Between 3 and 8 steps.`
+
+  const basePrompt = customPrompt || defaultBasePrompt
+
+  const systemPrompt = contextBlock
+    ? `${basePrompt}
 
 IMPORTANT — The user has provided context documents that define the project, its conventions, technologies, and constraints. These documents take PRIORITY over any generic assumptions. You MUST use them to:
 - Frame the task title using the project's domain and terminology
@@ -55,7 +61,8 @@ IMPORTANT — The user has provided context documents that define the project, i
 
 Context documents:
 
-${contextBlock}` : ''}`
+${contextBlock}`
+    : basePrompt
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -66,6 +73,9 @@ ${contextBlock}` : ''}`
   if (engine === 'zai') {
     const apiKey = await requireUserApiKey(event, 'zai_api_key')
     raw = await callZai(apiKey, model, messages)
+  } else if (engine === 'minimax') {
+    const apiKey = await requireUserApiKey(event, 'minimax_api_key')
+    raw = await callMinimax(apiKey, model, messages)
   } else {
     const apiKey = await requireUserApiKey(event, 'groq_api_key')
     raw = await callGroq(apiKey, model, messages)

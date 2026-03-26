@@ -81,6 +81,7 @@ export async function getUserApiKeys(userEmail: string): Promise<Record<string, 
     linear_api_key: keyNames.includes('linear_api_key'),
     groq_api_key: keyNames.includes('groq_api_key'),
     zai_api_key: keyNames.includes('zai_api_key'),
+    minimax_api_key: keyNames.includes('minimax_api_key'),
   }
 }
 

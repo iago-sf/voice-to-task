@@ -7,15 +7,19 @@ const defaultConfig: AppConfig = {
   assigneeName: '',
   language: 'es-ES',
   sttEngine: 'browser',
+  llmEngine: 'groq',
   groqModel: 'openai/gpt-oss-120b',
   zaiModel: 'glm-4-plus',
+  minimaxModel: 'MiniMax-M2.7',
   autoMode: false,
   activeContextIds: [],
+  favoriteContextIds: [],
   uiLanguage: 'en',
   theme: 'system',
   audioDeviceId: '',
   linearStateMap: { TRIAGE: 'triage', TODO: 'unstarted', IN_PROGRESS: 'started', DONE: 'completed' },
   lastSendAction: 'linear',
+  customPrompt: '',
 }
 
 export function useConfig() {
@@ -37,6 +41,10 @@ export function useConfig() {
     if (stored) {
       try {
         Object.assign(config.value, JSON.parse(stored))
+        // Migrate: derive llmEngine from sttEngine for existing users
+        if (!config.value.llmEngine) {
+          config.value.llmEngine = config.value.sttEngine === 'zai' ? 'zai' : 'groq'
+        }
       } catch {
         // ignore invalid JSON
       }

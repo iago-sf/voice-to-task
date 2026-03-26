@@ -1,5 +1,5 @@
 import { ensureDB } from '~/server/utils/db'
-import { callGroq, callZai } from '~/server/utils/llm'
+import { callGroq, callZai, callMinimax } from '~/server/utils/llm'
 
 export default defineEventHandler(async (event) => {
   const body = await readBody(event)
@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
   const model = body.model || 'openai/gpt-oss-120b'
   const engine = body.engine || 'groq'
   const contextIds: number[] = body.contextIds || []
+  const customPrompt: string = body.customPrompt || ''
 
   // Load active contexts from DB
   let contextBlock = ''
@@ -33,7 +34,7 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const systemPrompt = `You are a task planning assistant. The user previously generated an action plan but it has problems. They are providing feedback explaining what's wrong and what they actually meant.
+  const defaultRefinePrompt = `You are a task planning assistant. The user previously generated an action plan but it has problems. They are providing feedback explaining what's wrong and what they actually meant.
 
 Your job is to:
 1. Regenerate a corrected plan incorporating their feedback
@@ -51,11 +52,23 @@ PLAN:
 
 CONTEXT_RULE: <A concise, reusable directive (1-3 sentences) that captures the user's preference or correction so future plans don't make the same mistake. Write it as an instruction for a plan-generation AI.>
 
-Keep the plan practical, specific, and actionable. Between 3 and 8 steps.${contextBlock ? `
+Keep the plan practical, specific, and actionable. Between 3 and 8 steps.`
+
+  const basePrompt = customPrompt
+    ? `${customPrompt}
+
+Additionally, the user is REFINING an existing plan. Your job is also to extract a reusable rule from the feedback. Append this at the end:
+
+CONTEXT_RULE: <A concise, reusable directive (1-3 sentences) that captures the user's preference or correction so future plans don't make the same mistake. Write it as an instruction for a plan-generation AI.>`
+    : defaultRefinePrompt
+
+  const systemPrompt = contextBlock
+    ? `${basePrompt}
 
 IMPORTANT — The user has provided context documents. Use them to frame the plan:
 
-${contextBlock}` : ''}`
+${contextBlock}`
+    : basePrompt
 
   const messages = [
     { role: 'system', content: systemPrompt },
@@ -69,6 +82,9 @@ ${contextBlock}` : ''}`
   if (engine === 'zai') {
     const apiKey = await requireUserApiKey(event, 'zai_api_key')
     raw = await callZai(apiKey, model, messages)
+  } else if (engine === 'minimax') {
+    const apiKey = await requireUserApiKey(event, 'minimax_api_key')
+    raw = await callMinimax(apiKey, model, messages)
   } else {
     const apiKey = await requireUserApiKey(event, 'groq_api_key')
     raw = await callGroq(apiKey, model, messages)
