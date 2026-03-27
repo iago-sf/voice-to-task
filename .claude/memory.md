@@ -16,6 +16,19 @@
 - **Bidireccional:** Cambiar tab actualiza la URL, cambiar la URL actualiza el tab (útil para navegación con botones atrás/adelante)
 - **`router.replace`:** Usa `replace` en vez de `push` para no llenar el historial
 
+### Mejora del prompt de generación de planes
+
+- **Prompt reescrito** en `server/api/ai/action-plan.post.ts` — de 3-8 pasos genéricos a 4-12 pasos específicos con:
+  - **CONTEXT NEEDED:** Si falta info, lista preguntas al dev (archivos, edge cases, criterios de aceptación, feature flags)
+  - **PLAN:** Pasos concretos con archivos/funciones/endpoints, agrupados lógicamente, con testing cuando aplique
+  - **QUESTIONS:** 1-5 preguntas concretas al desarrollador, o "None — task is clear"
+  - **GENERATED CONTEXT:** Mini documento de contexto reutilizable para futuras tareas del mismo área (2-10 bullets con area, key files, patterns, dependencies, notes)
+- **Sentinel value `__DEFAULT__`:** `customPrompt` en `useConfig` usa `'__DEFAULT__'` en vez de `''` para distinguir "no customizado" de "vacío"
+- **Textarea editable:** El prompt por defecto ahora aparece como texto en el textarea (no placeholder), para que el usuario pueda hacer ediciones parciales sin reescribir todo
+- **`resolvedCustomPrompt`:** Computed getter/setter en config.vue que mapea `__DEFAULT__` y `''` (legacy) al prompt por defecto
+- **Backend:** `action-plan.post.ts` trata `__DEFAULT__` como "sin custom prompt", usa el default
+- **Contexto con contextos:** Cuando hay contextos activos, el system prompt también pide skippear QUESTIONS ya respondidas por los contextos y enriquecer el GENERATED CONTEXT
+
 ### Rediseño mobile-first de index.vue
 
 - **Layout reorganizado:** Hero record button cuando no hay texto + textarea siempre visible + toolbar compacta con texto

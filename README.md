@@ -9,7 +9,7 @@ Built with **Nuxt 3**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SD
 - **Google OAuth authentication** — login with your Google account; all data is isolated per user
 - **Per-user API key management** — each user configures their own Linear, Groq, Z.ai, and MiniMax keys from the Config page (encrypted at rest)
 - **Voice-to-text** via Web Speech API (Chrome/Edge), Groq Whisper, or Z.ai GLM-ASR (any browser)
-- **AI action plan generation** — turns raw voice notes into structured task plans with a summary title (powered by Groq, Z.ai GLM, or MiniMax, model configurable)
+- **AI action plan generation** — turns raw voice notes into structured task plans with a summary title, questions for the developer when info is missing, and a reusable context document for future tasks (powered by Groq, Z.ai GLM, or MiniMax, model configurable)
 - **Independent STT and LLM engine selection** — choose one engine for audio transcription and a different one for text generation (e.g., browser STT + Groq LLM, or Groq Whisper + MiniMax)
 - **Mobile-first UI** — responsive layout with hero/compact record button, toolbar with action icons, horizontal-scrolling pills, and smooth transitions
 - **Markdown preview** — toggle between editing and rendered markdown preview for generated plans
@@ -21,7 +21,7 @@ Built with **Nuxt 3**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SD
 - **History** in SQLite/Turso with status tracking, Linear issue links, and retry for failed sends
 - **Theme support** — system, light, and dark mode
 - **i18n** — English and Spanish UI
-- **Tabbed config** — settings organized into Linear, AI Models, API Keys, and User preferences tabs, accessible via URL query param
+- **Editable custom prompt** — the default plan generation prompt is shown as editable text, so users can make small tweaks without rewriting from scratch
 
 ## Prerequisites
 

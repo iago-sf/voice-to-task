@@ -328,20 +328,18 @@
           <div class="flex items-center justify-between mb-2">
             <label class="block text-xs text-gray-500">{{ t('config.customPrompt') }}</label>
             <button
-              v-if="config.customPrompt"
               class="text-xs text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
-              @click="config.customPrompt = ''; saveConfig(); toastSuccess(t('config.customPromptSaved'))"
+              @click="resolvedCustomPrompt = defaultPrompt; saveConfig(); toastSuccess(t('config.customPromptSaved'))"
             >
               {{ t('config.customPromptReset') }}
             </button>
           </div>
           <p class="text-xs text-gray-400 dark:text-gray-600 mb-2">{{ t('config.customPromptDesc') }}</p>
           <textarea
-            v-model="config.customPrompt"
+            v-model="resolvedCustomPrompt"
             rows="10"
-            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 resize-y font-mono leading-relaxed placeholder-gray-400 dark:placeholder-gray-600"
-            :placeholder="defaultPromptPlaceholder"
-            @blur="saveConfig(); if (config.customPrompt) toastSuccess(t('config.customPromptSaved'))"
+            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 resize-y font-mono leading-relaxed"
+            @blur="saveConfig(); if (resolvedCustomPrompt) toastSuccess(t('config.customPromptSaved'))"
           />
         </div>
       </div>
@@ -732,22 +730,30 @@ const uiLanguages = [
   { value: 'es' as const, label: 'Espanol' },
 ]
 
-const defaultPromptPlaceholder = `You are a task planning assistant. Given a raw task description (often from voice transcription), you must return:
-
-1. A concise summary title for the task (max 100 chars, imperative form)
-2. A structured action plan with concrete steps to execute the task
+const defaultPrompt = `You are a senior task planning assistant. Given a raw task description (often from voice transcription), produce a thorough, actionable plan.
 
 Reply in the same language as the input. Use this exact format:
 
-TITLE: <concise task title>
+TITLE: <concise task title, max 100 chars, imperative form>
+
+CONTEXT NEEDED:
+List specific questions for the developer if information is missing or ambiguous. Skip if clear.
 
 PLAN:
-- [ ] Step 1
-- [ ] Step 2
-- [ ] Step 3
+- [ ] Step 1 — be specific: mention file paths, function names, API endpoints
+- [ ] Step 2 — each step should be independently verifiable
 ...
 
-Keep it practical, specific, and actionable. No fluff. Between 3 and 8 steps.`
+QUESTIONS:
+1-5 concrete questions for the developer, or "None — task is clear."
+
+GENERATED CONTEXT:
+Brief context document (2-10 bullet points) summarizing key domain knowledge, patterns, or decisions for reuse in future tasks of the same area.`
+
+const resolvedCustomPrompt = computed({
+  get: () => (!config.value.customPrompt || config.value.customPrompt === '__DEFAULT__') ? defaultPrompt : config.value.customPrompt,
+  set: (v: string) => { config.value.customPrompt = v || '__DEFAULT__' }
+})
 
 const languages = [
   { code: 'es-ES', label: 'Espanol (Espana)' },

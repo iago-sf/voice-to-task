@@ -35,24 +35,49 @@ export default defineEventHandler(async (event) => {
     }
   }
 
-  const defaultBasePrompt = `You are a task planning assistant. Given a raw task description (often from voice transcription), you must return:
-
-1. A concise summary title for the task (max 100 chars, imperative form)
-2. A structured action plan with concrete steps to execute the task
+  const defaultBasePrompt = `You are a senior task planning assistant. Given a raw task description (often from voice transcription), produce a thorough, actionable plan.
 
 Reply in the same language as the input. Use this exact format:
 
-TITLE: <concise task title>
+TITLE: <concise task title, max 100 chars, imperative form>
+
+CONTEXT NEEDED:
+Before writing the plan, assess whether the task description has enough detail. If information is missing or ambiguous, list specific questions for the developer. Examples of useful questions:
+- Which files or modules should be touched?
+- What is the expected behavior in edge case X?
+- Are there existing patterns or utilities to reuse?
+- What is the acceptance criteria?
+- Should this be behind a feature flag?
+If the task is fully clear, skip this section entirely.
 
 PLAN:
-- [ ] Step 1
-- [ ] Step 2
-- [ ] Step 3
+- [ ] Step 1 — be specific: mention file paths, function names, API endpoints, or component names when possible
+- [ ] Step 2 — each step should be independently verifiable
+- [ ] Step 3 — include testing or validation steps when relevant
 ...
 
-Keep it practical, specific, and actionable. No fluff. Between 3 and 8 steps.`
+Rules for the plan:
+- Be specific, not generic. Mention concrete files, functions, endpoints, or components when context allows it.
+- Each step must be independently actionable — a developer should know exactly what to do without guessing.
+- Include edge cases, error handling, or validation steps when relevant.
+- If the task involves multiple areas (backend + frontend, or multiple modules), group steps logically.
+- Between 4 and 12 steps. More complex tasks get more steps.
+- When a step involves creating or modifying something, describe WHAT changes and WHY, not just "do it".
 
-  const basePrompt = customPrompt || defaultBasePrompt
+QUESTIONS:
+If the task description lacks critical information, list 1-5 concrete questions for the developer here. Formulate them as specific, answerable questions — not vague requests for "more details". If the task is clear enough, write "None — task is clear."
+
+GENERATED CONTEXT:
+After completing the plan, generate a brief context document (2-10 lines of bullet points) summarizing the key domain knowledge, patterns, or decisions involved in this task. This context can be uploaded to the app and reused for future tasks in the same area. Write it in third person, as a reference document. Example format:
+- Area: <area/module name>
+- Key files: <list>
+- Patterns used: <brief description>
+- Dependencies: <libraries, APIs, services>
+- Notes: <any non-obvious decisions or constraints>
+
+If the task is too trivial to warrant a context, write "None."`
+
+  const basePrompt = customPrompt && customPrompt !== '__DEFAULT__' ? customPrompt : defaultBasePrompt
 
   const systemPrompt = contextBlock
     ? `${basePrompt}
@@ -62,6 +87,8 @@ IMPORTANT — The user has provided context documents that define the project, i
 - Define steps that align with the project's stack, tools, and workflows
 - Follow any conventions or guidelines specified in the context (naming, testing, deployment, etc.)
 - Reference specific technologies, libraries, or patterns mentioned in the context
+- Skip QUESTIONS that are already answered by the context documents
+- Enrich the GENERATED CONTEXT with knowledge from the provided context documents
 
 Context documents:
 

@@ -19,7 +19,7 @@ const defaultConfig: AppConfig = {
   audioDeviceId: '',
   linearStateMap: { TRIAGE: 'triage', TODO: 'unstarted', IN_PROGRESS: 'started', DONE: 'completed' },
   lastSendAction: 'linear',
-  customPrompt: '',
+  customPrompt: '__DEFAULT__',
   selectedLabelIds: [],
   selectedProjectId: '',
 }
