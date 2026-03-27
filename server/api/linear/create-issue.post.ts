@@ -29,6 +29,13 @@ export default defineEventHandler(async (event) => {
       issuePayload.stateId = triageState.id
     }
 
+    if (body.labelIds?.length) {
+      issuePayload.labelIds = body.labelIds
+    }
+    if (body.projectId) {
+      issuePayload.projectId = body.projectId
+    }
+
     const result = await client.createIssue(issuePayload)
     const issue = await result.issue
 

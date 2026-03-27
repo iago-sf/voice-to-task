@@ -1,9 +1,11 @@
 import { ensureDB } from '~/server/utils/db'
 import { getSessionEmail } from '~/server/utils/session-email'
+import { checkUsage } from '~/server/utils/usage'
 import { callGroq, callZai, callMinimax } from '~/server/utils/llm'
 
 export default defineEventHandler(async (event) => {
   const userEmail = await getSessionEmail(event)
+  await checkUsage(userEmail)
   const body = await readBody<{
     contextIds: number[]
     engine?: string

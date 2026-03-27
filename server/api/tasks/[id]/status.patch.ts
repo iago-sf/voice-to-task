@@ -1,5 +1,6 @@
 import { ensureDB } from '~/server/utils/db'
 import { getSessionEmail } from '~/server/utils/session-email'
+import { checkUsage } from '~/server/utils/usage'
 import { syncTaskStatusToLinear } from '~/server/utils/linear-sync'
 import { getUserApiKey } from '~/server/utils/user-keys'
 import type { Task, TaskStatus } from '~/types'
@@ -8,6 +9,7 @@ const VALID_STATUSES: TaskStatus[] = ['TRIAGE', 'TODO', 'IN_PROGRESS', 'DONE']
 
 export default defineEventHandler(async (event) => {
   const userEmail = await getSessionEmail(event)
+  await checkUsage(userEmail)
   const id = getRouterParam(event, 'id')!
   const body = await readBody(event)
 

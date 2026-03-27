@@ -1,8 +1,11 @@
+import { checkUsage } from '~/server/utils/usage'
+
 const ALLOWED_KEYS = ['linear_api_key', 'groq_api_key', 'zai_api_key', 'minimax_api_key']
 
 export default defineEventHandler(async (event) => {
   const session = await requireUserSession(event)
   const email = session.user.email
+  await checkUsage(email)
   const body = await readBody(event)
 
   for (const [keyName, value] of Object.entries(body)) {

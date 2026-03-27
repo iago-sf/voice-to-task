@@ -61,6 +61,12 @@ export async function ensureDB(): Promise<Client> {
       created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
       last_used_at DATETIME
     )`,
+    `CREATE TABLE IF NOT EXISTS usage_counts (
+      user_email TEXT NOT NULL,
+      month TEXT NOT NULL,
+      count INTEGER NOT NULL DEFAULT 0,
+      PRIMARY KEY (user_email, month)
+    )`,
   ])
 
   // Idempotent column migrations via try/catch

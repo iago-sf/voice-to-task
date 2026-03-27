@@ -20,6 +20,8 @@ const defaultConfig: AppConfig = {
   linearStateMap: { TRIAGE: 'triage', TODO: 'unstarted', IN_PROGRESS: 'started', DONE: 'completed' },
   lastSendAction: 'linear',
   customPrompt: '',
+  selectedLabelIds: [],
+  selectedProjectId: '',
 }
 
 export function useConfig() {
@@ -43,7 +45,11 @@ export function useConfig() {
         Object.assign(config.value, JSON.parse(stored))
         // Migrate: derive llmEngine from sttEngine for existing users
         if (!config.value.llmEngine) {
-          config.value.llmEngine = config.value.sttEngine === 'zai' ? 'zai' : 'groq'
+          config.value.llmEngine = config.value.sttEngine === 'groq' ? 'groq' : 'groq'
+        }
+        // Migrate: zai STT was removed — fall back to groq
+        if ((config.value.sttEngine as string) === 'zai') {
+          config.value.sttEngine = 'groq'
         }
       } catch {
         // ignore invalid JSON

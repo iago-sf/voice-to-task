@@ -32,7 +32,7 @@ export interface AppConfig {
   assigneeId: string
   assigneeName: string
   language: string
-  sttEngine: 'browser' | 'groq' | 'zai'
+  sttEngine: 'browser' | 'groq'
   llmEngine: 'groq' | 'zai' | 'minimax'
   groqModel: string
   zaiModel: string
@@ -46,6 +46,8 @@ export interface AppConfig {
   linearStateMap: Record<TaskStatus, LinearStateType>
   lastSendAction?: 'linear' | 'copy' | 'save'
   customPrompt: string
+  selectedLabelIds: string[]
+  selectedProjectId: string
 }
 
 export interface Context {
@@ -66,6 +68,18 @@ export interface LinearUser {
   id: string
   name: string
   email: string
+}
+
+export interface LinearLabel {
+  id: string
+  name: string
+  color: string
+}
+
+export interface LinearProject {
+  id: string
+  name: string
+  color: string
 }
 
 export interface Toast {

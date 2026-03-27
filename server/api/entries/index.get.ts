@@ -1,8 +1,10 @@
 import { ensureDB } from '~/server/utils/db'
 import { getSessionEmail } from '~/server/utils/session-email'
+import { checkUsage } from '~/server/utils/usage'
 
 export default defineEventHandler(async (event) => {
   const userEmail = await getSessionEmail(event)
+  await checkUsage(userEmail)
   const query = getQuery(event)
   const limit = Number(query.limit) || 50
   const status = query.status as string | undefined

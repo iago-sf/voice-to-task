@@ -30,7 +30,7 @@ export async function callZai(
   messages: { role: string; content: string }[],
 ) {
   try {
-    const response = await fetch('https://api.z.ai/api/paas/v4/chat/completions', {
+    const response = await fetch('https://api.z.ai/api/coding/paas/v4/chat/completions', {
       method: 'POST',
       headers: {
         'Authorization': `Bearer ${apiKey}`,

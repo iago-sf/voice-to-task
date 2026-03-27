@@ -2,6 +2,33 @@
   <div class="max-w-2xl mx-auto px-4 py-8">
     <h1 class="text-2xl font-bold mb-6">{{ t('config.title') }}</h1>
 
+    <!-- Monthly usage bar -->
+    <div v-if="usage" class="mb-6 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('config.monthlyUsage') }}</span>
+        <span class="text-sm text-gray-500 dark:text-gray-400">{{ usage.used }} / {{ usage.limit }}</span>
+      </div>
+      <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+        <div
+          class="h-2.5 rounded-full transition-all"
+          :class="usageBarColor"
+          :style="{ width: usagePercent + '%' }"
+        />
+      </div>
+      <p
+        v-if="usage.used >= usage.limit"
+        class="mt-2 text-xs text-red-600 dark:text-red-400"
+      >
+        {{ t('config.usageLimitReached') }}
+      </p>
+      <p
+        v-else-if="usage.limit - usage.used <= 10"
+        class="mt-2 text-xs text-amber-600 dark:text-amber-400"
+      >
+        {{ t('config.usageWarning', { remaining: String(usage.limit - usage.used) }) }}
+      </p>
+    </div>
+
     <!-- Tabs -->
     <div class="flex border-b border-gray-200 dark:border-gray-800 mb-6 overflow-x-auto">
       <button
@@ -186,13 +213,6 @@
         <!-- API key needed for STT -->
         <div
           v-if="config.sttEngine === 'groq' && !keyStatus.groq_api_key"
-          class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-sm text-amber-700 dark:text-amber-400"
-        >
-          {{ t('config.needKey') }}
-          <button class="underline ml-1" @click="activeTab = 'keys'">API Keys</button>
-        </div>
-        <div
-          v-if="config.sttEngine === 'zai' && !keyStatus.zai_api_key"
           class="bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 rounded-lg p-4 text-sm text-amber-700 dark:text-amber-400"
         >
           {{ t('config.needKey') }}
@@ -486,6 +506,29 @@ const { applyTheme } = useTheme()
 const activeTab = ref<'keys' | 'linear' | 'ai' | 'user' | 'tokens'>('keys')
 const audioDevices = ref<MediaDeviceInfo[]>([])
 
+// ── Monthly usage ──
+const usage = ref<{ used: number; limit: number; month: string } | null>(null)
+
+const usagePercent = computed(() => {
+  if (!usage.value) return 0
+  return Math.min(100, Math.round((usage.value.used / usage.value.limit) * 100))
+})
+
+const usageBarColor = computed(() => {
+  const pct = usagePercent.value
+  if (pct >= 90) return 'bg-red-500'
+  if (pct >= 70) return 'bg-amber-500'
+  return 'bg-indigo-600'
+})
+
+async function loadUsage() {
+  try {
+    usage.value = await $fetch<{ used: number; limit: number; month: string }>('/api/usage')
+  } catch {
+    // silently fail
+  }
+}
+
 async function loadAudioDevices() {
   if (!import.meta.client || !navigator.mediaDevices?.enumerateDevices) return
   try {
@@ -659,7 +702,6 @@ async function onStateMapChange(status: TaskStatus, stateType: LinearStateType) 
 const sttEngines = computed(() => [
   { value: 'browser' as const, label: t('config.engineBrowser'), description: t('config.engineBrowserDesc') },
   { value: 'groq' as const, label: t('config.engineGroq'), description: t('config.engineGroqDesc') },
-  { value: 'zai' as const, label: t('config.engineZai'), description: t('config.engineZaiDesc') },
 ])
 
 const llmEngines = computed(() => [
@@ -724,6 +766,7 @@ onMounted(async () => {
   loadConfig()
   selectedTeamId.value = config.value.teamId
   loadAudioDevices()
+  loadUsage()
 
   // Load key status
   await loadKeyStatus()

@@ -1,3 +1,10 @@
+function mimeToExt(mime: string): string {
+  if (mime.includes('mp4')) return 'mp4'
+  if (mime.includes('ogg')) return 'ogg'
+  if (mime.includes('wav')) return 'wav'
+  return 'webm'
+}
+
 export function useGroqSpeechToText(language: Ref<string> | string = 'es-ES', engine: Ref<string> | string = 'groq', deviceId: Ref<string> | string = '') {
   const transcript = ref('')
   const interimText = ref('')
@@ -27,9 +34,7 @@ export function useGroqSpeechToText(language: Ref<string> | string = 'es-ES', en
       })
 
       mediaRecorder.ondataavailable = (e) => {
-        if (e.data.size > 0) {
-          audioChunks.push(e.data)
-        }
+        if (e.data.size > 0) audioChunks.push(e.data)
       }
 
       mediaRecorder.onstart = () => {
@@ -49,7 +54,8 @@ export function useGroqSpeechToText(language: Ref<string> | string = 'es-ES', en
 
         try {
           const formData = new FormData()
-          formData.append('file', audioBlob, 'audio.webm')
+          const ext = mimeToExt(audioBlob.type)
+          formData.append('file', audioBlob, `audio.${ext}`)
           formData.append('language', unref(language))
 
           const result = await $fetch<{ text: string }>(`/api/transcribe?engine=${unref(engine)}`, {
