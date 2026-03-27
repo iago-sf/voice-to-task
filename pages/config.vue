@@ -491,7 +491,7 @@
                 class="w-2.5 h-2.5 bg-white rounded-full flex items-center justify-center"
               >
                 <svg class="w-2 h-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4-4 4-4 6-6" />
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4 4 4 6-6" />
                 </svg>
               </div>
             </button>
