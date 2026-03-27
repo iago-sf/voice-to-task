@@ -6,20 +6,20 @@
     </linearGradient>
   </defs>
   <rect width="512" height="512" rx="108" fill="url(#g)"/>
-  <!-- Microphone (bottom-left) -->
-  <rect x="64" y="280" width="100" height="150" rx="50" fill="white"/>
-  <!-- Base stand curve -->
-  <path d="M64 340v30c0 55 44 100 100h0c55 0 100-44 100v-30h-40v30c0 33-28 67-60 60h0c-33 0-60-60v-30h-40z" fill="white"/>
-  <!-- Mic stand bar -->
-  <rect x="84" y="480" width="60" height="20" rx="6" fill="white"/>
-  <!-- Sound waves as task lines (diagonal up-right) -->
+  <!-- Microphone capsule (bottom-left) -->
+  <rect x="64" y="300" width="80" height="130" rx="40" fill="white"/>
+  <!-- Mic stand curve -->
+  <path d="M64 360v20c0 44 36 80 80 80h0c44 0 80-36 80-80v-20h-32v20c0 26-22 48-48 48h0c-26 0-48-22-48-48v-20h-32z" fill="white"/>
+  <rect x="84" y="460" width="40" height="16" rx="4" fill="white"/>
+  <rect x="64" y="472" width="80" height="12" rx="4" fill="white"/>
+  <!-- Curved sound waves (task lines) -->
   <!-- Wave 1 -->
-  <circle cx="200" cy="280" r="20" fill="white"/>
-  <rect x="228" y="272" width="120" height="16" rx="8" fill="white"/>
+  <circle cx="200" cy="300" r="18" fill="white"/>
+  <path d="M224 300q60-30 120 0" stroke="white" stroke-width="16" stroke-linecap="round" fill="none"/>
   <!-- Wave 2 -->
-  <circle cx="260" cy="180" r="20" fill="white"/>
-  <rect x="288" y="172" width="140" height="16" rx="8" fill="white"/>
+  <circle cx="260" cy="200" r="18" fill="white"/>
+  <path d="M284 200q70-35 140 0" stroke="white" stroke-width="16" stroke-linecap="round" fill="none"/>
   <!-- Wave 3 -->
-  <circle cx="320" cy="80" r="20" fill="white"/>
-  <rect x="348" y="72" width="100" height="16" rx="8" fill="white"/>
+  <circle cx="320" cy="100" r="18" fill="white"/>
+  <path d="M344 100q50-25 100 0" stroke="white" stroke-width="16" stroke-linecap="round" fill="none"/>
 </svg>
