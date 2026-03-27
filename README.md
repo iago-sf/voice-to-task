@@ -20,6 +20,7 @@ Built with **Nuxt 3**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SD
 - **Agent Task API** — REST endpoints for AI agents to discover, claim, and update tasks with automatic Linear sync
 - **History** in SQLite/Turso with status tracking, Linear issue links, and retry for failed sends
 - **Theme support** — system, light, and dark mode
+- **Accent color customization** — choose from 6 accent colors (indigo, blue, violet, rose, emerald, amber) to personalize the interface
 - **i18n** — English and Spanish UI
 - **Editable custom prompt** — the default plan generation prompt is shown as editable text, so users can make small tweaks without rewriting from scratch
 
@@ -109,6 +110,9 @@ After logging in with Google, go to **Config** via the user menu (tap your avata
 1. Enable/disable **auto mode**
 2. Choose **UI language** (English / Spanish)
 3. Choose **theme** (System / Light / Dark)
+4. Choose **accent color** — 6 options: indigo, blue, violet, rose, emerald, amber
+4. Choose **accent color** — 6 options: indigo, blue, violet, rose, emerald, amber
+4. Choose **accent color** (Indigo / Blue / Violet / Rose / Emerald / Amber)
 
 ## Usage
 
@@ -222,7 +226,7 @@ Each authenticated user sees only their own data:
 │   ├── useSpeechToText.ts      # Web Speech API wrapper
 │   ├── useGroqSpeechToText.ts  # MediaRecorder + API transcription (Groq/ZAI)
 │   ├── useConfig.ts            # App config in localStorage (keyed by user email)
-│   ├── useTheme.ts             # System/light/dark theme management
+│   ├── useTheme.ts             # System/light/dark theme + accent color management
 │   ├── useI18n.ts              # i18n (en/es)
 │   └── useToast.ts             # Toast notification system
 ├── components/             # EntryCard, NavBar, SplitActionButton, ToastContainer

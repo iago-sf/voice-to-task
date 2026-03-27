@@ -68,6 +68,9 @@
 - **Config.vue:** UI de selección con swatches de color en el tab "User"
 - **CSS variables:** `assets/css/main.css` define las variables por defecto (indigo), `applyAccentColor` las actualiza dinámicamente
 - **Persistencia:** Color guardado en `useConfig` → localStorage, keyed por email
+- **Fix (2026-03-27):** El config de Tailwind CDN debía estar en el mismo script tag que el src. Separados en dos tags.
+- **Fix (2026-03-27):** `useI18n()` no exporta `success`/`error`, solo `t`. Corregido en config.vue para usar `useToast()` para toasts.
+- **Fix (2026-03-27):** Añadidas variables CSS por defecto en `main.css` (`:root` block) porque el Tailwind config se carga antes de que las variables estén definidas.
 
 ### Notas técnicas
 - Tailwind en este proyecto se carga via CDN script (`cdn.tailwindcss.com`), NO como plugin PostCSS. Por tanto `@apply` en CSS externo no funciona — hay que usar CSS puro
