@@ -25,7 +25,7 @@ voice-to-task/
 ├── assets/css/main.css             # Body colors, dark mode, pulse-ring, markdown-preview, transitions
 ├── components/
 │   ├── EntryCard.vue               # Single entry row (text, badges, Linear link)
-│   ├── NavBar.vue                  # Bottom/top nav with user avatar + logout
+│   ├── NavBar.vue                  # Bottom/top nav with user avatar dropdown (config + logout)
 │   ├── SplitActionButton.vue       # Dropdown send button (Linear/copy/save) with dropDirection prop
 │   └── ToastContainer.vue          # Fixed top-right toast notifications
 ├── composables/

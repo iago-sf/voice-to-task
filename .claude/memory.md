@@ -2,6 +2,20 @@
 
 ## Qué se hizo (2026-03-27)
 
+### NavBar: Config movido al dropdown del usuario
+
+- **Config fuera del nav:** El enlace de Config ya no es un item del nav principal. Ahora está dentro del dropdown del usuario (avatar) junto con el logout
+- **Click outside:** Añadido `document.addEventListener('click', closeMenu)` en `onMounted` para cerrar el dropdown al clicar fuera
+- **`@click.stop`:** El botón del avatar usa `@click.stop` para evitar que el listener de document cierre el menú inmediatamente al abrirlo
+- **NuxtLink en dropdown:** El enlace a `/config` dentro del dropdown cierra el menú al navegar (`@click="showUserMenu = false"`)
+
+### Config tabs accesibles por URL
+
+- **Query param `?tab=`:** Las subtabs de `/config` ahora se sincronizan con la URL: `/config?tab=keys`, `/config?tab=linear`, `/config?tab=ai`, `/config?tab=user`, `/config?tab=tokens`
+- **Validación:** Solo se aceptan valores válidos del tipo `TabValue`, fallback a `'keys'`
+- **Bidireccional:** Cambiar tab actualiza la URL, cambiar la URL actualiza el tab (útil para navegación con botones atrás/adelante)
+- **`router.replace`:** Usa `replace` en vez de `push` para no llenar el historial
+
 ### Rediseño mobile-first de index.vue
 
 - **Layout reorganizado:** Hero record button cuando no hay texto + textarea siempre visible + toolbar compacta con texto

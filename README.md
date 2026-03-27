@@ -21,7 +21,7 @@ Built with **Nuxt 3**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SD
 - **History** in SQLite/Turso with status tracking, Linear issue links, and retry for failed sends
 - **Theme support** — system, light, and dark mode
 - **i18n** — English and Spanish UI
-- **Tabbed config** — settings organized into Linear, AI Models, API Keys, and User preferences tabs
+- **Tabbed config** — settings organized into Linear, AI Models, API Keys, and User preferences tabs, accessible via URL query param
 
 ## Prerequisites
 
@@ -80,7 +80,7 @@ Open [http://localhost:3000](http://localhost:3000). You'll be redirected to the
 
 ### 5. Initial configuration
 
-After logging in with Google, go to the **Config** page (gear icon). Settings are organized in tabs:
+After logging in with Google, go to **Config** via the user menu (tap your avatar in the nav bar). Settings are organized in tabs, each accessible by URL (`/config?tab=keys`, `/config?tab=linear`, `/config?tab=ai`, `/config?tab=user`, `/config?tab=tokens`):
 
 **API Keys tab:**
 1. Enter your **Linear API key** — [Linear Settings > API](https://linear.app/settings/api)

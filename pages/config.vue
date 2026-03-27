@@ -503,7 +503,24 @@ const { success: toastSuccess, error: toastError } = useToast()
 const { t } = useI18n()
 const { applyTheme } = useTheme()
 
-const activeTab = ref<'keys' | 'linear' | 'ai' | 'user' | 'tokens'>('keys')
+type TabValue = 'keys' | 'linear' | 'ai' | 'user' | 'tokens'
+const validTabs: TabValue[] = ['keys', 'linear', 'ai', 'user', 'tokens']
+const route = useRoute()
+const router = useRouter()
+
+const activeTab = ref<TabValue>(
+  validTabs.includes(route.query.tab as TabValue) ? (route.query.tab as TabValue) : 'keys'
+)
+
+watch(activeTab, (tab) => {
+  router.replace({ query: { ...route.query, tab } })
+})
+
+watch(() => route.query.tab, (tab) => {
+  if (validTabs.includes(tab as TabValue) && tab !== activeTab.value) {
+    activeTab.value = tab as TabValue
+  }
+})
 const audioDevices = ref<MediaDeviceInfo[]>([])
 
 // ── Monthly usage ──
