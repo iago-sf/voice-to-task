@@ -531,7 +531,8 @@ const accentColors = [
 ]
 
 const { config, isConfigured, loadConfig, saveConfig } = useConfig()
-const { success: toastSuccess, error: toastError } = useI18n()
+const { t } = useI18n()
+const { success: toastSuccess, error: toastError } = useToast()
 const { applyTheme, applyAccentColor } = useTheme()
 
 type TabValue = 'keys' | 'linear' | 'ai' | 'user' | 'tokens'

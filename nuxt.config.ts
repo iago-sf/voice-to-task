@@ -1,6 +1,9 @@
 export default defineNuxtConfig({
   compatibilityDate: '2024-11-01',
   devtools: { enabled: true },
+  devServer: { port: 3004 },
+
+  modules: ['nuxt-auth-utils'],
 
   runtimeConfig: {
     turso: {
@@ -21,8 +24,8 @@ export default defineNuxtConfig({
   app: {
     head: {
       script: [
+        { src: 'https://cdn.tailwindcss.com' },
         {
-          src: 'https://cdn.tailwindcss.com',
           innerHTML: `tailwind.config = {
             darkMode: 'class',
             theme: {
@@ -51,5 +54,4 @@ export default defineNuxtConfig({
   },
 
   css: ['~/assets/css/main.css'],
-  modules: ['nuxt-auth-utils'],
 })
