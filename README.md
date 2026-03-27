@@ -2,7 +2,7 @@
 
 App that captures voice via the browser microphone, transcribes it to text, and creates tasks in [Linear](https://linear.app). Optionally generates an AI-powered action plan before sending. All data is stored in a SQLite-compatible database (local file or [Turso](https://turso.tech) for cloud/serverless deployment) with direct links to the created Linear issues.
 
-Built with **Nuxt 3**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SDK**, **Groq API**, **Z.ai API**, **MiniMax API**, and **nuxt-auth-utils**.
+Built with **Nuxt 3**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SDK**, **Groq API**, **Z.ai API**, **MiniMax API**, **marked**, **DOMPurify**, and **nuxt-auth-utils**.
 
 ## Features
 
@@ -11,6 +11,8 @@ Built with **Nuxt 3**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SD
 - **Voice-to-text** via Web Speech API (Chrome/Edge), Groq Whisper, or Z.ai GLM-ASR (any browser)
 - **AI action plan generation** — turns raw voice notes into structured task plans with a summary title (powered by Groq, Z.ai GLM, or MiniMax, model configurable)
 - **Independent STT and LLM engine selection** — choose one engine for audio transcription and a different one for text generation (e.g., browser STT + Groq LLM, or Groq Whisper + MiniMax)
+- **Mobile-first UI** — responsive layout with hero/compact record button, toolbar with action icons, horizontal-scrolling pills, and smooth transitions
+- **Markdown preview** — toggle between editing and rendered markdown preview for generated plans
 - **Auto mode** — record, generate plan, and send to Linear in one step
 - **Contexts** — create multiple markdown documents (project info, conventions, stack details) that get injected into the LLM prompt for more relevant plans
 - **Task status tracking** — entries have a task status (Triage / TODO / In Progress / Done) with colored badges and filters in history
@@ -112,12 +114,13 @@ After logging in with Google, go to the **Config** page (gear icon). Settings ar
 
 ### Basic flow
 
-1. Press the **microphone button** to start recording
+1. Press the **microphone button** to start recording, or **type directly** in the textarea
 2. Speak — the transcript appears in real time (Web Speech API) or after stopping (Groq/ZAI)
-3. **Edit** the text if needed
-4. Press **Generate plan** to generate an AI action plan with a summary title
-5. Press **Send to Linear** to create the task (first line = title, rest = description)
-6. The issue is created in Linear with **triage** status and assigned to you
+3. **Edit** the text if needed — once there's text, a compact toolbar appears with all actions
+4. Press **Generate plan** (lightbulb icon) to generate an AI action plan with a summary title
+5. Toggle the **eye icon** to preview the rendered markdown
+6. Press **Send to Linear** (or choose copy/save from the dropdown) to create the task
+7. The issue is created in Linear with **triage** status and assigned to you
 
 ### Auto mode
 
@@ -209,7 +212,7 @@ Each authenticated user sees only their own data:
 │   ├── useTheme.ts             # System/light/dark theme management
 │   ├── useI18n.ts              # i18n (en/es)
 │   └── useToast.ts             # Toast notification system
-├── components/             # EntryCard, NavBar, ToastContainer
+├── components/             # EntryCard, NavBar, SplitActionButton, ToastContainer
 └── types/index.ts          # Shared TypeScript interfaces
 ```
 
@@ -223,7 +226,8 @@ Each authenticated user sees only their own data:
 - **Z.ai API** — GLM-ASR transcription + GLM chat models
 - **MiniMax API** — MiniMax reasoning models for plan generation
 - **Web Speech API** — Browser-native speech recognition (Chromium)
-- **Tailwind CSS** — Utility-first styling (with dark mode support)
+- **marked** + **DOMPurify** — Markdown rendering with XSS sanitization
+- **Tailwind CSS** — Utility-first styling via CDN (with dark mode support)
 
 ## License
 

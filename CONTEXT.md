@@ -22,10 +22,11 @@ A Nuxt 3 full-stack app that captures voice via the browser microphone, transcri
 
 ```
 voice-to-task/
-├── assets/css/main.css             # Body colors, dark mode, pulse-ring animation
+├── assets/css/main.css             # Body colors, dark mode, pulse-ring, markdown-preview, transitions
 ├── components/
 │   ├── EntryCard.vue               # Single entry row (text, badges, Linear link)
 │   ├── NavBar.vue                  # Bottom/top nav with user avatar + logout
+│   ├── SplitActionButton.vue       # Dropdown send button (Linear/copy/save) with dropDirection prop
 │   └── ToastContainer.vue          # Fixed top-right toast notifications
 ├── composables/
 │   ├── useConfig.ts                # AppConfig in localStorage (keyed by user email)
@@ -37,7 +38,7 @@ voice-to-task/
 ├── middleware/
 │   └── auth.global.ts              # Redirects unauthenticated users to /login
 ├── pages/
-│   ├── index.vue                   # Main: record → transcribe → plan → send to Linear
+│   ├── index.vue                   # Main: mobile-first UI with hero/compact record, toolbar, markdown preview
 │   ├── login.vue                   # Google OAuth login (layout: false)
 │   ├── history.vue                 # Entry list with status/task_status filters
 │   ├── contexts.vue                # CRUD for markdown context documents
@@ -292,7 +293,13 @@ Groq (OpenAI-compatible API) and ZAI (GLM models). The engine choice determines 
 ### 8. Auto mode pipeline
 When enabled: stop recording → `generatePlan()` → `sendToLinear()` — fully automated voice-to-Linear-issue flow.
 
-### 9. Nuxt auto-imports
+### 9. Tailwind CSS via CDN
+Tailwind is loaded as a CDN script (`cdn.tailwindcss.com`) in `nuxt.config.ts`, NOT as a PostCSS plugin. This means `@apply` directives do NOT work in external CSS files. All custom CSS in `assets/css/main.css` must use plain CSS properties.
+
+### 10. Client-only imports for DOM-dependent libraries
+Libraries that require a DOM (like `dompurify`) cannot be statically imported because Nuxt SSR runs in Node.js without a DOM. Use dynamic `import()` guarded by `import.meta.client` and store the result in a `ref`. The `oh-vue-icons` component (`v-icon`) is registered as a `.client.ts` plugin, which produces harmless SSR warnings.
+
+### 11. Nuxt auto-imports
 Nuxt auto-imports Vue APIs (`ref`, `computed`, `watch`, etc.), composables from `composables/`, server utilities from `server/utils/`, and Nuxt helpers (`defineEventHandler`, `createError`, `getQuery`, `readBody`, `getRouterParam`, `navigateTo`, `useState`, `useUserSession`, `requireUserSession`, `getUserSession`). You don't need explicit imports for these.
 
 ---

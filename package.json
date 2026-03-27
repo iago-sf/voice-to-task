@@ -13,6 +13,8 @@
     "@libsql/client": "^0.17.2",
     "@linear/sdk": "^80.0.0",
     "@vueuse/core": "^14.2.1",
+    "dompurify": "^3.3.3",
+    "marked": "^17.0.5",
     "nuxt": "^3.16.0",
     "nuxt-auth-utils": "^0.5.29",
     "oh-vue-icons": "^1.0.0-rc3",

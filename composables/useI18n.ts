@@ -107,7 +107,11 @@ const messages: Record<string, Record<string, string>> = {
     "contexts.favorite": "Favorite",
     "contexts.favoriteAdded": "Added to favorites",
     "contexts.favoriteRemoved": "Removed from favorites",
+    "index.labels": "Labels",
+    "index.project": "Project",
     "index.favoriteContexts": "Quick contexts",
+    "index.preview": "Preview",
+    "index.edit": "Edit",
     "contexts.editorPlaceholder": `Write context in markdown...
 
 Example:
@@ -254,6 +258,11 @@ Example:
     "config.tokenCopy": "Copy",
     "config.tokenEmpty": "No tokens yet",
     "config.tokenNever": "Never",
+    "config.monthlyUsage": "Monthly usage",
+    "config.usageWarning": "{remaining} requests remaining this month",
+    "config.usageLimitReached": "Monthly limit reached. Resets on the 1st.",
+    "config.usageError": "Could not load usage data",
+    "error.rateLimited": "Monthly request limit reached. Try again next month.",
   },
   es: {
     "app.title": "Voice to Task",
@@ -364,7 +373,11 @@ Example:
     "contexts.favorite": "Favorito",
     "contexts.favoriteAdded": "A\u00f1adido a favoritos",
     "contexts.favoriteRemoved": "Eliminado de favoritos",
+    "index.labels": "Etiquetas",
+    "index.project": "Proyecto",
     "index.favoriteContexts": "Contextos r\u00e1pidos",
+    "index.preview": "Vista previa",
+    "index.edit": "Editar",
     "contexts.editorPlaceholder": `Escribe el contexto en markdown...
 
 Ejemplo:
@@ -513,6 +526,11 @@ Ejemplo:
     "config.tokenCopy": "Copiar",
     "config.tokenEmpty": "No hay tokens todavia",
     "config.tokenNever": "Nunca",
+    "config.monthlyUsage": "Uso mensual",
+    "config.usageWarning": "{remaining} solicitudes restantes este mes",
+    "config.usageLimitReached": "Limite mensual alcanzado. Se reinicia el dia 1.",
+    "config.usageError": "No se pudo cargar el uso",
+    "error.rateLimited": "Limite mensual de solicitudes alcanzado. Intenta de nuevo el proximo mes.",
   },
 }
 

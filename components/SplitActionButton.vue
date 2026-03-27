@@ -27,7 +27,8 @@
     <!-- Dropdown menu (opens upward) -->
     <div
       v-if="open"
-      class="absolute bottom-full mb-1 right-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50"
+      class="absolute right-0 w-48 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg py-1 z-50"
+      :class="dropDirection === 'down' ? 'top-full mt-1' : 'bottom-full mb-1'"
     >
       <button
         v-for="action in actions"
@@ -52,12 +53,15 @@ interface Action {
   label: string
 }
 
-const props = defineProps<{
+const props = withDefaults(defineProps<{
   actions: Action[]
   activeId: string
   disabled?: boolean
   loading?: boolean
-}>()
+  dropDirection?: 'up' | 'down'
+}>(), {
+  dropDirection: 'up',
+})
 
 const emit = defineEmits<{
   execute: [id: string]
