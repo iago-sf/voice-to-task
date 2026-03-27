@@ -73,6 +73,20 @@
 - **Fix (2026-03-27):** Añadidas variables CSS por defecto en `main.css` (`:root` block) porque el Tailwind config se carga antes de que las variables estén definidas.
 - **Fix (2026-03-27):** Faltaban traducciones de theme y accent color en inglés y español. Añadidas `config.theme`, `config.themeSystem`, `config.themeLight`, `config.themeDark` y `config.accentColor*` en ambos idiomas.
 
+---
+
+### Reglas importantes para1. **RESPETET ABS ÓRDENES EXPLÍCITAS:** Si el usuario dice explícitamente "no toques X", "no edites X", "para aquí", "stop", DEBO DETENERME INMEDIATAMENTE.
+2. **VERIFICAR ANTES DE ACTUAR:** Si el usuario proporciona un archivo completo (ej. SVG, código), usarlo EXACTAMENTE como está, sin modificaciones.
+3. **ESCUCHAR FEEDBACK:** Si el usuario dice que algo está mal 3 veces, PARAR, preguntar alternativas o pedir aclaración antes de continuar.
+4. **NO SOBREREITAR ALGO:** Cuando algo está mal, no intentar arreglarlo con más cambios. Preguntar qué quiere el usuario.
+
+### Icono de la app (2026-03-27)
+- **Diseño:** Micrófono en esquina inferior izquierda + 3 ondas de sonido curvas (círculo + curva bézier)
+- **Archivos:** `favicon.svg` (512x512), `apple-touch-icon.svg` (180x180)
+- **Problema inicial:** Hice cambios incorrectos múltiples veces ignorando el SVG proporcionado por el usuario
+- **Corrección:** Usar EXACTAMENTE el SVG dado por el usuario, sin modificaciones
+- **Commit:** `acb950d`
+
 ### Notas técnicas
 - Tailwind en este proyecto se carga via CDN script (`cdn.tailwindcss.com`), NO como plugin PostCSS. Por tanto `@apply` en CSS externo no funciona — hay que usar CSS puro
 - `dompurify` no se puede importar estáticamente en SSR (necesita DOM). Se hace `import('dompurify')` dinámico guardado en un `ref` que se resuelve en el cliente. El computed `renderedMarkdown` devuelve HTML sin sanitizar en SSR (fallback seguro, es contenido del propio usuario)

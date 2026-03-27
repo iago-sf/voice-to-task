@@ -18,6 +18,12 @@ A Nuxt 3 full-stack app that captures voice via the browser microphone, transcri
 - **Client-only imports for DOM-dependent libraries** — libraries like `dompurify` require dynamic `import()` guarded by `import.meta.client`. Use `oh-vue-icons` component (`v-icon`) registered as `.client.ts` plugin.
 - **Nuxt auto-imports** — Vue APIs (`ref`, `computed`, `watch`), composables from `composables/`, server utilities from `server/utils/`, and Nuxt helpers (`defineEventHandler`, `createError`, etc.)
 
+## App Icon
+
+- **Files:** `public/favicon.svg` (512x512), `public/apple-touch-icon.svg` (180x180)
+- **Design:** Microphone capsule in bottom-left corner + 3 curved sound waves (each: circle + bezier curve)
+- **Note:** See `.claude/memory.md` for design history and important lessons learned
+
 ## Environment Variables
 
 ```env
@@ -53,3 +59,5 @@ API keys (Linear, Groq, ZAI) are per-user and managed through the Config > API K
    - Modify the tech stack
 
 3. **Keep both files in sync** — `CONTEXT.md` is the detailed technical reference, `README.md` is the user-facing documentation. They should not contradict each other.
+
+4. **RESPECT USER INSTRUCTIONS** — If the user says "don't touch X", "stop", or provides a file to use exactly, DO NOT modify it. Listen to feedback and stop if something is wrong after 3 attempts.
