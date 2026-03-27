@@ -59,6 +59,16 @@
 - **i18n:** Añadidas claves `index.preview` / `index.edit` en EN y ES
 - **Dependencias:** `marked`, `dompurify` (peer, lazy client import)
 
+### Selector de color de acento (Task 17)
+
+- **6 colores:** indigo, blue, violet, rose, emerald, amber
+- **Reemplazo masivo:** ~68 referencias `indigo-*` cambiadas a `accent-*` en 10+ archivos
+- **Tailwind CDN config:** `tailwind.config` en `nuxt.config.ts` mapea color `accent` a CSS variables (`--accent-50`, etc.)
+- **useTheme.ts:** Exporta `applyAccentColor(color)` y objeto `accentPalettes` con las paletas completas
+- **Config.vue:** UI de selección con swatches de color en el tab "User"
+- **CSS variables:** `assets/css/main.css` define las variables por defecto (indigo), `applyAccentColor` las actualiza dinámicamente
+- **Persistencia:** Color guardado en `useConfig` → localStorage, keyed por email
+
 ### Notas técnicas
 - Tailwind en este proyecto se carga via CDN script (`cdn.tailwindcss.com`), NO como plugin PostCSS. Por tanto `@apply` en CSS externo no funciona — hay que usar CSS puro
 - `dompurify` no se puede importar estáticamente en SSR (necesita DOM). Se hace `import('dompurify')` dinámico guardado en un `ref` que se resuelve en el cliente. El computed `renderedMarkdown` devuelve HTML sin sanitizar en SSR (fallback seguro, es contenido del propio usuario)
