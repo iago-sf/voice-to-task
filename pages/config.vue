@@ -476,24 +476,6 @@
         <!-- Accent color -->
         <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
           <label class="block text-xs text-gray-500 mb-2">{{ t('config.accentColor') }}</label>
-          <div class="flex gap-2 flex-wrap">
-            <button
-              v-for="color in accentColors"
-              :key="color.value"
-              class="w-8 h-8 rounded-full border-2 transition-transform hover:scale-110"
-              :class="config.accentColor === color.value
-                ? 'border-gray-800 dark:border-gray-200 scale-110'
-                : 'border-transparent'"
-              :style="{ backgroundColor: color.swatch }"
-              :title="color.label"
-              @click="config.accentColor = color.value; saveConfig(); applyAccentColor()"
-            />
-          </div>
-        </div>
-
-        <!-- Accent color -->
-        <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-          <label class="block text-xs text-gray-500 mb-2">{{ t('config.accentColor') }}</label>
           <div class="flex gap-2">
             <button
               v-for="ac in accentColors"
