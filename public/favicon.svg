@@ -6,21 +6,20 @@
     </linearGradient>
   </defs>
   <rect width="512" height="512" rx="108" fill="url(#g)"/>
-  <!-- Microphone head (bottom-left corner, peeking up) -->
-  <rect x="56" y="280" width="120" height="176" rx="60" fill="white"/>
-  <!-- Mic base curve -->
-  <path d="M56 320v48c0 66 54 120 120 120h0c66 0 120-54 120-120v-48h-48v48c0 40-32 72-72 72h0c-40 0-72-32-72-72v-48h-48z" fill="white"/>
-  <!-- Mic stand -->
-  <rect x="116" y="488" width="40" height="24" rx="6" fill="white"/>
-  <rect x="76" y="504" width="120" height="20" rx="6" fill="white"/>
+  <!-- Microphone (bottom-left) -->
+  <rect x="64" y="280" width="100" height="150" rx="50" fill="white"/>
+  <!-- Base stand curve -->
+  <path d="M64 340v30c0 55 44 100 100h0c55 0 100-44 100v-30h-40v30c0 33-28 67-60 60h0c-33 0-60-60v-30h-40z" fill="white"/>
+  <!-- Mic stand bar -->
+  <rect x="84" y="480" width="60" height="20" rx="6" fill="white"/>
   <!-- Sound waves as task lines (diagonal up-right) -->
-  <!-- Wave 1 (closest) -->
-  <circle cx="224" cy="320" r="16" fill="white"/>
-  <rect x="248" y="312" width="96" height="16" rx="8" fill="white"/>
+  <!-- Wave 1 -->
+  <circle cx="200" cy="280" r="20" fill="white"/>
+  <rect x="228" y="272" width="120" height="16" rx="8" fill="white"/>
   <!-- Wave 2 -->
-  <circle cx="280" cy="224" r="16" fill="white"/>
-  <rect x="304" y="216" width="112" height="16" rx="8" fill="white"/>
-  <!-- Wave 3 (furthest) -->
-  <circle cx="336" cy="128" r="16" fill="white"/>
-  <rect x="360" y="120" width="96" height="16" rx="8" fill="white"/>
+  <circle cx="260" cy="180" r="20" fill="white"/>
+  <rect x="288" y="172" width="140" height="16" rx="8" fill="white"/>
+  <!-- Wave 3 -->
+  <circle cx="320" cy="80" r="20" fill="white"/>
+  <rect x="348" y="72" width="100" height="16" rx="8" fill="white"/>
 </svg>
