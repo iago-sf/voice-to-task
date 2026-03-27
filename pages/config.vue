@@ -36,14 +36,14 @@
         :key="tab.value"
         class="px-4 py-2.5 text-sm font-medium transition-colors relative whitespace-nowrap"
         :class="activeTab === tab.value
-          ? 'text-indigo-600 dark:text-indigo-400'
+          ? 'text-accent-600 dark:text-accent-400'
           : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
         @click="activeTab = tab.value"
       >
         {{ tab.label }}
         <div
           v-if="activeTab === tab.value"
-          class="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-600 dark:bg-indigo-400"
+          class="absolute bottom-0 left-0 right-0 h-0.5 bg-accent-600 dark:bg-accent-400"
         />
       </button>
     </div>
@@ -77,11 +77,11 @@
               autocomplete="off"
               data-1p-ignore
               data-lpignore="true"
-              class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 placeholder-gray-400 dark:placeholder-gray-600 input-mask"
+              class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500 placeholder-gray-400 dark:placeholder-gray-600 input-mask"
               :placeholder="t('config.keyPlaceholder')"
             />
             <button
-              class="px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
+              class="px-3 py-2 bg-accent-600 hover:bg-accent-700 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
               :disabled="!keyInputs[keyDef.name] || savingKey === keyDef.name"
               @click="saveKey(keyDef.name)"
             >
@@ -99,7 +99,7 @@
 
           <p class="mt-2 text-xs text-gray-400 dark:text-gray-600">
             {{ keyDef.hint }}
-            <a v-if="keyDef.url" :href="keyDef.url" target="_blank" rel="noopener" class="text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 underline">{{ keyDef.urlLabel }}</a>
+            <a v-if="keyDef.url" :href="keyDef.url" target="_blank" rel="noopener" class="text-accent-500 dark:text-accent-400 hover:text-accent-600 dark:hover:text-accent-300 underline">{{ keyDef.urlLabel }}</a>
           </p>
         </div>
       </div>
@@ -127,7 +127,7 @@
           <select
             v-else-if="teams.length"
             v-model="selectedTeamId"
-            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500"
+            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500"
             @change="onTeamChange"
           >
             <option value="" disabled>{{ t('config.selectTeam') }}</option>
@@ -168,7 +168,7 @@
               <span class="text-sm text-gray-800 dark:text-gray-200 font-medium min-w-[110px]">{{ t(`taskStatus.${status}`) }}</span>
               <select
                 :value="config.linearStateMap[status]"
-                class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500"
+                class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500"
                 @change="onStateMapChange(status, ($event.target as HTMLSelectElement).value as LinearStateType)"
               >
                 <option v-for="st in linearStateTypes" :key="st" :value="st">
@@ -200,7 +200,7 @@
               :key="engine.value"
               class="flex-1 px-3 py-3 rounded-lg border text-sm text-left transition-colors"
               :class="config.sttEngine === engine.value
-                ? 'bg-indigo-50 dark:bg-indigo-950 border-indigo-400 dark:border-indigo-700 text-indigo-700 dark:text-indigo-200'
+                ? 'bg-accent-50 dark:bg-accent-950 border-accent-400 dark:border-accent-700 text-accent-700 dark:text-accent-200'
                 : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-600'"
               @click="config.sttEngine = engine.value; saveConfig()"
             >
@@ -229,7 +229,7 @@
               :key="engine.value"
               class="flex-1 px-3 py-3 rounded-lg border text-sm text-left transition-colors"
               :class="config.llmEngine === engine.value
-                ? 'bg-indigo-50 dark:bg-indigo-950 border-indigo-400 dark:border-indigo-700 text-indigo-700 dark:text-indigo-200'
+                ? 'bg-accent-50 dark:bg-accent-950 border-accent-400 dark:border-accent-700 text-accent-700 dark:text-accent-200'
                 : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-600'"
               @click="config.llmEngine = engine.value; saveConfig()"
             >
@@ -268,13 +268,13 @@
           <input
             v-model="config.groqModel"
             type="text"
-            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 placeholder-gray-400 dark:placeholder-gray-600"
+            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500 placeholder-gray-400 dark:placeholder-gray-600"
             :placeholder="t('config.llmModelPlaceholder')"
             @change="saveConfig"
           />
           <p class="mt-2 text-xs text-gray-400 dark:text-gray-600">
             {{ t('config.llmModelHint') }}
-            <a href="https://console.groq.com/docs/models" target="_blank" rel="noopener" class="text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 underline">console.groq.com/docs/models</a>.
+            <a href="https://console.groq.com/docs/models" target="_blank" rel="noopener" class="text-accent-500 dark:text-accent-400 hover:text-accent-600 dark:hover:text-accent-300 underline">console.groq.com/docs/models</a>.
           </p>
         </div>
 
@@ -284,7 +284,7 @@
           <input
             v-model="config.zaiModel"
             type="text"
-            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 placeholder-gray-400 dark:placeholder-gray-600"
+            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500 placeholder-gray-400 dark:placeholder-gray-600"
             :placeholder="t('config.zaiModelPlaceholder')"
             @change="saveConfig"
           />
@@ -299,13 +299,13 @@
           <input
             v-model="config.minimaxModel"
             type="text"
-            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 placeholder-gray-400 dark:placeholder-gray-600"
+            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500 placeholder-gray-400 dark:placeholder-gray-600"
             :placeholder="t('config.minimaxModelPlaceholder')"
             @change="saveConfig"
           />
           <p class="mt-2 text-xs text-gray-400 dark:text-gray-600">
             {{ t('config.minimaxModelHint') }}
-            <a href="https://platform.minimax.io/docs/api-reference/text-post" target="_blank" rel="noopener" class="text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 underline">platform.minimax.io</a>.
+            <a href="https://platform.minimax.io/docs/api-reference/text-post" target="_blank" rel="noopener" class="text-accent-500 dark:text-accent-400 hover:text-accent-600 dark:hover:text-accent-300 underline">platform.minimax.io</a>.
           </p>
         </div>
 
@@ -314,7 +314,7 @@
           <label class="block text-xs text-gray-500 mb-2">{{ t('config.language') }}</label>
           <select
             v-model="config.language"
-            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500"
+            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500"
             @change="saveConfig"
           >
             <option v-for="lang in languages" :key="lang.code" :value="lang.code">
@@ -328,7 +328,7 @@
           <div class="flex items-center justify-between mb-2">
             <label class="block text-xs text-gray-500">{{ t('config.customPrompt') }}</label>
             <button
-              class="text-xs text-indigo-500 hover:text-indigo-600 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors"
+              class="text-xs text-accent-500 hover:text-accent-600 dark:text-accent-400 dark:hover:text-accent-300 transition-colors"
               @click="resolvedCustomPrompt = defaultPrompt; saveConfig(); toastSuccess(t('config.customPromptSaved'))"
             >
               {{ t('config.customPromptReset') }}
@@ -338,7 +338,7 @@
           <textarea
             v-model="resolvedCustomPrompt"
             rows="10"
-            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 resize-y font-mono leading-relaxed"
+            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500 resize-y font-mono leading-relaxed"
             @blur="saveConfig(); if (resolvedCustomPrompt) toastSuccess(t('config.customPromptSaved'))"
           />
         </div>
@@ -356,12 +356,12 @@
           <input
             v-model="tokenName"
             type="text"
-            class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 placeholder-gray-400 dark:placeholder-gray-600"
+            class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500 placeholder-gray-400 dark:placeholder-gray-600"
             :placeholder="t('config.tokenNamePlaceholder')"
             @keyup.enter="generateToken"
           />
           <button
-            class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
+            class="px-4 py-2 bg-accent-600 hover:bg-accent-700 text-white rounded-lg text-sm transition-colors disabled:opacity-50"
             :disabled="generatingToken"
             @click="generateToken"
           >
@@ -446,7 +446,7 @@
               :key="uiLang.value"
               class="flex-1 px-3 py-3 rounded-lg border text-sm text-center transition-colors"
               :class="config.uiLanguage === uiLang.value
-                ? 'bg-indigo-50 dark:bg-indigo-950 border-indigo-400 dark:border-indigo-700 text-indigo-700 dark:text-indigo-200'
+                ? 'bg-accent-50 dark:bg-accent-950 border-accent-400 dark:border-accent-700 text-accent-700 dark:text-accent-200'
                 : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-600'"
               @click="config.uiLanguage = uiLang.value; saveConfig()"
             >
@@ -464,11 +464,54 @@
               :key="th.value"
               class="flex-1 px-3 py-3 rounded-lg border text-sm text-center transition-colors"
               :class="config.theme === th.value
-                ? 'bg-indigo-50 dark:bg-indigo-950 border-indigo-400 dark:border-indigo-700 text-indigo-700 dark:text-indigo-200'
+                ? 'bg-accent-50 dark:bg-accent-950 border-accent-400 dark:border-accent-700 text-accent-700 dark:text-accent-200'
                 : 'bg-white dark:bg-gray-800 border-gray-300 dark:border-gray-700 text-gray-600 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-600'"
               @click="config.theme = th.value; saveConfig(); applyTheme()"
             >
               {{ th.label }}
+            </button>
+          </div>
+        </div>
+
+        <!-- Accent color -->
+        <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+          <label class="block text-xs text-gray-500 mb-2">{{ t('config.accentColor') }}</label>
+          <div class="flex gap-2 flex-wrap">
+            <button
+              v-for="color in accentColors"
+              :key="color.value"
+              class="w-8 h-8 rounded-full border-2 transition-transform hover:scale-110"
+              :class="config.accentColor === color.value
+                ? 'border-gray-800 dark:border-gray-200 scale-110'
+                : 'border-transparent'"
+              :style="{ backgroundColor: color.swatch }"
+              :title="color.label"
+              @click="config.accentColor = color.value; saveConfig(); applyAccentColor()"
+            />
+          </div>
+        </div>
+
+        <!-- Accent color -->
+        <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+          <label class="block text-xs text-gray-500 mb-2">{{ t('config.accentColor') }}</label>
+          <div class="flex gap-2">
+            <button
+              v-for="ac in accentColors"
+              :key="ac.value"
+              class="w-8 h-8 rounded-full border-2 transition-all"
+              :class="config.accentColor === ac.value ? 'border-white dark:border-gray-100 scale-110' : 'border-gray-300 dark:border-gray-700 hover:scale-105'"
+              :style="{ backgroundColor: ac.swatch }"
+              :title="ac.label"
+              @click="config.accentColor = ac.value; saveConfig(); applyAccentColor()"
+            >
+              <div
+                v-if="config.accentColor === ac.value"
+                class="w-2.5 h-2.5 bg-white rounded-full flex items-center justify-center"
+              >
+                <svg class="w-2 h-2 text-gray-700" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4-4 4-4 6-6" />
+                </svg>
+              </div>
             </button>
           </div>
         </div>
@@ -478,7 +521,7 @@
           <label class="block text-xs text-gray-500 mb-2">{{ t('config.microphone') }}</label>
           <select
             v-model="config.audioDeviceId"
-            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500"
+            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500"
             @change="saveConfig"
           >
             <option value="">{{ t('config.micDefault') }}</option>
@@ -496,10 +539,18 @@
 <script setup lang="ts">
 import type { LinearTeam, LinearUser, TaskStatus, LinearStateType } from '~/types'
 
+const accentColors = [
+  { value: 'indigo', label: 'Indigo', swatch: '#4f46e5' },
+  { value: 'blue', label: 'Blue', swatch: '#3b82f6' },
+  { value: 'violet', label: 'Violet', swatch: '#7c3aed' },
+  { value: 'rose', label: 'Rose', swatch: '#f43f5e' },
+  { value: 'emerald', label: 'Emerald', swatch: '#10b981' },
+  { value: 'amber', label: 'Amber', swatch: '#f59e0b' },
+]
+
 const { config, isConfigured, loadConfig, saveConfig } = useConfig()
-const { success: toastSuccess, error: toastError } = useToast()
-const { t } = useI18n()
-const { applyTheme } = useTheme()
+const { success: toastSuccess, error: toastError } = useI18n()
+const { applyTheme, applyAccentColor } = useTheme()
 
 type TabValue = 'keys' | 'linear' | 'ai' | 'user' | 'tokens'
 const validTabs: TabValue[] = ['keys', 'linear', 'ai', 'user', 'tokens']
@@ -533,7 +584,7 @@ const usageBarColor = computed(() => {
   const pct = usagePercent.value
   if (pct >= 90) return 'bg-red-500'
   if (pct >= 70) return 'bg-amber-500'
-  return 'bg-indigo-600'
+  return 'bg-accent-600'
 })
 
 async function loadUsage() {

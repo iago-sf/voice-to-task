@@ -9,9 +9,9 @@
     <!-- Drop overlay -->
     <div
       v-if="dragging"
-      class="absolute inset-0 z-50 flex items-center justify-center bg-indigo-600/10 border-2 border-dashed border-indigo-400 rounded-xl backdrop-blur-sm pointer-events-none"
+      class="absolute inset-0 z-50 flex items-center justify-center bg-accent-600/10 border-2 border-dashed border-accent-400 rounded-xl backdrop-blur-sm pointer-events-none"
     >
-      <span class="text-indigo-600 dark:text-indigo-300 text-lg font-medium">{{ t('contexts.dropOverlay') }}</span>
+      <span class="text-accent-600 dark:text-accent-300 text-lg font-medium">{{ t('contexts.dropOverlay') }}</span>
     </div>
 
     <div class="flex items-center justify-between mb-6">
@@ -29,7 +29,7 @@
           {{ compacting ? t('contexts.compacting') : t('contexts.compact') }}
         </button>
         <button
-          class="flex items-center gap-2 px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm font-medium transition-colors"
+          class="flex items-center gap-2 px-3 py-2 bg-accent-600 hover:bg-accent-700 text-white rounded-lg text-sm font-medium transition-colors"
           @click="showNewForm = true"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,12 +50,12 @@
         v-model="newName"
         type="text"
         :placeholder="t('contexts.namePlaceholder')"
-        class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 placeholder-gray-400 dark:placeholder-gray-600 mb-3"
+        class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500 placeholder-gray-400 dark:placeholder-gray-600 mb-3"
         @keydown.enter="createContext"
       />
       <div class="flex gap-2">
         <button
-          class="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg text-sm transition-colors"
+          class="px-3 py-1.5 bg-accent-600 hover:bg-accent-700 text-white rounded-lg text-sm transition-colors"
           :disabled="!newName.trim()"
           @click="createContext"
         >
@@ -88,14 +88,14 @@
         v-for="ctx in contexts"
         :key="ctx.id"
         class="bg-white dark:bg-gray-900 border rounded-lg overflow-hidden transition-colors"
-        :class="isActive(ctx.id) ? 'border-indigo-400 dark:border-indigo-700' : 'border-gray-200 dark:border-gray-800'"
+        :class="isActive(ctx.id) ? 'border-accent-400 dark:border-accent-700' : 'border-gray-200 dark:border-gray-800'"
       >
         <!-- Header -->
         <div class="flex items-center gap-3 px-4 py-3">
           <!-- Active toggle -->
           <button
             class="relative w-9 h-5 rounded-full transition-colors shrink-0"
-            :class="isActive(ctx.id) ? 'bg-indigo-600' : 'bg-gray-300 dark:bg-gray-700'"
+            :class="isActive(ctx.id) ? 'bg-accent-600' : 'bg-gray-300 dark:bg-gray-700'"
             @click="toggleActive(ctx.id)"
           >
             <div
@@ -110,7 +110,7 @@
               ref="nameInputRef"
               v-model="editingNameValue"
               type="text"
-              class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-2 py-1 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500"
+              class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded px-2 py-1 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500"
               @keydown.enter="($event.target as HTMLInputElement).blur()"
               @keydown.escape="editingNameId = null"
               @blur="saveName(ctx)"
@@ -126,7 +126,7 @@
 
           <span
             v-if="isActive(ctx.id)"
-            class="text-xs px-2 py-0.5 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded shrink-0"
+            class="text-xs px-2 py-0.5 bg-accent-50 dark:bg-accent-950 text-accent-600 dark:text-accent-300 border border-accent-200 dark:border-accent-800 rounded shrink-0"
           >
             {{ t('contexts.active') }}
           </span>
@@ -174,7 +174,7 @@
           <textarea
             v-model="ctx.content"
             rows="12"
-            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-indigo-500 resize-y font-mono leading-relaxed placeholder-gray-400 dark:placeholder-gray-600"
+            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500 resize-y font-mono leading-relaxed placeholder-gray-400 dark:placeholder-gray-600"
             :placeholder="t('contexts.editorPlaceholder')"
             @blur="saveContent(ctx)"
           />
@@ -202,7 +202,7 @@
           <div class="px-5 py-3 max-h-72 overflow-y-auto">
             <div class="flex items-center justify-between mb-3">
               <button
-                class="text-xs text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300"
+                class="text-xs text-accent-600 dark:text-accent-400 hover:text-accent-700 dark:hover:text-accent-300"
                 @click="compactSelection = contexts.map(c => c.id)"
               >
                 {{ t('contexts.compactSelectAll') }}
@@ -222,7 +222,7 @@
               <input
                 type="checkbox"
                 :checked="compactSelection.includes(ctx.id)"
-                class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-indigo-600 focus:ring-indigo-500"
+                class="w-4 h-4 rounded border-gray-300 dark:border-gray-600 text-accent-600 focus:ring-accent-500"
                 @change="toggleCompactSelection(ctx.id)"
               />
               <div class="flex-1 min-w-0">
@@ -231,7 +231,7 @@
               </div>
               <span
                 v-if="isActive(ctx.id)"
-                class="text-[10px] px-1.5 py-0.5 bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 rounded shrink-0"
+                class="text-[10px] px-1.5 py-0.5 bg-accent-50 dark:bg-accent-950 text-accent-600 dark:text-accent-300 border border-accent-200 dark:border-accent-800 rounded shrink-0"
               >
                 {{ t('contexts.active') }}
               </span>
@@ -254,7 +254,7 @@
                 {{ t('contexts.cancel') }}
               </button>
               <button
-                class="px-4 py-1.5 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white rounded-lg text-sm font-medium transition-colors"
+                class="px-4 py-1.5 bg-accent-600 hover:bg-accent-700 disabled:opacity-40 text-white rounded-lg text-sm font-medium transition-colors"
                 :disabled="compactSelection.length < 2 || compacting"
                 @click="compactContexts"
               >

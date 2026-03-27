@@ -2,7 +2,7 @@
   <div ref="containerRef" class="relative inline-flex">
     <!-- Primary action button -->
     <button
-      class="flex items-center gap-2 px-4 py-2 bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-l-lg text-sm font-medium transition-colors"
+      class="flex items-center gap-2 px-4 py-2 bg-accent-600 hover:bg-accent-700 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-l-lg text-sm font-medium transition-colors"
       :disabled="disabled || loading"
       :title="primaryAction?.label"
       @click="$emit('execute', activeId)"
@@ -17,7 +17,7 @@
 
     <!-- Dropdown toggle -->
     <button
-      class="flex items-center px-2 py-2 bg-indigo-700 hover:bg-indigo-800 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-r-lg border-l border-indigo-500 transition-colors"
+      class="flex items-center px-2 py-2 bg-accent-700 hover:bg-accent-800 disabled:opacity-40 disabled:cursor-not-allowed text-white rounded-r-lg border-l border-accent-500 transition-colors"
       :disabled="disabled || loading"
       @click="open = !open"
     >
@@ -38,7 +38,7 @@
       >
         <v-icon :name="action.icon" scale="0.85" class="shrink-0" />
         <span class="flex-1 text-left">{{ action.label }}</span>
-        <v-icon v-if="action.id === activeId" name="bi-check" scale="0.85" class="text-indigo-600 dark:text-indigo-400 shrink-0" />
+        <v-icon v-if="action.id === activeId" name="bi-check" scale="0.85" class="text-accent-600 dark:text-accent-400 shrink-0" />
       </button>
     </div>
   </div>

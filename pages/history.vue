@@ -13,7 +13,7 @@
         :key="f.value"
         class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
         :class="filter === f.value
-          ? 'bg-indigo-600 text-white'
+          ? 'bg-accent-600 text-white'
           : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300'"
         @click="filter = f.value"
       >
@@ -27,7 +27,7 @@
         :key="f.value"
         class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
         :class="taskStatusFilter === f.value
-          ? 'bg-indigo-600 text-white'
+          ? 'bg-accent-600 text-white'
           : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300'"
         @click="taskStatusFilter = f.value"
       >
@@ -42,7 +42,7 @@
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
       </svg>
       <p class="text-gray-500 text-sm">{{ t('history.empty') }}</p>
-      <NuxtLink to="/" class="inline-block mt-3 text-indigo-500 dark:text-indigo-400 hover:text-indigo-600 dark:hover:text-indigo-300 text-sm underline">
+      <NuxtLink to="/" class="inline-block mt-3 text-accent-500 dark:text-accent-400 hover:text-accent-600 dark:hover:text-accent-300 text-sm underline">
         {{ t('history.createFirst') }}
       </NuxtLink>
     </div>

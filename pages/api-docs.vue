@@ -37,15 +37,15 @@
           <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Query params</h4>
           <div class="space-y-1 mb-3">
             <div class="flex gap-2">
-              <code class="text-indigo-400 text-xs">task_status</code>
+              <code class="text-accent-400 text-xs">task_status</code>
               <span class="text-xs text-gray-500">— TRIAGE | TODO | IN_PROGRESS | DONE</span>
             </div>
             <div class="flex gap-2">
-              <code class="text-indigo-400 text-xs">assigned_to</code>
+              <code class="text-accent-400 text-xs">assigned_to</code>
               <span class="text-xs text-gray-500">— {{ t('apiDocs.filterAgent') }}</span>
             </div>
             <div class="flex gap-2">
-              <code class="text-indigo-400 text-xs">limit</code>
+              <code class="text-accent-400 text-xs">limit</code>
               <span class="text-xs text-gray-500">— {{ t('apiDocs.maxResults') }}</span>
             </div>
           </div>
@@ -84,12 +84,12 @@
           <h4 class="text-xs font-medium text-gray-500 uppercase tracking-wider mb-2">Body (JSON)</h4>
           <div class="space-y-1 mb-3">
             <div class="flex gap-2">
-              <code class="text-indigo-400 text-xs">task_status</code>
+              <code class="text-accent-400 text-xs">task_status</code>
               <span class="text-xs text-red-400">({{ t('apiDocs.required') }})</span>
               <span class="text-xs text-gray-500">— TRIAGE | TODO | IN_PROGRESS | DONE</span>
             </div>
             <div class="flex gap-2">
-              <code class="text-indigo-400 text-xs">assigned_to</code>
+              <code class="text-accent-400 text-xs">assigned_to</code>
               <span class="text-xs text-gray-500">— {{ t('apiDocs.agentId') }}</span>
             </div>
           </div>
@@ -162,7 +162,7 @@
 
     <!-- Linear sync note -->
     <section class="mb-6">
-      <div class="bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 rounded-lg p-4 text-sm text-indigo-700 dark:text-indigo-200">
+      <div class="bg-accent-50 dark:bg-accent-950 border border-accent-200 dark:border-accent-800 rounded-lg p-4 text-sm text-accent-700 dark:text-accent-200">
         <p><strong>Linear sync:</strong> {{ t('apiDocs.linearNote') }}</p>
       </div>
     </section>

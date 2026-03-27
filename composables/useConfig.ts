@@ -16,6 +16,7 @@ const defaultConfig: AppConfig = {
   favoriteContextIds: [],
   uiLanguage: 'en',
   theme: 'system',
+  accentColor: 'indigo',
   audioDeviceId: '',
   linearStateMap: { TRIAGE: 'triage', TODO: 'unstarted', IN_PROGRESS: 'started', DONE: 'completed' },
   lastSendAction: 'linear',

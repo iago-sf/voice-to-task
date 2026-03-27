@@ -28,7 +28,7 @@
             :href="entry.linear_issue_url"
             target="_blank"
             rel="noopener"
-            class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 hover:bg-indigo-100 dark:hover:bg-indigo-900 transition-colors"
+            class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-accent-50 dark:bg-accent-950 text-accent-600 dark:text-accent-300 border border-accent-200 dark:border-accent-800 hover:bg-accent-100 dark:hover:bg-accent-900 transition-colors"
           >
             {{ entry.linear_issue_key }}
             <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -39,7 +39,7 @@
       </div>
       <div class="flex items-center gap-1 shrink-0">
         <button
-          class="p-2 text-gray-400 dark:text-gray-500 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+          class="p-2 text-gray-400 dark:text-gray-500 hover:text-accent-500 dark:hover:text-accent-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
           :title="t('entry.editTitle')"
           @click="$emit('edit', entry)"
         >
@@ -49,7 +49,7 @@
         </button>
         <button
           v-if="entry.status === 'draft'"
-          class="p-2 text-gray-400 dark:text-gray-500 hover:text-indigo-500 dark:hover:text-indigo-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
+          class="p-2 text-gray-400 dark:text-gray-500 hover:text-accent-500 dark:hover:text-accent-400 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors"
           :title="t('entry.retryTitle')"
           @click="$emit('retry', entry)"
         >
@@ -84,7 +84,7 @@ defineEmits<{
 const { t } = useI18n()
 
 const taskStatusStyle: Record<string, string> = {
-  TRIAGE: 'bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800',
+  TRIAGE: 'bg-accent-50 dark:bg-accent-950 text-accent-700 dark:text-accent-300 border border-accent-200 dark:border-accent-800',
   TODO: 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-700',
   IN_PROGRESS: 'bg-amber-50 dark:bg-amber-950 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800',
   DONE: 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800',

@@ -42,6 +42,7 @@ export interface AppConfig {
   favoriteContextIds: number[]
   uiLanguage: 'en' | 'es'
   theme: 'system' | 'light' | 'dark'
+  accentColor: string
   audioDeviceId: string
   linearStateMap: Record<TaskStatus, LinearStateType>
   lastSendAction?: 'linear' | 'copy' | 'save'

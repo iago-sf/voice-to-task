@@ -4,7 +4,7 @@
       <NuxtLink
         to="/"
         class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-xs transition-colors"
-        :class="$route.path === '/' ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
+        :class="$route.path === '/' ? 'text-accent-500 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
@@ -14,7 +14,7 @@
       <NuxtLink
         to="/history"
         class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-xs transition-colors"
-        :class="$route.path === '/history' ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
+        :class="$route.path === '/history' ? 'text-accent-500 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
@@ -24,7 +24,7 @@
       <NuxtLink
         to="/contexts"
         class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-xs transition-colors"
-        :class="$route.path === '/contexts' ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
+        :class="$route.path === '/contexts' ? 'text-accent-500 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
@@ -34,7 +34,7 @@
       <NuxtLink
         to="/api-docs"
         class="flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg text-xs transition-colors"
-        :class="$route.path === '/api-docs' ? 'text-indigo-500 dark:text-indigo-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
+        :class="$route.path === '/api-docs' ? 'text-accent-500 dark:text-accent-400' : 'text-gray-400 dark:text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
       >
         <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
           <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />

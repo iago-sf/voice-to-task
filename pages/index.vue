@@ -40,7 +40,7 @@
     <!-- Auto mode progress -->
     <div
       v-if="autoStep"
-      class="mb-4 p-3 bg-indigo-50 dark:bg-indigo-950 border border-indigo-200 dark:border-indigo-800 rounded-lg text-indigo-700 dark:text-indigo-200 text-sm flex items-center gap-3"
+      class="mb-4 p-3 bg-accent-50 dark:bg-accent-950 border border-accent-200 dark:border-accent-800 rounded-lg text-accent-700 dark:text-accent-200 text-sm flex items-center gap-3"
     >
       <svg class="w-4 h-4 animate-spin shrink-0" fill="none" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -72,7 +72,7 @@
         <div class="relative">
           <button
             :disabled="!isSupported"
-            class="relative z-10 w-20 h-20 rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed bg-indigo-600 hover:bg-indigo-700 shadow-lg shadow-indigo-500/20"
+            class="relative z-10 w-20 h-20 rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed bg-accent-600 hover:bg-accent-700 shadow-lg shadow-accent-500/20"
             @click="toggleRecording"
           >
             <svg class="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -137,7 +137,7 @@
           class="relative min-w-[40px] min-h-[40px] w-10 h-10 rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-40 disabled:cursor-not-allowed shrink-0"
           :class="isListening
             ? 'bg-red-600 hover:bg-red-700 shadow-md shadow-red-500/30'
-            : 'bg-indigo-600 hover:bg-indigo-700 shadow-md shadow-indigo-500/20'"
+            : 'bg-accent-600 hover:bg-accent-700 shadow-md shadow-accent-500/20'"
           @click="toggleRecording"
         >
           <div v-if="isListening" class="absolute inset-0 rounded-full bg-red-500/20 animate-pulse-ring" />
@@ -203,7 +203,7 @@
         <button
           class="min-w-[40px] min-h-[40px] p-2 rounded-lg transition-colors"
           :class="showPreview
-            ? 'text-indigo-600 dark:text-indigo-400 bg-indigo-50 dark:bg-indigo-950'
+            ? 'text-accent-600 dark:text-accent-400 bg-accent-50 dark:bg-accent-950'
             : 'text-gray-400 dark:text-gray-600 hover:text-gray-600 dark:hover:text-gray-400'"
           :title="showPreview ? t('index.edit') : t('index.preview')"
           @click="showPreview = !showPreview"
@@ -236,7 +236,7 @@
         ref="textareaRef"
         v-model="editableText"
         :rows="hasText ? 10 : 4"
-        class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-600 focus:border-indigo-500 focus:ring-1 focus:ring-indigo-500 outline-none resize-y text-sm leading-relaxed transition-all"
+        class="w-full bg-white dark:bg-gray-900 border border-gray-300 dark:border-gray-700 rounded-lg px-4 py-3 text-gray-800 dark:text-gray-200 placeholder-gray-400 dark:placeholder-gray-600 focus:border-accent-500 focus:ring-1 focus:ring-accent-500 outline-none resize-y text-sm leading-relaxed transition-all"
         :class="hasText ? 'min-h-[200px]' : 'min-h-[80px]'"
         :placeholder="t('index.placeholder')"
       />
@@ -263,7 +263,7 @@
             :key="fav.id"
             class="px-3 py-1.5 text-xs rounded-full border transition-colors whitespace-nowrap shrink-0"
             :class="isContextActive(fav.id)
-              ? 'bg-indigo-50 dark:bg-indigo-950 border-indigo-400 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300'
+              ? 'bg-accent-50 dark:bg-accent-950 border-accent-400 dark:border-accent-600 text-accent-700 dark:text-accent-300'
               : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-600'"
             @click="toggleContextActive(fav.id)"
           >
@@ -281,7 +281,7 @@
             :key="label.id"
             class="px-3 py-1.5 text-xs rounded-full border transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
             :class="isLabelSelected(label.id)
-              ? 'bg-indigo-50 dark:bg-indigo-950 border-indigo-400 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300'
+              ? 'bg-accent-50 dark:bg-accent-950 border-accent-400 dark:border-accent-600 text-accent-700 dark:text-accent-300'
               : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-600'"
             @click="toggleLabel(label.id)"
           >
@@ -300,7 +300,7 @@
             :key="project.id"
             class="px-3 py-1.5 text-xs rounded-full border transition-colors flex items-center gap-1.5 whitespace-nowrap shrink-0"
             :class="config.selectedProjectId === project.id
-              ? 'bg-indigo-50 dark:bg-indigo-950 border-indigo-400 dark:border-indigo-600 text-indigo-700 dark:text-indigo-300'
+              ? 'bg-accent-50 dark:bg-accent-950 border-accent-400 dark:border-accent-600 text-accent-700 dark:text-accent-300'
               : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-400 dark:hover:border-gray-600'"
             @click="toggleProject(project.id)"
           >
