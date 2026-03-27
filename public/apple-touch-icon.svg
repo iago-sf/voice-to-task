@@ -1,18 +1,26 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
   <defs>
-    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+    <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#6366f1"/>
       <stop offset="100%" style="stop-color:#4f46e5"/>
     </linearGradient>
   </defs>
-  <rect width="180" height="180" rx="40" fill="url(#bg)"/>
-  <g fill="white">
-    <!-- Mic capsule -->
-    <rect x="73" y="34" width="34" height="62" rx="17"/>
-    <!-- Mic base -->
-    <path d="M45 84v11a45 45 0 0 0 90 0V84h-11v11a34 34 0 0 1-68 0V84H45z"/>
-    <!-- Stand -->
-    <rect x="84" y="130" width="12" height="17"/>
-    <rect x="62" y="141" width="56" height="11" rx="5.5"/>
-  </g>
+  <rect width="180" height="180" rx="38" fill="url(#g)"/>
+  <!-- Microphone head (bottom-left corner, peeking up) -->
+  <rect x="20" y="98" width="42" height="62" rx="21" fill="white"/>
+  <!-- Mic base curve -->
+  <path d="M20 112v17c0 23 19 42 42 42h0c23 0 42-19 42-42v-17h-17v17c0 14-11 25-25 25h0c-14 0-25-11-25-25v-17h-17z" fill="white"/>
+  <!-- Mic stand -->
+  <rect x="41" y="172" width="14" height="8" rx="2" fill="white"/>
+  <rect x="27" y="177" width="42" height="7" rx="2" fill="white"/>
+  <!-- Sound waves as task lines (diagonal up-right) -->
+  <!-- Wave 1 (closest) -->
+  <circle cx="79" cy="113" r="6" fill="white"/>
+  <rect x="88" y="110" width="34" height="6" rx="3" fill="white"/>
+  <!-- Wave 2 -->
+  <circle cx="99" cy="79" r="6" fill="white"/>
+  <rect x="108" y="76" width="39" height="6" rx="3" fill="white"/>
+  <!-- Wave 3 (furthest) -->
+  <circle cx="118" cy="45" r="6" fill="white"/>
+  <rect x="127" y="42" width="34" height="6" rx="3" fill="white"/>
 </svg>
