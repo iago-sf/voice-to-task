@@ -23,6 +23,15 @@ export default defineNuxtConfig({
 
   app: {
     head: {
+      title: 'Voice to Task',
+      meta: [
+        { name: 'theme-color', content: '#4f46e5' },
+        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+      ],
+      link: [
+        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
+        { rel: 'apple-touch-icon', type: 'image/svg+xml', href: '/apple-touch-icon.svg' },
+      ],
       script: [
         { src: 'https://cdn.tailwindcss.com' },
         {

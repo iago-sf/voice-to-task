@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" style="stop-color:#6366f1"/>
+      <stop offset="100%" style="stop-color:#4f46e5"/>
+    </linearGradient>
+  </defs>
+  <rect width="180" height="180" rx="40" fill="url(#bg)"/>
+  <g fill="white">
+    <!-- Mic capsule -->
+    <rect x="73" y="34" width="34" height="62" rx="17"/>
+    <!-- Mic base -->
+    <path d="M45 84v11a45 45 0 0 0 90 0V84h-11v11a34 34 0 0 1-68 0V84H45z"/>
+    <!-- Stand -->
+    <rect x="84" y="130" width="12" height="17"/>
+    <rect x="62" y="141" width="56" height="11" rx="5.5"/>
+  </g>
+</svg>
