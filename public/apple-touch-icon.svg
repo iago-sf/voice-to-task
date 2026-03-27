@@ -6,20 +6,20 @@
     </linearGradient>
   </defs>
   <rect width="180" height="180" rx="36" fill="url(#g)"/>
-  <!-- Microphone capsule (scaled to 180x180) -->
-  <rect x="22" y="105" width="28" height="46" rx="14" fill="white"/>
-  <!-- Mic stand curve -->
-  <path d="M22 126v7c0 15 13 28 28 28h0c15 0 28-13 28-28v-7h-11v7c0 9-8 17-17 17h0c-9 0-17-8-17-17v-7h-11z" fill="white"/>
-  <rect x="29" y="161" width="14" height="6" rx="2" fill="white"/>
-  <rect x="22" y="165" width="28" height="4" rx="2" fill="white"/>
-  <!-- Curved waves -->
+  <!-- Microphone (left side, vertical) -->
+  <rect x="35" y="56" width="35" height="63" rx="18" fill="white"/>
+  <!-- Lines inside mic -->
+  <rect x="49" y="70" width="25" height="5" rx="2" fill="#5651e9"/>
+  <rect x="49" y="81" width="25" height="5" rx="2" fill="#5651e9"/>
+  <rect x="49" y="92" width="25" height="5" rx="2" fill="#5651e9"/>
+  <!-- Curved sound waves -->
   <!-- Wave 1 -->
-  <circle cx="70" cy="105" r="6" fill="white"/>
-  <path d="M78 105q21-10 42 0" stroke="white" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <circle cx="40" cy="42" r="6" fill="white"/>
+  <path d="M56 42q49-21 98 0" stroke="white" stroke-width="6" stroke-linecap="round" fill="none"/>
   <!-- Wave 2 -->
-  <circle cx="91" cy="70" r="6" fill="white"/>
-  <path d="M99 70q25-12 50 0" stroke="white" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <circle cx="40" cy="70" r="6" fill="white"/>
+  <path d="M56 70q35-14 70 0" stroke="white" stroke-width="6" stroke-linecap="round" fill="none"/>
   <!-- Wave 3 -->
-  <circle cx="112" cy="35" r="6" fill="white"/>
-  <path d="M120 35q18-9 36 0" stroke="white" stroke-width="6" stroke-linecap="round" fill="none"/>
+  <circle cx="40" cy="98" r="6" fill="white"/>
+  <path d="M56 98q21-7 42 0" stroke="white" stroke-width="6" stroke-linecap="round" fill="none"/>
 </svg>
