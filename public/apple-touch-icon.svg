@@ -1,25 +1,25 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 180 180">
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
     <linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%">
       <stop offset="0%" style="stop-color:#6366f1"/>
       <stop offset="100%" style="stop-color:#4f46e5"/>
     </linearGradient>
   </defs>
-  <rect width="180" height="180" rx="36" fill="url(#g)"/>
-  <!-- Microphone capsule (scaled to 180x180) -->
-  <rect x="28" y="98" width="35" height="53" rx="18" fill="white"/>
+  <rect width="512" height="512" rx="108" fill="url(#g)"/>
+  <!-- Microphone capsule (bottom-left) -->
+  <rect x="100" y="400" width="120" height="180" rx="60" fill="white"/>
   
-  <rect x="42" y="112" width="21" height="4" rx="2" fill="#5651e9"/>
-  <rect x="42" y="119" width="21" height="4" rx="2" fill="#5651e9"/>
-  <rect x="42" y="126" width="21" height="4" rx="2" fill="#5651e9"/>
-  <!-- Curved sound waves -->
+  <rect x="150" y="445" width="75" height="12" rx="5" fill="#5651e9"/>
+  <rect x="150" y="470" width="75" height="12" rx="5" fill="#5651e9"/>
+  <rect x="150" y="495" width="75" height="12" rx="5" fill="#5651e9"/>
+  <!-- Curved sound waves (task lines) -->
   <!-- Wave 1 -->
-  <circle cx="33" cy="77" r="5" fill="white"/>
-  <path d="M46 77q35-18 70 0" stroke="white" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <circle cx="115" cy="300" r="18" fill="white"/>
+  <path d="M160 300q120-0 120 120" stroke="white" stroke-width="16" stroke-linecap="round" fill="none"/>
   <!-- Wave 2 -->
-  <circle cx="33" cy="53" r="5" fill="white"/>
-  <path d="M46 53q63-28 112 0" stroke="white" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <circle cx="115" cy="200" r="18" fill="white"/>
+  <path d="M160 200q220-0 220 220" stroke="white" stroke-width="16" stroke-linecap="round" fill="none"/>
   <!-- Wave 3 -->
-  <circle cx="33" cy="28" r="5" fill="white"/>
-  <path d="M46 28q91-35 119 35" stroke="white" stroke-width="5" stroke-linecap="round" fill="none"/>
+  <circle cx="115" cy="100" r="18" fill="white"/>
+  <path d="M160 100q320-0 320 320" stroke="white" stroke-width="16" stroke-linecap="round" fill="none"/>
 </svg>
