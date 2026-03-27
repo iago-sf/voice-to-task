@@ -71,6 +71,7 @@
 - **Fix (2026-03-27):** El config de Tailwind CDN debía estar en el mismo script tag que el src. Separados en dos tags.
 - **Fix (2026-03-27):** `useI18n()` no exporta `success`/`error`, solo `t`. Corregido en config.vue para usar `useToast()` para toasts.
 - **Fix (2026-03-27):** Añadidas variables CSS por defecto en `main.css` (`:root` block) porque el Tailwind config se carga antes de que las variables estén definidas.
+- **Fix (2026-03-27):** Faltaban traducciones de theme y accent color en inglés y español. Añadidas `config.theme`, `config.themeSystem`, `config.themeLight`, `config.themeDark` y `config.accentColor*` en ambos idiomas.
 
 ### Notas técnicas
 - Tailwind en este proyecto se carga via CDN script (`cdn.tailwindcss.com`), NO como plugin PostCSS. Por tanto `@apply` en CSS externo no funciona — hay que usar CSS puro
