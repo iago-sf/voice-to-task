@@ -165,6 +165,19 @@ REST endpoints at `/api/tasks` allow AI agents to discover, claim, and update ta
 
 Task status changes automatically sync to Linear using the configurable state mapping.
 
+### Claude Code MCP Integration
+
+The project includes an MCP (Model Context Protocol) server that lets Claude Code manage tasks directly. Setup:
+
+1. Generate an API token at **Config > Tokens** (`/config?tab=tokens`)
+2. Set the environment variable:
+   ```bash
+   export VOICE_TO_TASK_TOKEN="vtk_your_token_here"
+   ```
+3. The `.mcp.json` at the project root auto-configures the MCP server for Claude Code
+
+Available tools: `list_tasks`, `get_task`, `update_task_status`. The workflow is: pick a TODO task → claim it with IN_PROGRESS + your agent name → do the work → mark DONE.
+
 ### Data isolation
 
 Each authenticated user sees only their own data:

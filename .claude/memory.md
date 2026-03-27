@@ -29,6 +29,21 @@
 - **Backend:** `action-plan.post.ts` trata `__DEFAULT__` como "sin custom prompt", usa el default
 - **Contexto con contextos:** Cuando hay contextos activos, el system prompt también pide skippear QUESTIONS ya respondidas por los contextos y enriquecer el GENERATED CONTEXT
 
+### MCP Skill para Claude Code
+
+- **Servidor MCP** en `mcp/task-server.ts` — usa `@modelcontextprotocol/sdk` con transporte stdio
+- **3 tools:**
+  - `list_tasks` — GET /api/tasks con filtros `task_status`, `assigned_to`, `limit`
+  - `get_task` — GET /api/tasks/:id
+  - `update_task_status` — PATCH /api/tasks/:id/status con `task_status` y `assigned_to` opcional
+- **Auth:** Bearer token vía env var `VOICE_TO_TASK_TOKEN` (generado en /config?tab=tokens)
+- **URL base:** `VOICE_TO_TASK_URL` env var, default `https://voice-to-task-taupe.vercel.app`
+- **Workflow agéntico:** Las descripciones de las tools guían al agente: pick TODO → claim con IN_PROGRESS + assigned_to → work → mark DONE
+- **Errores:** 401 (auth), 404 (not found), 429 (usage limit), genéricos
+- **`.mcp.json`** en raíz del proyecto para que Claude Code auto-descubra el servidor
+- **Dependencia:** `@modelcontextprotocol/sdk` (trae `zod` como peer)
+- **Runner:** `npx tsx mcp/task-server.ts`
+
 ### Rediseño mobile-first de index.vue
 
 - **Layout reorganizado:** Hero record button cuando no hay texto + textarea siempre visible + toolbar compacta con texto

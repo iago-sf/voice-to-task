@@ -42,8 +42,11 @@ voice-to-task/
 │   ├── login.vue                   # Google OAuth login (layout: false)
 │   ├── history.vue                 # Entry list with status/task_status filters
 │   ├── contexts.vue                # CRUD for markdown context documents
-│   ├── config.vue                  # 4-tab settings (API Keys, Linear, AI Models, Prefs)
+│   ├── config.vue                  # 5-tab settings (API Keys, Linear, AI Models, Prefs, Tokens) — tabs accessible via ?tab= query param
 │   └── api-docs.vue                # Agent Task API docs + copy as Markdown
+├── mcp/
+│   └── task-server.ts              # MCP server for Claude Code (list_tasks, get_task, update_task_status)
+├── .mcp.json                       # Claude Code MCP server config (auto-discovery)
 ├── server/
 │   ├── auth.d.ts                   # Type augmentation: User { name, email, avatar }
 │   ├── routes/auth/
@@ -188,6 +191,23 @@ Empty string value = delete the key.
 | PATCH | `/api/tasks/:id/status` | Update `{ task_status, assigned_to? }` — triggers Linear sync |
 
 Task fields returned: `id, text, task_status, assigned_to, linear_issue_key, linear_issue_url, created_at, updated_at`.
+
+### MCP Server (`mcp/task-server.ts`)
+
+An MCP (Model Context Protocol) server for Claude Code integration. Runs as a stdio process via `npx tsx mcp/task-server.ts`. Configured in `.mcp.json` at project root.
+
+**Environment variables:**
+- `VOICE_TO_TASK_TOKEN` (required) — API token generated at `/config?tab=tokens`
+- `VOICE_TO_TASK_URL` (optional) — Base URL, defaults to `https://voice-to-task-taupe.vercel.app`
+
+**Tools:**
+| Tool | Description | Parameters |
+|------|-------------|------------|
+| `list_tasks` | List tasks with optional filters | `task_status?`, `assigned_to?`, `limit?` |
+| `get_task` | Get a single task by ID | `id` (required) |
+| `update_task_status` | Update status + optional assignee, triggers Linear sync | `id` (required), `task_status` (required), `assigned_to?` |
+
+**Workflow:** Pick TODO → claim with IN_PROGRESS + assigned_to → work → mark DONE.
 
 ### Contexts (`server/api/contexts/`)
 | Method | Path | Description |

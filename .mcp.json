@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "voice-to-task": {
+      "command": "npx",
+      "args": ["tsx", "mcp/task-server.ts"],
+      "env": {
+        "VOICE_TO_TASK_URL": "https://voice-to-task-taupe.vercel.app"
+      }
+    }
+  }
+}
