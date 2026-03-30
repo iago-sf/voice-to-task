@@ -24,10 +24,11 @@ function encrypt(plaintext: string): string {
 
 function decrypt(ciphertext: string): string {
   const key = getDerivedKey()
-  const [ivB64, tagB64, dataB64] = ciphertext.split(':')
-  const iv = Buffer.from(ivB64, 'base64')
-  const authTag = Buffer.from(tagB64, 'base64')
-  const encrypted = Buffer.from(dataB64, 'base64')
+  const parts = ciphertext.split(':')
+  if (parts.length !== 3) throw new Error('Invalid ciphertext format')
+  const iv = Buffer.from(parts[0]!, 'base64')
+  const authTag = Buffer.from(parts[1]!, 'base64')
+  const encrypted = Buffer.from(parts[2]!, 'base64')
   const decipher = crypto.createDecipheriv(ALGORITHM, key, iv)
   decipher.setAuthTag(authTag)
   return decipher.update(encrypted) + decipher.final('utf8')

@@ -49,7 +49,7 @@ export function useGroqSpeechToText(language: Ref<string> | string = 'es-ES', en
           return
         }
 
-        const audioBlob = new Blob(audioChunks, { type: audioChunks[0].type })
+        const audioBlob = new Blob(audioChunks, { type: audioChunks[0]?.type || 'audio/webm' })
         audioChunks = []
 
         try {

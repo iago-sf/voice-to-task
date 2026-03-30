@@ -1,5 +1,5 @@
 import { ensureDB } from '~/server/utils/db'
-import { callGroq, callZai, callMinimax, parseResponse } from '~/server/utils/llm'
+import { streamGroq, streamZai, streamMinimax } from '~/server/utils/llm'
 import { getSessionEmail } from '~/server/utils/session-email'
 import { checkUsage } from '~/server/utils/usage'
 
@@ -18,7 +18,6 @@ export default defineEventHandler(async (event) => {
   const contextIds: number[] = body.contextIds || []
   const customPrompt: string = body.customPrompt || ''
 
-  // Load active contexts from DB
   let contextBlock = ''
   if (contextIds.length > 0) {
     const db = await ensureDB()
@@ -100,16 +99,37 @@ ${contextBlock}`
     { role: 'user', content: body.text },
   ]
 
-  let raw
+  let stream: AsyncGenerator<string>
   if (engine === 'zai') {
     const apiKey = await requireUserApiKey(event, 'zai_api_key')
-    raw = await callZai(apiKey, model, messages)
+    stream = streamZai(apiKey, model, messages)
   } else if (engine === 'minimax') {
     const apiKey = await requireUserApiKey(event, 'minimax_api_key')
-    raw = await callMinimax(apiKey, model, messages)
+    stream = streamMinimax(apiKey, model, messages)
   } else {
     const apiKey = await requireUserApiKey(event, 'groq_api_key')
-    raw = await callGroq(apiKey, model, messages)
+    stream = streamGroq(apiKey, model, messages)
   }
-  return parseResponse(raw)
+
+  event.node.res.statusCode = 200
+  event.node.res.setHeader('Content-Type', 'text/event-stream')
+  event.node.res.setHeader('Cache-Control', 'no-cache')
+  event.node.res.setHeader('Connection', 'keep-alive')
+  event.node.res.setHeader('X-Accel-Buffering', 'no')
+  event.node.res.flushHeaders()
+
+  const send = (data: string) => {
+    event.node.res.write(`data: ${data}\n\n`)
+  }
+
+  try {
+    for await (const chunk of stream) {
+      send(JSON.stringify({ chunk }))
+    }
+    send('[DONE]')
+  } catch (err: any) {
+    send(JSON.stringify({ error: err.message || 'Stream error' }))
+  } finally {
+    event.node.res.end()
+  }
 })

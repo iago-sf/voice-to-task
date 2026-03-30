@@ -63,4 +63,18 @@ export default defineNuxtConfig({
   },
 
   css: ['~/assets/css/main.css'],
+
+  vite: {
+    optimizeDeps: {
+      include: [
+        'oh-vue-icons',
+        'oh-vue-icons/icons',
+        '@vue/devtools-core',
+        '@vue/devtools-kit',
+        'marked',
+        'dompurify',
+        '@vueuse/core',
+      ],
+    },
+  },
 })

@@ -13,7 +13,7 @@ async function getUserLimit(email: string): Promise<number> {
     sql: `SELECT value FROM user_settings WHERE user_email = ? AND key = 'monthly_limit'`,
     args: [email],
   })
-  if (rows.length > 0 && rows[0].value) {
+  if (rows.length > 0 && rows[0]?.value) {
     const parsed = Number(rows[0].value)
     if (!isNaN(parsed) && parsed > 0) return parsed
   }

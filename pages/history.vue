@@ -133,7 +133,7 @@ async function handleRetry(entry: Entry) {
 
   try {
     const lines = entry.text.split('\n')
-    const title = lines[0].slice(0, 200)
+    const title = (lines[0] || '').slice(0, 200)
     const description = lines.slice(1).join('\n').trim() || undefined
 
     const result = await $fetch('/api/linear/create-issue', {

@@ -21,13 +21,13 @@ export default defineEventHandler(async (event) => {
     'eu-ES': 'eu',
   }
   const rawLang = languageField?.data?.toString() || 'es-ES'
-  const language = langMap[rawLang] || rawLang.split('-')[0]
+  const language = langMap[rawLang] || rawLang.split('-')[0] || 'es'
 
   const apiKey = await requireUserApiKey(event, 'groq_api_key')
 
   const filename = audioFile.filename || 'audio.webm'
   const mime = audioFile.type || 'audio/webm'
-  const blob = new Blob([audioFile.data], { type: mime })
+  const blob = new Blob([new Uint8Array(audioFile.data)], { type: mime })
   const form = new FormData()
   form.append('file', blob, filename)
   form.append('model', 'whisper-large-v3-turbo')
