@@ -25,9 +25,12 @@
 - **Multi-line `:class` with ternaries** break the Vue macro parser — keep single-line
 - **NavBar**: `h-14`, fixed `bottom-0` mobile, `top-0` desktop. `app.vue` adds `pb-16 sm:pb-0 sm:pt-14` padding
 
-### Known issues (to fix)
-- `toggleRecording` reads `transcript.value` directly to avoid race condition with `stop()`/`reset()`
-- The `watch(transcript)` only updates `inputText` while `isListening` is true (for real-time display)
+### Voice input goes to text field instead of auto-sending
+- `toggleRecording()` now puts the transcript into `inputText` (textarea) instead of auto-sending to chat
+- User must press Send to submit — allows editing the transcription before sending
+- Added `pendingVoiceInput` ref to handle Groq engine's async transcription (API response arrives after `stop()`)
+- `watch(transcript)` has a second branch for `pendingVoiceInput` that catches delayed transcriptions
+- Fixes issue where Groq transcription sometimes didn't appear (race condition between `nextTick` and async API response)
 
 ### Bug fix: duplicate code blocks in pages/index.vue
 - `scrollToBottom`, `toggleRecording`, `watch`, `onMounted` were each defined 2-3 times

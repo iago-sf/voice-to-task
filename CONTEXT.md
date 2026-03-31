@@ -79,6 +79,11 @@ API keys (Linear, Groq, ZAI) are per-user and managed through the Config > API K
 - `server/api/ai/action-plan.post.ts` — SSE endpoint with `flushHeaders()`, `X-Accel-Buffering: no`, 5-min timeout via `AbortController`.
 - Frontend `streamPlan()` uses `fetch` + `ReadableStream` reader, mutates `messages.value[index]` for reactivity.
 
+### Voice input flow
+- **Recording stops → transcript goes to input field** (not auto-sent to chat). User edits and presses Send.
+- `pendingVoiceInput` ref handles async Groq transcription: API response arrives after `stop()`, so the `watch(transcript)` catches it via this flag.
+- Browser STT updates `inputText` in real-time while recording (`watch(transcript)` + `isListening`). Groq STT updates after stop via `pendingVoiceInput`.
+
 ### Reactivity gotchas
 - **Never pass message objects directly** to mutation functions — always use `messages.value[index]` to stay reactive.
 - **DOMPurify is async** — `purifyReady` flag gates `v-html` rendering; shows plain text as fallback to avoid hydration mismatch.

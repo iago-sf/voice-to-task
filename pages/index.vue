@@ -341,19 +341,20 @@ function scrollToBottom() {
   })
 }
 
+const pendingVoiceInput = ref(false)
+
 function toggleRecording() {
   if (isListening.value) {
     stop()
+    pendingVoiceInput.value = true
     nextTick(() => {
-      const text = transcript.value?.trim() || inputText.value.trim()
+      const text = transcript.value?.trim()
       if (text) {
-        addUserMessage(text)
-        if (config.value.autoMode && isConfigured.value) {
-          runAutoFlow()
-        }
+        inputText.value = text
+        autoResize()
+        pendingVoiceInput.value = false
+        reset()
       }
-      inputText.value = ''
-      reset()
     })
   } else {
     start()
@@ -371,6 +372,11 @@ watch(transcript, (val) => {
   if (val && isListening.value) {
     inputText.value = val
     autoResize()
+  } else if (val && pendingVoiceInput.value) {
+    inputText.value = val
+    autoResize()
+    pendingVoiceInput.value = false
+    nextTick(() => reset())
   }
 })
 

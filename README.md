@@ -116,18 +116,19 @@ After logging in with Google, go to **Config** via the user menu (tap your avata
 ### Basic flow
 
 1. Press the **microphone button** to start recording, or **type directly** in the chat input
-2. Speak — the transcript appears in real time (Web Speech API) or after stopping (Groq/ZAI)
-3. The AI generates a plan automatically — action plans stream as a response with streaming markdown
-4. Use **Send to Linear** (or choose copy/save from the dropdown) to create the task
-5. The issue is created in Linear with **triage** status and assigned to you
+2. Speak — the transcript appears in the input field in real time (Web Speech API) or after stopping (Groq/ZAI)
+3. **Edit the transcription** if needed, then press **Send** (or Enter)
+4. The AI generates a plan automatically — action plans stream as a response with streaming markdown
+5. Use **Send to Linear** (or choose copy/save from the dropdown) to create the task
+6. The issue is created in Linear with **triage** status and assigned to you
 
-6. Iterate by typing another message to refine the plan
+7. Iterate by typing another message to refine the plan
 
 ### Auto mode
 
-When enabled, stopping the recording or sending typing automatically triggers the full pipeline:
+When enabled, sending a message automatically triggers the full pipeline:
 
-**Record** → **Generate plan** → **Send to Linear**
+**Send** → **Generate plan** → **Send to Linear**
 
 Toggle it from the main page or from Config.
 
