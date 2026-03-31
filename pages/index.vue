@@ -355,6 +355,26 @@ watch(transcript, (val) => {
   }
 })
 
+function toggleRecording() {
+  if (isListening.value) {
+    stop()
+    nextTick(() => {
+      const text = transcript.value?.trim() || inputText.value.trim()
+      if (text) {
+        addUserMessage(text)
+        if (config.value.autoMode && isConfigured.value) {
+          runAutoFlow()
+        }
+      }
+      inputText.value = ''
+      reset()
+    })
+  } else {
+    start()
+  }
+}
+})
+
 watch(() => messages.value.length, () => {
   scrollToBottom()
 })
