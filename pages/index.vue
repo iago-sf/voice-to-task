@@ -341,20 +341,6 @@ function scrollToBottom() {
   })
 }
 
-function autoResize() {
-  const el = inputRef.value
-  if (!el) return
-  el.style.height = 'auto'
-  el.style.height = Math.min(el.scrollHeight, 128) + 'px'
-}
-
-watch(transcript, (val) => {
-  if (val && isListening.value) {
-    inputText.value = val
-    autoResize()
-  }
-})
-
 function toggleRecording() {
   if (isListening.value) {
     stop()
@@ -373,6 +359,19 @@ function toggleRecording() {
     start()
   }
 }
+
+function autoResize() {
+  const el = inputRef.value
+  if (!el) return
+  el.style.height = 'auto'
+  el.style.height = Math.min(el.scrollHeight, 128) + 'px'
+}
+
+watch(transcript, (val) => {
+  if (val && isListening.value) {
+    inputText.value = val
+    autoResize()
+  }
 })
 
 watch(() => messages.value.length, () => {
@@ -411,22 +410,6 @@ onMounted(async () => {
     }
   })
 })
-
-function toggleRecording() {
-  if (isListening.value) {
-    stop()
-    const text = inputText.value.trim()
-    if (text) {
-      addUserMessage(text)
-      if (config.value.autoMode && isConfigured.value) {
-        runAutoFlow()
-      }
-    }
-    reset()
-  } else {
-    start()
-  }
-}
 
 function addUserMessage(text: string) {
   messages.value.push({ role: 'user', content: text })
@@ -471,6 +454,9 @@ async function streamPlan(text: string, msgIndex: number) {
   generatingPlan.value = true
   let receivedChunks = false
 
+  const getMsg = () => messages.value[msgIndex]
+  if (!getMsg()) return
+
   try {
     const response = await fetch('/api/ai/action-plan', {
       method: 'POST',
@@ -503,9 +489,9 @@ async function streamPlan(text: string, msgIndex: number) {
         if (data === '[DONE]') continue
         try {
           const json = JSON.parse(data)
-          if (json.chunk) {
+          if (json.chunk && getMsg()) {
             receivedChunks = true
-            messages.value[msgIndex].content += json.chunk
+            getMsg()!.content += json.chunk
           } else if (json.error) {
             toastError(`${t('index.errorPlan')}: ${json.error}`)
           }
@@ -518,21 +504,25 @@ async function streamPlan(text: string, msgIndex: number) {
       if (data !== '[DONE]') {
         try {
           const json = JSON.parse(data)
-          if (json.chunk) {
+          if (json.chunk && getMsg()) {
             receivedChunks = true
-            messages.value[msgIndex].content += json.chunk
+            getMsg()!.content += json.chunk
           }
         } catch {}
       }
     }
 
-    if (!receivedChunks) {
-      messages.value[msgIndex].content = t('index.errorPlan')
+    if (!receivedChunks && getMsg()) {
+      getMsg()!.content = t('index.errorPlan')
     }
   } catch (err: any) {
-    messages.value[msgIndex].content = `${t('index.errorPlan')}: ${err.message || 'Unknown'}`
+    if (getMsg()) {
+      getMsg()!.content = `${t('index.errorPlan')}: ${err.message || 'Unknown'}`
+    }
   } finally {
-    messages.value[msgIndex].generating = false
+    if (getMsg()) {
+      getMsg()!.generating = false
+    }
     generatingPlan.value = false
     scrollToBottom()
   }
@@ -559,9 +549,13 @@ async function runAutoFlow() {
   const autoMsgIndex = messages.value.length - 1
   await streamPlan(lastUserMsg.content, autoMsgIndex)
 
-  messages.value[autoMsgIndex].autoStep = t('index.sendingLinear')
+  if (messages.value[autoMsgIndex]) {
+    messages.value[autoMsgIndex].autoStep = t('index.sendingLinear')
+  }
   await handleSendFromChat(autoMsgIndex, config.value.lastSendAction || 'linear')
-  messages.value[autoMsgIndex].autoStep = ''
+  if (messages.value[autoMsgIndex]) {
+    messages.value[autoMsgIndex].autoStep = ''
+  }
 }
 
 const sendActions = computed(() => [

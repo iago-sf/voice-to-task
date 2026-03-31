@@ -10,7 +10,7 @@
 A Nuxt 4 full-stack app that captures voice via the browser microphone, transcribes it to text, optionally generates an AI action plan, and creates tasks in [Linear](https://linear.app). All data is scoped per authenticated user (Google OAuth). The database is SQLite-compatible via libSQL (local file or Turso for cloud/serverless).
 
 - **Framework:** Nuxt 4 (Vue 3) — full-stack, file-based routing
-- **Node.js:** v22+ required (see `.nvmrc`)
+- **Node.js:** v22 required (see `.nvmrc`)
 - **Database:** libSQL via `@libsql/client` — local file (`file:data/voice-linear.db`) or remote Turso
 - **Auth:** Google OAuth via `nuxt-auth-utils`
 - **Styling:** Tailwind CSS (loaded from CDN) + `assets/css/main.css`

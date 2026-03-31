@@ -25,7 +25,7 @@ Built with **Nuxt 4**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SD
 
 ## Prerequisites
 
-- **Node.js** >= 18
+- **Node.js** v22
 - A **Google OAuth** client ID and secret (for authentication)
 - A **Linear API key** (per user, configured in-app)
 - A **Groq API key**, **Z.ai API key**, and/or **MiniMax API key** (per user, configured in-app)
@@ -110,8 +110,6 @@ After logging in with Google, go to **Config** via the user menu (tap your avata
 2. Choose **UI language** (English / Spanish)
 3. Choose **theme** (System / Light / Dark)
 4. Choose **accent color** — 6 options: indigo, blue, violet, rose, emerald, amber
-4. Choose **accent color** — 6 options: indigo, blue, violet, rose, emerald, amber
-4. Choose **accent color** (Indigo / Blue / Violet / Rose / Emerald / Amber)
 
 ## Usage
 
@@ -123,7 +121,7 @@ After logging in with Google, go to **Config** via the user menu (tap your avata
 4. Use **Send to Linear** (or choose copy/save from the dropdown) to create the task
 5. The issue is created in Linear with **triage** status and assigned to you
 
-6. Iterateate by typing another message to refine the plan
+6. Iterate by typing another message to refine the plan
 
 ### Auto mode
 
