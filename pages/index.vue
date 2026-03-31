@@ -96,7 +96,6 @@
                 class="rounded-2xl px-4 py-3 text-sm leading-relaxed"
                 :class="msg.role === 'user' ? 'bg-accent-600 text-white rounded-br-sm' : 'bg-gray-100 dark:bg-gray-800 text-gray-800 dark:text-gray-200 rounded-bl-sm'"
               >
-                <!-- Plan generating spinner (only when no content yet) -->
                 <div v-if="msg.generating && !msg.content" class="flex items-center gap-2 text-gray-500 dark:text-gray-400">
                   <svg class="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -105,7 +104,6 @@
                   {{ t('index.generating') }}
                 </div>
 
-                <!-- Auto step indicator -->
                 <div v-if="msg.autoStep" class="flex items-center gap-2 text-accent-600 dark:text-accent-400 mb-2 text-xs">
                   <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -114,12 +112,10 @@
                   {{ msg.autoStep }}
                 </div>
 
-                <!-- User message -->
                 <template v-if="msg.role === 'user'">
                   <p class="whitespace-pre-wrap">{{ msg.content }}</p>
                 </template>
 
-                <!-- System markdown content -->
                 <div
                   v-if="msg.role === 'system' && msg.content && purifyReady"
                   class="markdown-preview"
@@ -130,7 +126,6 @@
                   class="whitespace-pre-wrap"
                 >{{ msg.content }}</p>
 
-                <!-- Generating footer -->
                 <div v-if="msg.role === 'system' && msg.generating && msg.content" class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
                   <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
@@ -139,7 +134,6 @@
                   {{ t('index.generating') }}
                 </div>
 
-                <!-- Success link -->
                 <div
                   v-if="msg.createdIssue"
                   class="mt-2 flex items-center gap-2 text-xs text-emerald-600 dark:text-emerald-400"
@@ -157,7 +151,6 @@
                 </div>
               </div>
 
-              <!-- Action buttons for system messages (outside bubble) -->
               <div v-if="msg.role === 'system' && msg.content && !msg.generating" class="mt-1.5 flex items-center gap-1.5 flex-wrap">
                 <SplitActionButton
                   :actions="sendActions"
@@ -172,7 +165,6 @@
             </div>
           </div>
 
-          <!-- Scroll anchor -->
           <div ref="scrollAnchor" />
         </div>
 
@@ -180,7 +172,7 @@
         <div class="shrink-0 px-4 pb-3 pt-2">
           <div class="max-w-xl mx-auto flex items-end gap-2 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl px-3 py-2 shadow-sm">
             <button
-              :disabled="!isSupported || isListening"
+              :disabled="!isSupported"
               class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-colors"
               :class="isListening ? 'bg-red-500 hover:bg-red-600 text-white' : 'bg-accent-600 hover:bg-accent-700 disabled:opacity-40 text-white'"
               @click="toggleRecording"
