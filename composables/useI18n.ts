@@ -128,7 +128,8 @@ Example:
 - Commits in English
 - Tests for all business logic`,
     "config.customPrompt": "Task generation prompt",
-    "config.customPromptDesc": "The system prompt sent to the LLM when generating action plans. Edit it to change how tasks are structured.",
+    "config.customPromptDesc":
+      "The system prompt sent to the LLM when generating action plans. Edit it to change how tasks are structured.",
     "config.customPromptReset": "Reset to default",
     "config.customPromptSaved": "Prompt saved",
     "config.title": "Configuration",
@@ -182,11 +183,11 @@ Example:
     "config.engineGroq": "Groq Whisper",
     "config.engineGroqDesc": "Any browser. Requires API key.",
     "config.engineZai": "Z.ai GLM",
-    "config.engineZaiDesc": "Any browser. GLM-ASR + GLM models.",
+    "config.engineZaiDesc": "Any browser. GLM models.",
     "config.zaiInfo": "Requires",
     "config.zaiLlmModel": "LLM model (ZAI) for plan generation",
     "config.zaiModelPlaceholder": "e.g., glm-5.1, glm-5-turbo",
-    "config.zaiModelHint": "GLM model ID on Z.ai. Default: glm-5.1. STT uses glm-asr-2512.",
+    "config.zaiModelHint": "GLM model ID on Z.ai. Default: glm-5.1.",
     "config.groqInfo": "Requires",
     "config.groqInfoFile": "in the",
     "config.groqInfoFile2": "file.",
@@ -254,10 +255,12 @@ Example:
     "linearState.completed": "Completed",
     "linearState.canceled": "Canceled",
     "apiDocs.authTitle": "Authentication",
-    "apiDocs.authDesc": "All endpoints require authentication via a Bearer token. Generate one in Config > API Tokens.",
+    "apiDocs.authDesc":
+      "All endpoints require authentication via a Bearer token. Generate one in Config > API Tokens.",
     "apiDocs.authHeader": "Required header",
     "config.apiTokens": "API Tokens",
-    "config.apiTokensDesc": "Generate tokens so external agents (e.g. Claude Code) can call the Task API without a browser session.",
+    "config.apiTokensDesc":
+      "Generate tokens so external agents (e.g. Claude Code) can call the Task API without a browser session.",
     "config.tokenName": "Token name",
     "config.tokenNamePlaceholder": "e.g. claude-code, my-script",
     "config.tokenGenerate": "Generate",
@@ -405,7 +408,8 @@ Ejemplo:
 - Commits en ingles
 - Tests para toda logica de negocio`,
     "config.customPrompt": "Prompt de generacion de tareas",
-    "config.customPromptDesc": "El prompt de sistema que se envia al LLM al generar planes de accion. Editalo para cambiar como se estructuran las tareas.",
+    "config.customPromptDesc":
+      "El prompt de sistema que se envia al LLM al generar planes de accion. Editalo para cambiar como se estructuran las tareas.",
     "config.customPromptReset": "Restaurar por defecto",
     "config.customPromptSaved": "Prompt guardado",
     "config.title": "Configuracion",
@@ -459,12 +463,11 @@ Ejemplo:
     "config.engineGroq": "Groq Whisper",
     "config.engineGroqDesc": "Cualquier navegador. Requiere API key.",
     "config.engineZai": "Z.ai GLM",
-    "config.engineZaiDesc": "Cualquier navegador. GLM-ASR + modelos GLM.",
+    "config.engineZaiDesc": "Cualquier navegador. Modelos GLM.",
     "config.zaiInfo": "Requiere",
     "config.zaiLlmModel": "Modelo LLM (ZAI) para generar planes",
     "config.zaiModelPlaceholder": "ej: glm-5.1, glm-5-turbo",
-    "config.zaiModelHint":
-      "ID del modelo GLM en Z.ai. Por defecto: glm-5.1. STT usa glm-asr-2512.",
+    "config.zaiModelHint": "ID del modelo GLM en Z.ai. Por defecto: glm-5.1.",
     "config.groqInfo": "Requiere",
     "config.groqInfoFile": "en el archivo",
     "config.groqInfoFile2": ".",
@@ -532,10 +535,12 @@ Ejemplo:
     "linearState.completed": "Completed",
     "linearState.canceled": "Canceled",
     "apiDocs.authTitle": "Autenticacion",
-    "apiDocs.authDesc": "Todos los endpoints requieren autenticacion con un token Bearer. Genera uno en Config > Tokens API.",
+    "apiDocs.authDesc":
+      "Todos los endpoints requieren autenticacion con un token Bearer. Genera uno en Config > Tokens API.",
     "apiDocs.authHeader": "Header requerido",
     "config.apiTokens": "Tokens API",
-    "config.apiTokensDesc": "Genera tokens para que agentes externos (ej. Claude Code) puedan llamar a la API de tareas sin sesion de navegador.",
+    "config.apiTokensDesc":
+      "Genera tokens para que agentes externos (ej. Claude Code) puedan llamar a la API de tareas sin sesion de navegador.",
     "config.tokenName": "Nombre del token",
     "config.tokenNamePlaceholder": "ej. claude-code, mi-script",
     "config.tokenGenerate": "Generar",
@@ -551,7 +556,8 @@ Ejemplo:
     "config.usageWarning": "{remaining} solicitudes restantes este mes",
     "config.usageLimitReached": "Limite mensual alcanzado. Se reinicia el dia 1.",
     "config.usageError": "No se pudo cargar el uso",
-    "error.rateLimited": "Limite mensual de solicitudes alcanzado. Intenta de nuevo el proximo mes.",
+    "error.rateLimited":
+      "Limite mensual de solicitudes alcanzado. Intenta de nuevo el proximo mes.",
   },
 }
 

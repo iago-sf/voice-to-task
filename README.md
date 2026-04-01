@@ -214,7 +214,7 @@ Each authenticated user sees only their own data:
 │   ├── api/user-keys/      # Per-user encrypted API key management
 │   ├── api/linear/         # Linear SDK endpoints (create-issue, teams, me)
 │   ├── api/ai/             # LLM action plan generation (Groq / ZAI / MiniMax)
-│   ├── api/transcribe.post.ts  # Audio transcription (Groq Whisper / ZAI GLM-ASR)
+│   ├── api/transcribe.post.ts  # Audio transcription (Groq Whisper)
 │   └── utils/
 │       ├── db.ts           # libSQL/Turso connection, schema init, migrations
 │       ├── session-email.ts # Helper to extract user email from session
