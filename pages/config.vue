@@ -761,7 +761,7 @@ const llmEngines = computed(() => [
 
 const uiLanguages = [
   { value: 'en' as const, label: 'English' },
-  { value: 'es' as const, label: 'Espanol' },
+  { value: 'es' as const, label: 'Español' },
 ]
 
 const defaultPrompt = `You are a senior task planning assistant. Given a raw task description (often from voice transcription), produce a thorough, actionable plan.
@@ -790,10 +790,10 @@ const resolvedCustomPrompt = computed({
 })
 
 const languages = [
-  { code: 'es-ES', label: 'Espanol (Espana)' },
+  { code: 'es-ES', label: 'Español (España)' },
   { code: 'en-US', label: 'English (US)' },
-  { code: 'pt-BR', label: 'Portugues (Brasil)' },
-  { code: 'ca-ES', label: 'Catala' },
+  { code: 'pt-BR', label: 'Português (Brasil)' },
+  { code: 'ca-ES', label: 'Català' },
   { code: 'gl-ES', label: 'Galego' },
   { code: 'eu-ES', label: 'Euskara' },
 ]
