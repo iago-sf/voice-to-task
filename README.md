@@ -8,7 +8,7 @@ Built with **Nuxt 4**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SD
 
 - **Google OAuth authentication** — login with your Google account; all data is isolated per user
 - **Per-user API key management** — each user configures their own Linear, Groq, Z.ai, and MiniMax keys from the Config page (encrypted at rest)
-- **Voice-to-text** via Web Speech API (Chrome/Edge), Groq Whisper, or Z.ai GLM-ASR (any browser)
+- **Voice-to-text** via Web Speech API (Chrome/Edge), Groq Whisper (any browser)
 - **AI action plan generation** — turns raw voice notes into structured task plans with a summary title, questions for the developer when info is missing, and a reusable context document for future tasks (powered by Groq, Z.ai GLM, or MiniMax, model configurable)
 - **Independent STT and LLM engine selection** — choose one engine for audio transcription and a different one for text generation (e.g., browser STT + Groq LLM, or Groq Whisper + MiniMax)
 - **Chat-based UI** — conversational interface with streaming AI responses, bottom input bar, and right sidebar for contexts/labels/projects
@@ -28,7 +28,7 @@ Built with **Nuxt 4**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SD
 - **Node.js** v22
 - A **Google OAuth** client ID and secret (for authentication)
 - A **Linear API key** (per user, configured in-app)
-- A **Groq API key**, **Z.ai API key**, and/or **MiniMax API key** (per user, configured in-app)
+- A **Groq API key**, **Z.ai coding plan API key**, and/or **MiniMax API key** (per user, configured in-app)
 
 ## Setup
 
@@ -83,9 +83,9 @@ Open [http://localhost:3000](http://localhost:3000). You'll be redirected to the
 After logging in with Google, go to **Config** via the user menu (tap your avatar in the nav bar). Settings are organized in tabs, each accessible by URL (`/config?tab=keys`, `/config?tab=linear`, `/config?tab=ai`, `/config?tab=user`, `/config?tab=tokens`):
 
 **API Keys tab:**
-1. Enter your **Linear API key** — [Linear Settings > API](https://linear.app/settings/api)
+1. Enter your **Linear API key** (optional) — [Linear Settings > API](https://linear.app/settings/api)
 2. Enter your **Groq API key** (optional) — [console.groq.com/keys](https://console.groq.com/keys)
-3. Enter your **Z.ai API key** (optional) — [z.ai](https://z.ai)
+3. Enter your **Z.ai API key** (optional) — [z.ai](https://z.ai/manage-apikey/apikey-list)
 4. Enter your **MiniMax API key** (optional) — [platform.minimax.io](https://platform.minimax.io)
 
 **Linear tab:**
@@ -98,10 +98,9 @@ After logging in with Google, go to **Config** via the user menu (tap your avata
 1. Choose the **transcription engine** (STT):
    - **Web Speech API** — only Chrome/Edge, free, real-time transcription
    - **Groq Whisper** — any browser, requires Groq API key
-   - **Z.ai GLM** — any browser, requires Z.ai API key, uses GLM-ASR-2512
 2. Choose the **text generation engine** (LLM) — independent from STT:
    - **Groq** — inference models via API, defaults to `openai/gpt-oss-120b` (see [available models](https://console.groq.com/docs/models))
-   - **Z.ai** — GLM models, defaults to `glm-4-plus`
+   - **Z.ai** — GLM models with coding plan, defaults to `glm-5.1`
    - **MiniMax** — reasoning models, defaults to `MiniMax-M2.7` (see [available models](https://platform.minimax.io/docs/api-reference/text-post))
 3. Choose the **speech recognition language** (Spanish, English, Portuguese, Catalan, Galician, Basque)
 
@@ -174,6 +173,7 @@ The project includes an MCP (Model Context Protocol) server that lets Claude Cod
 1. Generate an API token at **Config > Tokens** (`/config?tab=tokens`)
 2. Set the environment variable:
    ```bash
+   export VOICE_TO_TASK_URL="https://voice-to-task-taupe.vercel.app"
    export VOICE_TO_TASK_TOKEN="vtk_your_token_here"
    ```
 3. The `.mcp.json` at the project root auto-configures the MCP server for Claude Code
@@ -238,7 +238,7 @@ Each authenticated user sees only their own data:
 - **@libsql/client** — SQLite-compatible database via [Turso](https://turso.tech)/libSQL (local file or remote)
 - **@linear/sdk** — Linear GraphQL API client
 - **Groq API** — Whisper transcription + LLM plan generation
-- **Z.ai API** — GLM-ASR transcription + GLM chat models
+- **Z.ai API** — GLM reasoning models for plan generation
 - **MiniMax API** — MiniMax reasoning models for plan generation
 - **Web Speech API** — Browser-native speech recognition (Chromium)
 - **marked** + **DOMPurify** — Markdown rendering with XSS sanitization

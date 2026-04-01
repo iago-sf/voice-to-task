@@ -9,7 +9,7 @@ const defaultConfig: AppConfig = {
   sttEngine: 'browser',
   llmEngine: 'groq',
   groqModel: 'openai/gpt-oss-120b',
-  zaiModel: 'glm-4-plus',
+  zaiModel: 'glm-5.1',
   minimaxModel: 'MiniMax-M2.7',
   autoMode: false,
   activeContextIds: [],

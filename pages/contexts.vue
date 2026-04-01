@@ -336,7 +336,7 @@ async function compactContexts() {
         contextIds: ids,
         engine: config.value.llmEngine || 'groq',
         model: config.value.llmEngine === 'zai'
-          ? (config.value.zaiModel || 'glm-4-plus')
+          ? (config.value.zaiModel || 'glm-5.1')
           : config.value.llmEngine === 'minimax'
             ? (config.value.minimaxModel || 'MiniMax-M2.7')
             : (config.value.groqModel || 'openai/gpt-oss-120b'),
