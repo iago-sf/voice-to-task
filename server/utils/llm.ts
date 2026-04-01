@@ -15,7 +15,8 @@ export async function callGroq(
 
     if (!response.ok) {
       const err = await response.text()
-      throw new Error(`Groq API error: ${response.status} ${err}`)
+      console.error(`Groq API error: ${response.status}`, err)
+      throw new Error(`Groq API error: ${response.status}`)
     }
 
     return await response.json()
@@ -41,7 +42,8 @@ export async function callZai(
 
     if (!response.ok) {
       const err = await response.text()
-      throw new Error(`ZAI API error: ${response.status} ${err}`)
+      console.error(`ZAI API error: ${response.status}`, err)
+      throw new Error(`ZAI API error: ${response.status}`)
     }
 
     return await response.json()
@@ -67,7 +69,8 @@ export async function callMinimax(
 
     if (!response.ok) {
       const err = await response.text()
-      throw new Error(`MiniMax API error: ${response.status} ${err}`)
+      console.error(`MiniMax API error: ${response.status}`, err)
+      throw new Error(`MiniMax API error: ${response.status}`)
     }
 
     return await response.json()
@@ -174,7 +177,8 @@ export async function* streamGroq(
 
     if (!response.ok) {
       const err = await response.text()
-      throw createError({ statusCode: 500, message: `Groq API error: ${response.status} ${err}` })
+      console.error(`Groq stream error: ${response.status}`, err)
+      throw createError({ statusCode: 500, message: `Groq API error: ${response.status}` })
     }
 
     const reader = response.body?.getReader()
@@ -201,7 +205,8 @@ export async function* streamZai(
 
     if (!response.ok) {
       const err = await response.text()
-      throw createError({ statusCode: 500, message: `ZAI API error: ${response.status} ${err}` })
+      console.error(`ZAI stream error: ${response.status}`, err)
+      throw createError({ statusCode: 500, message: `ZAI API error: ${response.status}` })
     }
 
     const isStreaming = response.headers.get('content-type')?.includes('text/event-stream')
@@ -237,7 +242,8 @@ export async function* streamMinimax(
 
     if (!response.ok) {
       const err = await response.text()
-      throw createError({ statusCode: 500, message: `MiniMax API error: ${response.status} ${err}` })
+      console.error(`MiniMax stream error: ${response.status}`, err)
+      throw createError({ statusCode: 500, message: `MiniMax API error: ${response.status}` })
     }
 
     const isStreaming = response.headers.get('content-type')?.includes('text/event-stream')

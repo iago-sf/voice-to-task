@@ -53,9 +53,10 @@ export default defineEventHandler(async (event) => {
       },
     }
   } catch (error: any) {
+    console.error('Linear create issue error:', error)
     throw createError({
       statusCode: 500,
-      message: error.message || 'Failed to create Linear issue',
+      message: 'Failed to create Linear issue',
     })
   }
 })

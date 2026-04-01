@@ -1,39 +1,55 @@
 export default defineNuxtConfig({
-  compatibilityDate: '2024-11-01',
+  compatibilityDate: "2024-11-01",
   devtools: { enabled: true },
   devServer: { port: 3004 },
 
-  modules: ['nuxt-auth-utils'],
+  modules: ["nuxt-auth-utils"],
 
   runtimeConfig: {
     turso: {
-      url: process.env.TURSO_DATABASE_URL || 'file:data/voice-linear.db',
-      authToken: process.env.TURSO_AUTH_TOKEN || '',
+      url: process.env.TURSO_DATABASE_URL || "file:data/voice-linear.db",
+      authToken: process.env.TURSO_AUTH_TOKEN || "",
     },
     session: {
-      password: process.env.NUXT_SESSION_PASSWORD || '',
+      password: process.env.NUXT_SESSION_PASSWORD || "",
     },
     oauth: {
       google: {
-        clientId: process.env.NUXT_OAUTH_GOOGLE_CLIENT_ID || '',
-        clientSecret: process.env.NUXT_OAUTH_GOOGLE_CLIENT_SECRET || '',
+        clientId: process.env.NUXT_OAUTH_GOOGLE_CLIENT_ID || "",
+        clientSecret: process.env.NUXT_OAUTH_GOOGLE_CLIENT_SECRET || "",
       },
+    },
+  },
+
+  hooks: {
+    ready: () => {
+      const missing: string[] = []
+      if (!process.env.NUXT_SESSION_PASSWORD) missing.push("NUXT_SESSION_PASSWORD")
+      if (!process.env.NUXT_OAUTH_GOOGLE_CLIENT_ID) missing.push("NUXT_OAUTH_GOOGLE_CLIENT_ID")
+      if (!process.env.NUXT_OAUTH_GOOGLE_CLIENT_SECRET)
+        missing.push("NUXT_OAUTH_GOOGLE_CLIENT_SECRET")
+      if (missing.length) {
+        console.error(
+          `\n❌ Missing required environment variables:\n${missing.map((k) => `   - ${k}`).join("\n")}\n`,
+        )
+        process.exit(1)
+      }
     },
   },
 
   app: {
     head: {
-      title: 'Voice to Task',
+      title: "Voice to Task",
       meta: [
-        { name: 'theme-color', content: '#4f46e5' },
-        { name: 'apple-mobile-web-app-status-bar-style', content: 'black-translucent' },
+        { name: "theme-color", content: "#4f46e5" },
+        { name: "apple-mobile-web-app-status-bar-style", content: "black-translucent" },
       ],
       link: [
-        { rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' },
-        { rel: 'apple-touch-icon', type: 'image/svg+xml', href: '/apple-touch-icon.svg' },
+        { rel: "icon", type: "image/svg+xml", href: "/favicon.svg" },
+        { rel: "apple-touch-icon", type: "image/svg+xml", href: "/apple-touch-icon.svg" },
       ],
       script: [
-        { src: 'https://cdn.tailwindcss.com' },
+        { src: "https://cdn.tailwindcss.com" },
         {
           innerHTML: `tailwind.config = {
             darkMode: 'class',
@@ -62,18 +78,18 @@ export default defineNuxtConfig({
     },
   },
 
-  css: ['~/assets/css/main.css'],
+  css: ["~/assets/css/main.css"],
 
   vite: {
     optimizeDeps: {
       include: [
-        'oh-vue-icons',
-        'oh-vue-icons/icons',
-        '@vue/devtools-core',
-        '@vue/devtools-kit',
-        'marked',
-        'dompurify',
-        '@vueuse/core',
+        "oh-vue-icons",
+        "oh-vue-icons/icons",
+        "@vue/devtools-core",
+        "@vue/devtools-kit",
+        "marked",
+        "dompurify",
+        "@vueuse/core",
       ],
     },
   },

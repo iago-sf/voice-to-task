@@ -1,20 +1,20 @@
 import crypto from 'node:crypto'
 import type { H3Event } from 'h3'
 import { ensureDB } from './db'
+import { getSessionEmail } from "./session-email"
 
-const SALT = 'voice-to-task-user-keys'
 const ALGORITHM = 'aes-256-gcm'
 
-function getDerivedKey(): Buffer {
+function getDerivedKey(userEmail: string): Buffer {
   const password = useRuntimeConfig().session?.password || ''
   if (!password) {
     throw createError({ statusCode: 500, message: 'NUXT_SESSION_PASSWORD is required for key encryption' })
   }
-  return crypto.scryptSync(password, SALT, 32)
+  return crypto.scryptSync(password, userEmail, 32)
 }
 
-function encrypt(plaintext: string): string {
-  const key = getDerivedKey()
+function encrypt(plaintext: string, userEmail: string): string {
+  const key = getDerivedKey(userEmail)
   const iv = crypto.randomBytes(12)
   const cipher = crypto.createCipheriv(ALGORITHM, key, iv)
   const encrypted = Buffer.concat([cipher.update(plaintext, 'utf8'), cipher.final()])
@@ -22,8 +22,8 @@ function encrypt(plaintext: string): string {
   return `${iv.toString('base64')}:${authTag.toString('base64')}:${encrypted.toString('base64')}`
 }
 
-function decrypt(ciphertext: string): string {
-  const key = getDerivedKey()
+function decrypt(ciphertext: string, userEmail: string): string {
+  const key = getDerivedKey(userEmail)
   const parts = ciphertext.split(':')
   if (parts.length !== 3) throw new Error('Invalid ciphertext format')
   const iv = Buffer.from(parts[0]!, 'base64')
@@ -45,7 +45,7 @@ export async function getUserApiKey(userEmail: string, keyName: string): Promise
   if (!row) return null
 
   try {
-    return decrypt(row.encrypted_value)
+    return decrypt(row.encrypted_value, userEmail)
   } catch {
     return null
   }
@@ -53,7 +53,7 @@ export async function getUserApiKey(userEmail: string, keyName: string): Promise
 
 export async function setUserApiKey(userEmail: string, keyName: string, plaintext: string): Promise<void> {
   const db = await ensureDB()
-  const encrypted = encrypt(plaintext)
+  const encrypted = encrypt(plaintext, userEmail)
   await db.execute({
     sql: `INSERT INTO user_api_keys (user_email, key_name, encrypted_value, updated_at)
      VALUES (?, ?, ?, CURRENT_TIMESTAMP)
@@ -87,8 +87,7 @@ export async function getUserApiKeys(userEmail: string): Promise<Record<string, 
 }
 
 export async function requireUserApiKey(event: H3Event, keyName: string): Promise<string> {
-  const session = await requireUserSession(event)
-  const email = session.user.email
+  const email = await getSessionEmail(event)
   const key = await getUserApiKey(email, keyName)
 
   if (!key) {

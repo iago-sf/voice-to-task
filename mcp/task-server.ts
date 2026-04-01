@@ -3,12 +3,17 @@ import { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js'
 import { StdioServerTransport } from '@modelcontextprotocol/sdk/server/stdio.js'
 import { z } from 'zod'
 
-const API_BASE = process.env.VOICE_TO_TASK_URL || 'https://voice-to-task-taupe.vercel.app'
+const API_BASE = process.env.VOICE_TO_TASK_URL
 const API_TOKEN = process.env.VOICE_TO_TASK_TOKEN
 
+if (!API_BASE) {
+  console.error("Missing required environment variable: VOICE_TO_TASK_URL")
+  process.exit(1)
+}
+
 if (!API_TOKEN) {
-  console.error('ERROR: VOICE_TO_TASK_TOKEN environment variable is required.')
-  console.error('Generate a token at https://voice-to-task-taupe.vercel.app/config?tab=tokens')
+  console.error("Missing required environment variable: VOICE_TO_TASK_TOKEN")
+  console.error(`Generate one in ${API_BASE} at Config > API Tokens`)
   process.exit(1)
 }
 

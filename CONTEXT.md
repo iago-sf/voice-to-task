@@ -88,3 +88,11 @@ API keys (Linear, Groq, ZAI) are per-user and managed through the Config > API K
 - **Never pass message objects directly** to mutation functions — always use `messages.value[index]` to stay reactive.
 - **DOMPurify is async** — `purifyReady` flag gates `v-html` rendering; shows plain text as fallback to avoid hydration mismatch.
 - **Multi-line `:class` with ternaries** break the Vue macro parser — keep them single-line.
+
+### Authentication & Authorization
+- **Dual auth**: All API endpoints support both Google OAuth sessions (`requireUserSession`) and Bearer API tokens (`Bearer vtk_...`). The `getSessionEmail()` utility abstracts both.
+- **`requireUserApiKey()`** uses `getSessionEmail()` internally, so API token auth works for all LLM/Linear endpoints too.
+- **All data is scoped by `user_email`** — every query filters by the authenticated user's email. Context queries in `action-plan.post.ts` and `refine-plan.post.ts` also enforce `user_email` ownership.
+- **External API errors are sanitized** — raw error bodies from Groq/ZAI/MiniMax/Linear are logged server-side only (`console.error`) and never exposed to the client.
+- **API keys are encrypted at rest** with AES-256-GCM using a key derived from `NUXT_SESSION_PASSWORD`.
+- **API tokens are stored as SHA-256 hashes** — the raw token is only shown once at creation.

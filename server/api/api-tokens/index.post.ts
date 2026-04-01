@@ -1,9 +1,9 @@
 import { generateApiToken } from '~/server/utils/api-tokens'
+import { getSessionEmail } from '~/server/utils/session-email'
 import { checkUsage } from '~/server/utils/usage'
 
 export default defineEventHandler(async (event) => {
-  const session = await requireUserSession(event)
-  const email = session.user.email
+  const email = await getSessionEmail(event)
   await checkUsage(email)
   const body = await readBody<{ name?: string }>(event)
   const name = (body?.name || '').trim()

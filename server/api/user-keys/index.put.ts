@@ -1,10 +1,11 @@
+import { setUserApiKey, deleteUserApiKey } from '~/server/utils/user-keys'
+import { getSessionEmail } from '~/server/utils/session-email'
 import { checkUsage } from '~/server/utils/usage'
 
 const ALLOWED_KEYS = ['linear_api_key', 'groq_api_key', 'zai_api_key', 'minimax_api_key']
 
 export default defineEventHandler(async (event) => {
-  const session = await requireUserSession(event)
-  const email = session.user.email
+  const email = await getSessionEmail(event)
   await checkUsage(email)
   const body = await readBody(event)
 

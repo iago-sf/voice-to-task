@@ -18,6 +18,10 @@ logs
 .fleet
 .idea
 
+# AI agent config (local only)
+.claude/
+.mcp.json
+
 # Local env files
 .env
 .env.*

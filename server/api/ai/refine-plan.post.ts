@@ -27,8 +27,8 @@ export default defineEventHandler(async (event) => {
     const db = await ensureDB()
     const placeholders = contextIds.map(() => '?').join(',')
     const { rows } = await db.execute({
-      sql: `SELECT name, content FROM contexts WHERE id IN (${placeholders})`,
-      args: contextIds,
+      sql: `SELECT name, content FROM contexts WHERE id IN (${placeholders}) AND user_email = ?`,
+      args: [...contextIds, userEmail],
     })
 
     if (rows.length > 0) {

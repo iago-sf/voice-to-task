@@ -43,7 +43,8 @@ export default defineEventHandler(async (event) => {
 
     if (!response.ok) {
       const err = await response.text()
-      throw new Error(`Groq API error: ${response.status} ${err}`)
+      console.error(`Groq transcription error: ${response.status}`, err)
+      throw new Error(`Transcription failed: ${response.status}`)
     }
 
     const result = await response.json()
