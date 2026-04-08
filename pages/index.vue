@@ -117,13 +117,14 @@
                 </template>
 
                 <div
-                  v-if="msg.role === 'system' && msg.content && purifyReady"
+                  v-if="msg.role === 'system' && msg.content && purifyReady && !msg.error"
                   class="markdown-preview"
                   v-html="renderMarkdown(msg.content)"
                 />
                 <p
-                  v-if="msg.role === 'system' && msg.content && !purifyReady"
+                  v-if="msg.role === 'system' && msg.content && (!purifyReady || msg.error)"
                   class="whitespace-pre-wrap"
+                  :class="msg.error ? 'text-red-500 dark:text-red-400' : ''"
                 >{{ msg.content }}</p>
 
                 <div v-if="msg.role === 'system' && msg.generating && msg.content" class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700 flex items-center gap-2 text-xs text-gray-400 dark:text-gray-500">
@@ -151,7 +152,26 @@
                 </div>
               </div>
 
-              <div v-if="msg.role === 'system' && msg.content && !msg.generating" class="mt-1.5 flex items-center gap-1.5 flex-wrap">
+              <!-- Retry button under user message -->
+              <div v-if="msg.role === 'user' && hasErrorAfter(i)" class="mt-1.5 flex justify-end">
+                <button
+                  class="flex items-center gap-1.5 text-xs text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300 transition-colors"
+                  :disabled="isBusy"
+                  @click="retryMessage(i)"
+                >
+                  <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                  </svg>
+                  {{ t('index.retry') }}
+                </button>
+              </div>
+
+              <!-- Token usage + actions row -->
+              <div v-if="msg.role === 'system' && msg.content && !msg.generating && !msg.error" class="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                <span v-if="msg.usage" class="text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+                  {{ msg.usage.prompt }}↑ {{ msg.usage.completion }}↓ {{ msg.usage.total }} tokens
+                </span>
+                <div class="flex-1" />
                 <SplitActionButton
                   :actions="sendActions"
                   :active-id="config.lastSendAction || 'linear'"
@@ -162,6 +182,17 @@
                   @update:active-id="updateLastSendAction"
                 />
               </div>
+            </div>
+          </div>
+
+          <!-- Summarizing indicator -->
+          <div v-if="summarizing" class="flex justify-center">
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 text-xs text-blue-600 dark:text-blue-400">
+              <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+              </svg>
+              {{ t('index.summarizing') }}
             </div>
           </div>
 
@@ -192,8 +223,8 @@
             />
             <button
               class="shrink-0 w-9 h-9 rounded-full flex items-center justify-center transition-colors"
-              :class="inputText.trim() ? 'bg-accent-600 hover:bg-accent-700 text-white' : 'text-gray-300 dark:text-gray-600'"
-              :disabled="!inputText.trim()"
+              :class="inputText.trim() && !isBusy ? 'bg-accent-600 hover:bg-accent-700 text-white' : 'text-gray-300 dark:text-gray-600'"
+              :disabled="!inputText.trim() || isBusy"
               @click="sendMessage"
             >
               <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -226,12 +257,20 @@
 <script setup lang="ts">
 import { marked } from 'marked'
 
+interface TokenUsage {
+  prompt: number
+  completion: number
+  total: number
+}
+
 interface ChatMessage {
   role: 'user' | 'system'
   content: string
   generating?: boolean
   autoStep?: string
   createdIssue?: { identifier: string; url: string }
+  usage?: TokenUsage
+  error?: boolean
 }
 
 const { config, isConfigured, loadConfig, saveConfig } = useConfig()
@@ -315,10 +354,14 @@ const messages = ref<ChatMessage[]>([])
 const inputText = ref('')
 const sending = ref(false)
 const generatingPlan = ref(false)
+const summarizing = ref(false)
+const conversationSummary = ref('')
 const chatContainer = ref<HTMLElement | null>(null)
 const scrollAnchor = ref<HTMLElement | null>(null)
 const inputRef = ref<HTMLTextAreaElement | null>(null)
 const showSidebar = ref(true)
+
+const isBusy = computed(() => generatingPlan.value || summarizing.value)
 
 const purify = ref<{ sanitize: (html: string) => string } | null>(null)
 const purifyReady = ref(false)
@@ -404,6 +447,7 @@ onMounted(async () => {
   const recoverEntry = useState<import('~/types').Entry | null>('recover-entry', () => null)
   if (recoverEntry.value) {
     inputText.value = recoverEntry.value.text
+    conversationSummary.value = recoverEntry.value.conversation_summary || ''
     recoverEntry.value = null
     nextTick(() => autoResize())
   }
@@ -431,7 +475,7 @@ function handleEnter(e: KeyboardEvent) {
 
 function sendMessage() {
   const text = inputText.value.trim()
-  if (!text) return
+  if (!text || isBusy.value) return
 
   addUserMessage(text)
   inputText.value = ''
@@ -439,6 +483,23 @@ function sendMessage() {
     inputRef.value.style.height = 'auto'
   }
   generatePlanForMessage(text)
+}
+
+function hasErrorAfter(userIndex: number): boolean {
+  const next = messages.value[userIndex + 1]
+  return !!next?.error
+}
+
+function retryMessage(userIndex: number) {
+  const userMsg = messages.value[userIndex]
+  if (!userMsg || userMsg.role !== 'user' || isBusy.value) return
+
+  const next = messages.value[userIndex + 1]
+  if (next?.error) {
+    messages.value.splice(userIndex + 1, 1)
+  }
+
+  generatePlanForMessage(userMsg.content)
 }
 
 function getLLMBody(text: string) {
@@ -453,6 +514,37 @@ function getLLMBody(text: string) {
         : (config.value.groqModel || 'openai/gpt-oss-120b'),
     contextIds: config.value.activeContextIds || [],
     customPrompt: config.value.customPrompt || undefined,
+    conversationSummary: conversationSummary.value || undefined,
+  }
+}
+
+async function summarizeConversation() {
+  if (messages.value.length === 0) return
+
+  summarizing.value = true
+  scrollToBottom()
+
+  try {
+    const result = await $fetch<{ summary: string }>('/api/ai/summarize', {
+      method: 'POST',
+      body: {
+        messages: messages.value.map(m => ({ role: m.role, content: m.content })),
+        existingSummary: conversationSummary.value,
+        engine: config.value.llmEngine || 'groq',
+        model: config.value.llmEngine === 'zai'
+          ? (config.value.zaiModel || 'glm-5.1')
+          : config.value.llmEngine === 'minimax'
+            ? (config.value.minimaxModel || 'MiniMax-M2.7')
+            : (config.value.groqModel || 'openai/gpt-oss-120b'),
+      },
+    })
+    if (result.summary) {
+      conversationSummary.value = result.summary
+    }
+  } catch (err: any) {
+    console.error('Summarization failed:', err)
+  } finally {
+    summarizing.value = false
   }
 }
 
@@ -498,6 +590,8 @@ async function streamPlan(text: string, msgIndex: number) {
           if (json.chunk && getMsg()) {
             receivedChunks = true
             getMsg()!.content += json.chunk
+          } else if (json.usage && getMsg()) {
+            getMsg()!.usage = json.usage
           } else if (json.error) {
             toastError(`${t('index.errorPlan')}: ${json.error}`)
           }
@@ -513,6 +607,8 @@ async function streamPlan(text: string, msgIndex: number) {
           if (json.chunk && getMsg()) {
             receivedChunks = true
             getMsg()!.content += json.chunk
+          } else if (json.usage && getMsg()) {
+            getMsg()!.usage = json.usage
           }
         } catch {}
       }
@@ -520,10 +616,12 @@ async function streamPlan(text: string, msgIndex: number) {
 
     if (!receivedChunks && getMsg()) {
       getMsg()!.content = t('index.errorPlan')
+      getMsg()!.error = true
     }
   } catch (err: any) {
     if (getMsg()) {
       getMsg()!.content = `${t('index.errorPlan')}: ${err.message || 'Unknown'}`
+      getMsg()!.error = true
     }
   } finally {
     if (getMsg()) {
@@ -531,6 +629,10 @@ async function streamPlan(text: string, msgIndex: number) {
     }
     generatingPlan.value = false
     scrollToBottom()
+
+    if (!messages.value[msgIndex]?.error) {
+      summarizeConversation()
+    }
   }
 }
 
@@ -592,7 +694,10 @@ async function handleSendFromChat(msgIndex: number, actionId: string) {
   if (actionId === 'save') {
     sending.value = true
     try {
-      await $fetch('/api/entries', { method: 'POST', body: { text: msg.content } })
+      await $fetch('/api/entries', {
+        method: 'POST',
+        body: { text: msg.content, conversation_summary: conversationSummary.value },
+      })
       toastSuccess(t('index.saved'))
     } catch (err: any) {
       toastError(`${t('index.errorSave')}: ${err.data?.message || err.message || 'Unknown'}`)
@@ -605,7 +710,10 @@ async function handleSendFromChat(msgIndex: number, actionId: string) {
   if (actionId === 'linear') {
     sending.value = true
     try {
-      const entry = await $fetch('/api/entries', { method: 'POST', body: { text: msg.content } })
+      const entry = await $fetch('/api/entries', {
+        method: 'POST',
+        body: { text: msg.content, conversation_summary: conversationSummary.value },
+      })
 
       const lines = msg.content.split('\n')
       const title = (lines[0] || '').slice(0, 200)

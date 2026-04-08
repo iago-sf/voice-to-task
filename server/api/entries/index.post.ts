@@ -11,10 +11,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, message: 'text is required' })
   }
 
+  const conversationSummary = body.conversation_summary || ''
+
   const db = await ensureDB()
   const result = await db.execute({
-    sql: 'INSERT INTO entries (text, status, task_status, user_email) VALUES (?, ?, ?, ?)',
-    args: [body.text.trim(), 'draft', 'TRIAGE', userEmail],
+    sql: 'INSERT INTO entries (text, status, task_status, user_email, conversation_summary) VALUES (?, ?, ?, ?, ?)',
+    args: [body.text.trim(), 'draft', 'TRIAGE', userEmail, conversationSummary],
   })
 
   const { rows: [created] } = await db.execute({

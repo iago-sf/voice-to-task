@@ -74,6 +74,7 @@ export async function ensureDB(): Promise<Client> {
     "ALTER TABLE entries ADD COLUMN task_status TEXT NOT NULL DEFAULT 'TRIAGE'",
     "ALTER TABLE entries ADD COLUMN assigned_to TEXT",
     "ALTER TABLE entries ADD COLUMN user_email TEXT DEFAULT ''",
+    "ALTER TABLE entries ADD COLUMN conversation_summary TEXT DEFAULT ''",
     "ALTER TABLE contexts ADD COLUMN user_email TEXT DEFAULT ''",
   ]) {
     try { await db.execute(stmt) } catch { /* column already exists */ }

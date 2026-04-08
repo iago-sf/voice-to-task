@@ -17,6 +17,7 @@ export default defineEventHandler(async (event) => {
   const engine = body.engine || 'groq'
   const contextIds: number[] = body.contextIds || []
   const customPrompt: string = body.customPrompt || ''
+  const conversationSummary: string = body.conversationSummary || ''
 
   let contextBlock = ''
   if (contextIds.length > 0) {
@@ -78,8 +79,10 @@ If the task is too trivial to warrant a context, write "None."`
 
   const basePrompt = customPrompt && customPrompt !== '__DEFAULT__' ? customPrompt : defaultBasePrompt
 
-  const systemPrompt = contextBlock
-    ? `${basePrompt}
+  let systemPrompt = basePrompt
+
+  if (contextBlock) {
+    systemPrompt = `${basePrompt}
 
 IMPORTANT — The user has provided context documents that define the project, its conventions, technologies, and constraints. These documents take PRIORITY over any generic assumptions. You MUST use them to:
 - Frame the task title using the project's domain and terminology
@@ -92,14 +95,22 @@ IMPORTANT — The user has provided context documents that define the project, i
 Context documents:
 
 ${contextBlock}`
-    : basePrompt
+  }
 
-  const messages = [
+  const messages: { role: string; content: string }[] = [
     { role: 'system', content: systemPrompt },
-    { role: 'user', content: body.text },
   ]
 
-  let stream: AsyncGenerator<string>
+  if (conversationSummary) {
+    messages.push({
+      role: 'system',
+      content: `CONVERSATION HISTORY SUMMARY (previous turns of this conversation):\n${conversationSummary}\n\nUse this summary to maintain context continuity. The user's new message below continues from this conversation.`,
+    })
+  }
+
+  messages.push({ role: 'user', content: body.text })
+
+  let stream: AsyncGenerator<import('~/server/utils/llm').StreamChunk>
   if (engine === 'zai') {
     const apiKey = await requireUserApiKey(event, 'zai_api_key')
     stream = streamZai(apiKey, model, messages)
@@ -124,7 +135,11 @@ ${contextBlock}`
 
   try {
     for await (const chunk of stream) {
-      send(JSON.stringify({ chunk }))
+      if (chunk.type === 'content' && chunk.content) {
+        send(JSON.stringify({ chunk: chunk.content }))
+      } else if (chunk.type === 'usage' && chunk.usage) {
+        send(JSON.stringify({ usage: chunk.usage }))
+      }
     }
     send('[DONE]')
   } catch (err: any) {

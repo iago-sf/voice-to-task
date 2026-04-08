@@ -96,3 +96,19 @@ API keys (Linear, Groq, ZAI) are per-user and managed through the Config > API K
 - **External API errors are sanitized** — raw error bodies from Groq/ZAI/MiniMax/Linear are logged server-side only (`console.error`) and never exposed to the client.
 - **API keys are encrypted at rest** with AES-256-GCM using a key derived from `NUXT_SESSION_PASSWORD`.
 - **API tokens are stored as SHA-256 hashes** — the raw token is only shown once at creation.
+
+### Conversation Summary (Context Continuity)
+- **Problem**: Long conversations lose LLM context because each call only sends `[system prompt, user message]`.
+- **Solution**: After each LLM response, a background summary request condenses the conversation history into a persistent summary that is injected as context on subsequent calls.
+- **Flow**:
+  1. User sends message → action-plan endpoint receives `conversationSummary` alongside `text`
+  2. Summary is injected as a system message before the user message: `"CONVERSATION HISTORY SUMMARY: ..."`
+  3. LLM responds with full conversation context
+  4. After streaming completes, frontend calls `/api/ai/summarize` in the background
+  5. The summary updates `conversationSummary` ref in memory
+  6. Frontend blocks new messages (`isBusy = generatingPlan || summarizing`) until summary completes
+  7. When saving/sending to Linear, `conversation_summary` is persisted in the `entries` table
+  8. When recovering an entry from history, `conversation_summary` is restored to allow continuing the conversation
+- **Endpoint**: `server/api/ai/summarize.post.ts` — non-streaming, accepts `messages[]`, `existingSummary`, `engine`, `model`; returns `{ summary }`
+- **Database**: `entries.conversation_summary TEXT DEFAULT ''` column (idempotent migration in `db.ts`)
+- **Entry type**: `conversation_summary: string` field on `Entry` interface

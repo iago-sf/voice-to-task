@@ -88,9 +88,21 @@ export function parseResponse(result: any) {
   return { title, plan }
 }
 
+export interface TokenUsage {
+  prompt: number
+  completion: number
+  total: number
+}
+
+export interface StreamChunk {
+  type: 'content' | 'usage'
+  content?: string
+  usage?: TokenUsage
+}
+
 async function* parseSSEStream(
   reader: ReadableStreamDefaultReader<Uint8Array>,
-): AsyncGenerator<string> {
+): AsyncGenerator<StreamChunk> {
   const decoder = new TextDecoder()
   let buffer = ''
   let fullText = ''
@@ -117,7 +129,8 @@ async function* parseSSEStream(
           try {
             const json = JSON.parse(fullText.trim())
             const content = json.choices?.[0]?.message?.content
-            if (content) yield content
+            if (content) yield { type: 'content', content }
+            if (json.usage) yield { type: 'usage', usage: { prompt: json.usage.prompt_tokens || 0, completion: json.usage.completion_tokens || 0, total: json.usage.total_tokens || 0 } }
           } catch {}
         }
         return
@@ -125,7 +138,8 @@ async function* parseSSEStream(
       try {
         const json = JSON.parse(data)
         const content = json.choices?.[0]?.delta?.content
-        if (content) yield content
+        if (content) yield { type: 'content', content }
+        if (json.usage) yield { type: 'usage', usage: { prompt: json.usage.prompt_tokens || 0, completion: json.usage.completion_tokens || 0, total: json.usage.total_tokens || 0 } }
       } catch {}
     }
   }
@@ -134,7 +148,8 @@ async function* parseSSEStream(
     try {
       const json = JSON.parse(fullText.trim())
       const content = json.choices?.[0]?.message?.content
-      if (content) yield content
+      if (content) yield { type: 'content', content }
+      if (json.usage) yield { type: 'usage', usage: { prompt: json.usage.prompt_tokens || 0, completion: json.usage.completion_tokens || 0, total: json.usage.total_tokens || 0 } }
     } catch {}
   }
 }
@@ -166,7 +181,7 @@ export async function* streamGroq(
   apiKey: string,
   model: string,
   messages: { role: string; content: string }[],
-): AsyncGenerator<string> {
+): AsyncGenerator<StreamChunk> {
   const { request, clearTimeout } = getStreamOrFallback(
     'https://api.groq.com/openai/v1/chat/completions',
     apiKey, model, messages, 2048,
@@ -194,7 +209,7 @@ export async function* streamZai(
   apiKey: string,
   model: string,
   messages: { role: string; content: string }[],
-): AsyncGenerator<string> {
+): AsyncGenerator<StreamChunk> {
   const { request, clearTimeout } = getStreamOrFallback(
     'https://api.z.ai/api/coding/paas/v4/chat/completions',
     apiKey, model, messages, 4096,
@@ -214,7 +229,8 @@ export async function* streamZai(
     if (!isStreaming) {
       const json = await response.json()
       const content = json.choices?.[0]?.message?.content || ''
-      if (content) yield content
+      if (content) yield { type: 'content', content }
+      if (json.usage) yield { type: 'usage', usage: { prompt: json.usage.prompt_tokens || 0, completion: json.usage.completion_tokens || 0, total: json.usage.total_tokens || 0 } }
       return
     }
 
@@ -231,7 +247,7 @@ export async function* streamMinimax(
   apiKey: string,
   model: string,
   messages: { role: string; content: string }[],
-): AsyncGenerator<string> {
+): AsyncGenerator<StreamChunk> {
   const { request, clearTimeout } = getStreamOrFallback(
     'https://api.minimax.io/v1/chat/completions',
     apiKey, model, messages, 2048,
@@ -251,7 +267,8 @@ export async function* streamMinimax(
     if (!isStreaming) {
       const json = await response.json()
       const content = json.choices?.[0]?.message?.content || ''
-      if (content) yield content
+      if (content) yield { type: 'content', content }
+      if (json.usage) yield { type: 'usage', usage: { prompt: json.usage.prompt_tokens || 0, completion: json.usage.completion_tokens || 0, total: json.usage.total_tokens || 0 } }
       return
     }
 

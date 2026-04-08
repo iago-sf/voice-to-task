@@ -9,6 +9,7 @@ export interface Entry {
   status: 'draft' | 'sent'
   task_status: TaskStatus
   assigned_to: string | null
+  conversation_summary: string
   created_at: string
   updated_at: string
 }
