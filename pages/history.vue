@@ -1,162 +1,130 @@
 <template>
   <div class="max-w-2xl mx-auto px-4 py-8">
     <div class="flex items-center justify-between mb-6">
-      <h1 class="text-2xl font-bold">{{ t('history.title') }}</h1>
-      <span v-if="entries.length" class="text-sm text-gray-500">
-        {{ entries.length }} {{ t('history.entries') }} ({{ sentCount }} {{ t('history.sent') }})
+      <h1 class="text-2xl font-bold">History</h1>
+      <span v-if="conversations.length" class="text-sm text-gray-500">
+        {{ conversations.length }} conversations
       </span>
     </div>
 
-    <div class="flex gap-2 mb-3">
-      <button
-        v-for="f in filters"
-        :key="f.value"
-        class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-        :class="filter === f.value
-          ? 'bg-accent-600 text-white'
-          : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300'"
-        @click="filter = f.value"
-      >
-        {{ f.label }}
-      </button>
-    </div>
+    <div v-if="loading" class="text-center py-12 text-gray-500">Loading...</div>
 
-    <div class="flex gap-2 mb-6">
-      <button
-        v-for="f in taskStatusFilters"
-        :key="f.value"
-        class="px-3 py-1.5 rounded-lg text-xs font-medium transition-colors"
-        :class="taskStatusFilter === f.value
-          ? 'bg-accent-600 text-white'
-          : 'bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:text-gray-800 dark:hover:text-gray-300'"
-        @click="taskStatusFilter = f.value"
-      >
-        {{ f.label }}
-      </button>
-    </div>
-
-    <div v-if="loading" class="text-center py-12 text-gray-500">{{ t('history.loading') }}</div>
-
-    <div v-else-if="filteredEntries.length === 0" class="text-center py-12">
+    <div v-else-if="conversations.length === 0" class="text-center py-12">
       <svg class="w-12 h-12 mx-auto text-gray-300 dark:text-gray-700 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 012-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10" />
       </svg>
-      <p class="text-gray-500 text-sm">{{ t('history.empty') }}</p>
+      <p class="text-gray-500 text-sm">No conversations yet</p>
       <NuxtLink to="/" class="inline-block mt-3 text-accent-500 dark:text-accent-400 hover:text-accent-600 dark:hover:text-accent-300 text-sm underline">
-        {{ t('history.createFirst') }}
+        Start a new conversation
       </NuxtLink>
     </div>
 
     <div v-else class="flex flex-col gap-3">
-      <EntryCard
-        v-for="entry in filteredEntries"
-        :key="entry.id"
-        :entry="entry"
-        @delete="handleDelete"
-        @retry="handleRetry"
-        @edit="handleEdit"
-      />
+      <div
+        v-for="conv in conversations"
+        :key="conv.id"
+        class="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden hover:border-gray-300 dark:hover:border-gray-700 transition-colors"
+      >
+        <div class="flex items-center gap-3 px-4 py-3">
+          <div class="flex-1 min-w-0 cursor-pointer" @click="openConversation(conv)">
+            <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{{ conv.title || 'Untitled' }}</p>
+            <div class="flex items-center gap-3 mt-1">
+              <span class="text-xs text-gray-400 dark:text-gray-600">{{ formatDate(conv.updated_at) }}</span>
+              <span v-if="conv.linear_issue_key" class="text-xs px-1.5 py-0.5 bg-emerald-50 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 rounded">
+                {{ conv.linear_issue_key }}
+              </span>
+              <span
+                class="text-xs px-1.5 py-0.5 rounded"
+                :class="conv.status === 'sent' ? 'bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'"
+              >
+                {{ conv.status }}
+              </span>
+            </div>
+          </div>
+          <button
+            class="p-1.5 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors shrink-0"
+            title="Delete"
+            @click.stop="deleteConversation(conv)"
+          >
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import type { Entry } from '~/types'
-
-const { config, loadConfig, isConfigured } = useConfig()
-const { success: toastSuccess, error: toastError } = useToast()
 const { t } = useI18n()
+const { success: toastSuccess, error: toastError } = useToast()
 
-const entries = ref<Entry[]>([])
+interface ConversationSummary {
+  id: number
+  title: string
+  status: string
+  conversation_summary: string
+  linear_issue_key: string | null
+  linear_issue_url: string | null
+  created_at: string
+  updated_at: string
+}
+
+const conversations = ref<ConversationSummary[]>([])
 const loading = ref(true)
-const filter = ref<'all' | 'draft' | 'sent'>('all')
-const taskStatusFilter = ref<'all' | 'TRIAGE' | 'TODO' | 'IN_PROGRESS' | 'DONE'>('all')
 
-const filters = computed(() => [
-  { label: t('history.all'), value: 'all' as const },
-  { label: t('history.drafts'), value: 'draft' as const },
-  { label: t('history.sentFilter'), value: 'sent' as const },
-])
+function formatDate(dateStr: string): string {
+  const d = new Date(dateStr + 'Z')
+  const now = new Date()
+  const diff = now.getTime() - d.getTime()
+  const minutes = Math.floor(diff / 60000)
+  const hours = Math.floor(diff / 3600000)
+  const days = Math.floor(diff / 86400000)
 
-const taskStatusFilters = computed(() => [
-  { label: t('history.taskStatusAll'), value: 'all' as const },
-  { label: t('taskStatus.TRIAGE'), value: 'TRIAGE' as const },
-  { label: t('taskStatus.TODO'), value: 'TODO' as const },
-  { label: t('taskStatus.IN_PROGRESS'), value: 'IN_PROGRESS' as const },
-  { label: t('taskStatus.DONE'), value: 'DONE' as const },
-])
+  if (minutes < 1) return 'just now'
+  if (minutes < 60) return `${minutes}m ago`
+  if (hours < 24) return `${hours}h ago`
+  if (days < 7) return `${days}d ago`
+  return d.toLocaleDateString()
+}
 
-const filteredEntries = computed(() => {
-  let result = entries.value
-  if (filter.value !== 'all') {
-    result = result.filter(e => e.status === filter.value)
-  }
-  if (taskStatusFilter.value !== 'all') {
-    result = result.filter(e => e.task_status === taskStatusFilter.value)
-  }
-  return result
-})
-
-const sentCount = computed(() => entries.value.filter(e => e.status === 'sent').length)
-
-async function fetchEntries() {
+async function fetchConversations() {
   loading.value = true
   try {
-    entries.value = await $fetch<Entry[]>('/api/entries')
+    conversations.value = await $fetch<ConversationSummary[]>('/api/conversations')
   } catch {
-    toastError(t('history.errorLoad'))
+    toastError('Error loading conversations')
   } finally {
     loading.value = false
   }
 }
 
-async function handleDelete(entry: Entry) {
-  if (!confirm(t('history.deleteConfirm'))) return
+async function openConversation(conv: ConversationSummary) {
   try {
-    await $fetch(`/api/entries/${entry.id}`, { method: 'DELETE' })
-    entries.value = entries.value.filter(e => e.id !== entry.id)
+    const full = await $fetch<any>(`/api/conversations/${conv.id}`)
+    useState('recover-conversation', () => null).value = {
+      id: full.id,
+      messages: full.messages,
+      conversation_summary: full.conversation_summary || '',
+    }
+    navigateTo('/')
   } catch {
-    toastError(t('history.errorDelete'))
+    toastError('Error opening conversation')
   }
 }
 
-function handleEdit(entry: Entry) {
-  useState<Entry | null>('recover-entry', () => null).value = entry
-  navigateTo('/')
-}
-
-async function handleRetry(entry: Entry) {
-  if (!isConfigured.value) {
-    toastError(t('history.configFirst'))
-    return
-  }
-
+async function deleteConversation(conv: ConversationSummary) {
+  if (!confirm(`Delete "${conv.title || 'Untitled'}"?`)) return
   try {
-    const lines = entry.text.split('\n')
-    const title = (lines[0] || '').slice(0, 200)
-    const description = lines.slice(1).join('\n').trim() || undefined
-
-    const result = await $fetch('/api/linear/create-issue', {
-      method: 'POST',
-      body: { title, description, teamId: config.value.teamId, assigneeId: config.value.assigneeId },
-    })
-
-    const updated = await $fetch<Entry>(`/api/entries/${entry.id}`, {
-      method: 'PATCH',
-      body: { linear_issue_id: result.issue.id, linear_issue_key: result.issue.identifier, linear_issue_url: result.issue.url, status: 'sent' },
-    })
-
-    const idx = entries.value.findIndex(e => e.id === entry.id)
-    if (idx !== -1) entries.value[idx] = updated
-
-    toastSuccess(`${result.issue.identifier} ${t('index.created')}`, { url: result.issue.url, label: t('index.openLinear') })
-  } catch (err: any) {
-    toastError(`${t('history.errorRetry')}: ${err.data?.message || err.message || 'Unknown'}`)
+    await $fetch(`/api/conversations/${conv.id}`, { method: 'DELETE' })
+    conversations.value = conversations.value.filter(c => c.id !== conv.id)
+  } catch {
+    toastError('Error deleting')
   }
 }
 
 onMounted(() => {
-  loadConfig()
-  fetchEntries()
+  fetchConversations()
 })
 </script>

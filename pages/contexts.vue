@@ -185,6 +185,77 @@
       </div>
     </div>
 
+
+    <!-- Project contexts (desktop only) -->
+    <div v-if="isDesktop" class="mt-10">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
+          <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+          </svg>
+          Projects
+        </h2>
+        <button
+          class="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+          @click="addProjectFolder"
+        >
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+          </svg>
+          Add folder
+        </button>
+      </div>
+      <p class="text-sm text-gray-500 mb-4">Local project folders used as live context via file tools. The AI can explore files, read code, and check git status in real time.</p>
+
+      <div v-if="projectContexts.length === 0" class="text-center py-8 bg-gray-50 dark:bg-gray-900/50 border border-dashed border-gray-300 dark:border-gray-700 rounded-lg">
+        <svg class="w-10 h-10 mx-auto text-gray-300 dark:text-gray-700 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+        </svg>
+        <p class="text-gray-500 text-sm">No project folders added yet</p>
+      </div>
+
+      <div v-else class="flex flex-col gap-3">
+        <div
+          v-for="pc in projectContexts"
+          :key="'project-' + pc.id"
+          class="bg-white dark:bg-gray-900 border rounded-lg overflow-hidden transition-colors"
+          :class="isProjectActive(pc.id) ? 'border-blue-400 dark:border-blue-700' : 'border-gray-200 dark:border-gray-800'"
+        >
+          <div class="flex items-center gap-3 px-4 py-3">
+            <button
+              class="relative w-9 h-5 rounded-full transition-colors shrink-0"
+              :class="isProjectActive(pc.id) ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'"
+              @click="toggleProjectActive(pc.id)"
+            >
+              <div
+                class="absolute top-0.5 left-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform"
+                :class="isProjectActive(pc.id) ? 'translate-x-4' : ''"
+              />
+            </button>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-medium text-gray-800 dark:text-gray-200 truncate">{{ pc.name }}</p>
+              <p class="text-xs text-gray-400 dark:text-gray-600 truncate font-mono">{{ pc.folder_path }}</p>
+            </div>
+            <span
+              v-if="isProjectActive(pc.id)"
+              class="text-xs px-2 py-0.5 bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded shrink-0"
+            >
+              Active
+            </span>
+            <button
+              class="p-1 text-gray-400 dark:text-gray-500 hover:text-red-500 dark:hover:text-red-400 transition-colors shrink-0"
+              title="Remove project"
+              @click="deleteProjectContext(pc)"
+            >
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+              </svg>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Compact modal -->
     <Teleport to="body">
       <div
@@ -269,7 +340,7 @@
 </template>
 
 <script setup lang="ts">
-import type { Context } from '~/types'
+import type { Context, ProjectContext } from '~/types'
 
 const { config, loadConfig, saveConfig } = useConfig()
 const { success: toastSuccess, error: toastError } = useToast()
@@ -284,6 +355,9 @@ const editingNameId = ref<number | null>(null)
 const editingNameValue = ref('')
 const nameInputRef = ref<HTMLInputElement | null>(null)
 const dragging = ref(false)
+const projectContexts = ref<ProjectContext[]>([])
+const runtimeConfig = useRuntimeConfig()
+const isDesktop = computed(() => runtimeConfig.public.desktopMode === true)
 const compacting = ref(false)
 const showCompactModal = ref(false)
 const compactSelection = ref<number[]>([])
@@ -509,8 +583,61 @@ async function deleteContext(ctx: Context) {
   }
 }
 
+
+function isProjectActive(id: number): boolean {
+  return (config.value.activeProjectContextIds || []).includes(id)
+}
+
+function toggleProjectActive(id: number) {
+  if (!config.value.activeProjectContextIds) config.value.activeProjectContextIds = []
+  const idx = config.value.activeProjectContextIds.indexOf(id)
+  if (idx === -1) config.value.activeProjectContextIds.push(id)
+  else config.value.activeProjectContextIds.splice(idx, 1)
+  saveConfig()
+}
+
+async function fetchProjectContexts() {
+  try {
+    projectContexts.value = await $fetch<ProjectContext[]>('/api/project-contexts')
+  } catch {
+    projectContexts.value = []
+  }
+}
+
+async function addProjectFolder() {
+  try {
+    const folderPath = await (window as any).__electron?.selectFolder()
+    if (!folderPath) return
+    const name = folderPath.split('/').pop() || folderPath
+    const result = await $fetch<{ id: number; name: string; folder_path: string }>('/api/project-contexts', {
+      method: 'POST',
+      body: { name, folder_path: folderPath },
+    })
+    projectContexts.value.push({ ...result, created_at: new Date().toISOString(), updated_at: new Date().toISOString() } as ProjectContext)
+    toastSuccess(`Project "${result.name}" added`)
+  } catch (err: any) {
+    toastError(`Error: ${err.data?.message || err.message}`)
+  }
+}
+
+async function deleteProjectContext(pc: ProjectContext) {
+  if (!confirm(`Remove project "${pc.name}"?`)) return
+  try {
+    await $fetch(`/api/project-contexts/${pc.id}`, { method: 'DELETE' })
+    projectContexts.value = projectContexts.value.filter(p => p.id !== pc.id)
+    const idx = (config.value.activeProjectContextIds || []).indexOf(pc.id)
+    if (idx !== -1) {
+      config.value.activeProjectContextIds.splice(idx, 1)
+      saveConfig()
+    }
+  } catch {
+    toastError('Error removing project')
+  }
+}
+
 onMounted(() => {
   loadConfig()
   fetchContexts()
+  fetchProjectContexts()
 })
 </script>

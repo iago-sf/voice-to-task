@@ -1,12 +1,14 @@
 # Voice to Task
 
-App that captures voice via the browser microphone, transcribes it to text, and creates tasks in [Linear](https://linear.app). Optionally generates an AI-powered action plan before sending. All data is stored in a SQLite-compatible database (local file or [Turso](https://turso.tech) for cloud/serverless deployment) with direct links to the created Linear issues.
+App that captures voice via the browser microphone, transcribes it to text, and creates tasks in [Linear](https://linear.app). Optionally generates an AI-powered action plan before sending. Runs as both a web app and an **Electron desktop app**. All data is stored in a SQLite-compatible database (local file or [Turso](https://turso.tech) for cloud/serverless deployment) with direct links to the created Linear issues.
 
-Built with **Nuxt 4**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SDK**, **Groq API**, **Z.ai API**, **MiniMax API**, **marked**, **DOMPurify**, and **nuxt-auth-utils**.
+Built with **Nuxt 4**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SDK**, **Groq API**, **Z.ai API**, **MiniMax API**, **marked**, **DOMPurify**, **nuxt-auth-utils**, and **Electron**.
 
 ## Features
 
 - **Google OAuth authentication** — login with your Google account; all data is isolated per user
+- **Electron desktop app** — run as a native desktop app with local SQLite, no login required (optional Google OAuth)
+- **Auto-update** — desktop app checks for updates on GitHub Releases and prompts to restart
 - **Per-user API key management** — each user configures their own Linear, Groq, Z.ai, and MiniMax keys from the Config page (encrypted at rest)
 - **Voice-to-text** via Web Speech API (Chrome/Edge), Groq Whisper (any browser)
 - **AI action plan generation** — turns raw voice notes into structured task plans with a summary title, questions for the developer when info is missing, and a reusable context document for future tasks (powered by Groq, Z.ai GLM, or MiniMax, model configurable)
@@ -26,7 +28,7 @@ Built with **Nuxt 4**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SD
 ## Prerequisites
 
 - **Node.js** v22
-- A **Google OAuth** client ID and secret (for authentication)
+- A **Google OAuth** client ID and secret (for web authentication, optional for desktop)
 - A **Linear API key** (per user, configured in-app)
 - A **Groq API key**, **Z.ai coding plan API key**, and/or **MiniMax API key** (per user, configured in-app)
 
@@ -109,6 +111,39 @@ After logging in with Google, go to **Config** via the user menu (tap your avata
 2. Choose **UI language** (English / Spanish)
 3. Choose **theme** (System / Light / Dark)
 4. Choose **accent color** — 6 options: indigo, blue, violet, rose, emerald, amber
+
+## Desktop App (Electron)
+
+The app can also run as an Electron desktop app with local SQLite storage and no login required.
+
+### Development
+
+```bash
+npm run dev:electron
+```
+
+This builds the Nuxt app with `NUXT_DESKTOP_MODE=true` and launches it in Electron.
+
+### Production Build
+
+```bash
+npm run build:electron
+```
+
+Produces installers in `dist-electron/`:
+- **macOS**: DMG + ZIP
+- **Windows**: NSIS installer
+- **Linux**: AppImage
+
+### Desktop-specific behavior
+
+- **No login required** — works with `local@desktop` identity by default
+- **Local SQLite** — database stored at Electron's `userData` directory
+- **Optional Google OAuth** — login link available in navbar to switch to real user identity
+- **Auto-update** — checks GitHub Releases for updates on launch
+- **Session password** — auto-generated per launch for API key encryption
+
+Configure the GitHub Releases provider in `electron-builder.yml` (`publish.owner` and `publish.repo`).
 
 ## Usage
 
@@ -203,8 +238,13 @@ Each authenticated user sees only their own data:
 │   ├── contexts.vue       # Manage markdown context documents
 │   ├── config.vue         # Tabbed settings (Linear, AI Models, API Keys, User prefs)
 │   └── api-docs.vue       # Agent Task API documentation
+├── electron/
+│   ├── main.js            # Electron main process (spawns Nitro, creates BrowserWindow)
+│   ├── preload.js         # Context bridge (exposes __electron to renderer)
+│   ├── types.ts           # TypeScript interface for ElectronBridge
+│   └── compile-main.js    # Build helper (validates files before electron-builder)
 ├── middleware/
-│   └── auth.global.ts     # Redirect unauthenticated users to /login
+│   └── auth.global.ts     # Redirect unauthenticated users to /login (skipped in desktop mode)
 ├── server/
 │   ├── routes/auth/        # Google OAuth callback + logout
 │   ├── api/entries/        # SQLite CRUD for entries (scoped by user)
@@ -216,14 +256,15 @@ Each authenticated user sees only their own data:
 │   ├── api/ai/             # LLM action plan generation (Groq / ZAI / MiniMax)
 │   ├── api/transcribe.post.ts  # Audio transcription (Groq Whisper)
 │   └── utils/
-│       ├── db.ts           # libSQL/Turso connection, schema init, migrations
-│       ├── session-email.ts # Helper to extract user email from session
+│       ├── db.ts           # libSQL/Turso connection, schema init, migrations (dual mode)
+│       ├── session-email.ts # Helper to extract user email (with desktop fallback)
 │       ├── user-keys.ts    # Encrypted API key storage/retrieval
 │       └── linear-sync.ts  # Sync task status to Linear workflow states
 ├── composables/
 │   ├── useSpeechToText.ts      # Web Speech API wrapper
 │   ├── useGroqSpeechToText.ts  # MediaRecorder + API transcription (Groq/ZAI)
 │   ├── useConfig.ts            # App config in localStorage (keyed by user email)
+│   ├── useDesktopMode.ts       # Detect Electron desktop mode
 │   ├── useTheme.ts             # System/light/dark theme + accent color management
 │   ├── useI18n.ts              # i18n (en/es)
 │   └── useToast.ts             # Toast notification system
@@ -233,7 +274,8 @@ Each authenticated user sees only their own data:
 
 ## Tech stack
 
-- **Nuxt 3** — Full-stack Vue framework
+- **Nuxt 4** — Full-stack Vue framework
+- **Electron** — Desktop app packaging with auto-update
 - **nuxt-auth-utils** — Google OAuth authentication + session management
 - **@libsql/client** — SQLite-compatible database via [Turso](https://turso.tech)/libSQL (local file or remote)
 - **@linear/sdk** — Linear GraphQL API client

@@ -3,7 +3,7 @@
     <h1 class="text-2xl font-bold mb-6">{{ t('config.title') }}</h1>
 
     <!-- Monthly usage bar -->
-    <div v-if="usage" class="mb-6 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
+    <div v-if="usage && !isDesktopMode" class="mb-6 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
       <div class="flex items-center justify-between mb-2">
         <span class="text-sm font-medium text-gray-700 dark:text-gray-300">{{ t('config.monthlyUsage') }}</span>
         <span class="text-sm text-gray-500 dark:text-gray-400">{{ usage.used }} / {{ usage.limit }}</span>
@@ -556,6 +556,8 @@ watch(() => route.query.tab, (tab) => {
 const audioDevices = ref<MediaDeviceInfo[]>([])
 
 // ── Monthly usage ──
+const runtimeConfig = useRuntimeConfig()
+const isDesktopMode = computed(() => runtimeConfig.public.desktopMode === true)
 const usage = ref<{ used: number; limit: number; month: string } | null>(null)
 
 const usagePercent = computed(() => {

@@ -23,6 +23,7 @@ const defaultConfig: AppConfig = {
   customPrompt: '__DEFAULT__',
   selectedLabelIds: [],
   selectedProjectId: '',
+  activeProjectContextIds: [],
 }
 
 export function useConfig() {

@@ -2,12 +2,17 @@
   "name": "voice-to-task",
   "type": "module",
   "private": true,
+  "main": "electron/main.js",
   "scripts": {
     "build": "nuxt build",
     "dev": "nuxt dev",
+    "dev:desktop": "NUXT_DESKTOP_MODE=true nuxt dev",
+    "dev:electron": "NUXT_DESKTOP_MODE=true nuxt build && node electron/compile-main.js && electron .",
+    "build:electron": "nuxt build && node electron/compile-main.js && electron-builder",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare"
+    "postinstall": "nuxt prepare",
+    "dev:electron:hot": "NUXT_DESKTOP_MODE=true nuxt dev & sleep 5 && electron ."
   },
   "dependencies": {
     "@libsql/client": "^0.17.2",
@@ -15,11 +20,17 @@
     "@modelcontextprotocol/sdk": "^1.28.0",
     "@vueuse/core": "^14.2.1",
     "dompurify": "^3.3.3",
+    "electron-updater": "^6.8.3",
     "marked": "^17.0.5",
     "nuxt": "^4.4.2",
     "nuxt-auth-utils": "^0.5.29",
     "oh-vue-icons": "^1.0.0-rc3",
+    "portfinder": "^1.0.38",
     "vue": "^3.5.13",
     "vue-router": "^5.0.4"
+  },
+  "devDependencies": {
+    "electron": "^41.2.0",
+    "electron-builder": "^26.8.1"
   }
 }

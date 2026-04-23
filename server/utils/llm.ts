@@ -16,7 +16,7 @@ export async function callGroq(
     if (!response.ok) {
       const err = await response.text()
       console.error(`Groq API error: ${response.status}`, err)
-      throw new Error(`Groq API error: ${response.status}`)
+      throw new Error(response.status === 401 ? 'Groq API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'Groq rate limit reached. Wait a moment or try a different model.' : `Groq API error: ${response.status}`)
     }
 
     return await response.json()
@@ -43,7 +43,7 @@ export async function callZai(
     if (!response.ok) {
       const err = await response.text()
       console.error(`ZAI API error: ${response.status}`, err)
-      throw new Error(`ZAI API error: ${response.status}`)
+      throw new Error(response.status === 401 ? 'ZAI API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'ZAI rate limit reached. Wait a moment or try a different model.' : `ZAI API error: ${response.status}`)
     }
 
     return await response.json()
@@ -70,7 +70,7 @@ export async function callMinimax(
     if (!response.ok) {
       const err = await response.text()
       console.error(`MiniMax API error: ${response.status}`, err)
-      throw new Error(`MiniMax API error: ${response.status}`)
+      throw new Error(response.status === 401 ? 'MiniMax API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'MiniMax rate limit reached. Wait a moment or try a different model.' : `MiniMax API error: ${response.status}`)
     }
 
     return await response.json()
@@ -193,7 +193,7 @@ export async function* streamGroq(
     if (!response.ok) {
       const err = await response.text()
       console.error(`Groq stream error: ${response.status}`, err)
-      throw createError({ statusCode: 500, message: `Groq API error: ${response.status}` })
+      throw createError({ statusCode: 500, message: response.status === 401 ? 'Groq API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'Groq rate limit reached. Wait a moment or try a different model.' : response.status === 402 ? 'Groq quota exceeded. Check your plan at console.groq.com' : `Groq API error: ${response.status}` })
     }
 
     const reader = response.body?.getReader()
@@ -221,7 +221,7 @@ export async function* streamZai(
     if (!response.ok) {
       const err = await response.text()
       console.error(`ZAI stream error: ${response.status}`, err)
-      throw createError({ statusCode: 500, message: `ZAI API error: ${response.status}` })
+      throw createError({ statusCode: 500, message: response.status === 401 ? 'ZAI API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'ZAI rate limit reached. Wait a moment or try a different model.' : `ZAI API error: ${response.status}` })
     }
 
     const isStreaming = response.headers.get('content-type')?.includes('text/event-stream')
@@ -259,7 +259,7 @@ export async function* streamMinimax(
     if (!response.ok) {
       const err = await response.text()
       console.error(`MiniMax stream error: ${response.status}`, err)
-      throw createError({ statusCode: 500, message: `MiniMax API error: ${response.status}` })
+      throw createError({ statusCode: 500, message: response.status === 401 ? 'MiniMax API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'MiniMax rate limit reached. Wait a moment or try a different model.' : `MiniMax API error: ${response.status}` })
     }
 
     const isStreaming = response.headers.get('content-type')?.includes('text/event-stream')
@@ -278,5 +278,120 @@ export async function* streamMinimax(
     yield* parseSSEStream(reader)
   } finally {
     clearTimeout()
+  }
+}
+
+
+export interface ToolCall {
+  id: string
+  type: 'function'
+  function: {
+    name: string
+    arguments: string
+  }
+}
+
+export interface ToolUseResponse {
+  content: string
+  toolCalls: ToolCall[]
+  usage: TokenUsage | null
+}
+
+export async function callGroqWithTools(
+  apiKey: string,
+  model: string,
+  messages: { role: string; content: string | null }[],
+  tools: any[],
+): Promise<ToolUseResponse> {
+  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, messages, tools, tool_choice: 'auto', temperature: 0.3, max_tokens: 4096 }),
+  })
+
+  if (!response.ok) {
+    const err = await response.text()
+    console.error(`Groq tool-use error: ${response.status}`, err)
+    throw createError({ statusCode: 500, message: response.status === 401 ? 'Groq API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'Groq rate limit reached. Wait a moment or try a different model.' : response.status === 402 ? 'Groq quota exceeded. Check your plan at console.groq.com' : `Groq API error: ${response.status}` })
+  }
+
+  const json = await response.json()
+  const choice = json.choices?.[0]
+  const message = choice?.message
+
+  return {
+    content: message?.content || '',
+    toolCalls: (message?.tool_calls || []).map((tc: any) => ({
+      id: tc.id,
+      type: 'function' as const,
+      function: { name: tc.function.name, arguments: tc.function.arguments },
+    })),
+    usage: json.usage ? { prompt: json.usage.prompt_tokens || 0, completion: json.usage.completion_tokens || 0, total: json.usage.total_tokens || 0 } : null,
+  }
+}
+
+export async function callZaiWithTools(
+  apiKey: string,
+  model: string,
+  messages: { role: string; content: string | null }[],
+  tools: any[],
+): Promise<ToolUseResponse> {
+  const response = await fetch('https://api.z.ai/api/coding/paas/v4/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, messages, tools, tool_choice: 'auto', temperature: 0.3, max_tokens: 4096 }),
+  })
+
+  if (!response.ok) {
+    const err = await response.text()
+    console.error(`ZAI tool-use error: ${response.status}`, err)
+    throw createError({ statusCode: 500, message: response.status === 401 ? 'ZAI API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'ZAI rate limit reached. Wait a moment or try a different model.' : `ZAI API error: ${response.status}` })
+  }
+
+  const json = await response.json()
+  const choice = json.choices?.[0]
+  const message = choice?.message
+
+  return {
+    content: message?.content || '',
+    toolCalls: (message?.tool_calls || []).map((tc: any) => ({
+      id: tc.id,
+      type: 'function' as const,
+      function: { name: tc.function.name, arguments: tc.function.arguments },
+    })),
+    usage: json.usage ? { prompt: json.usage.prompt_tokens || 0, completion: json.usage.completion_tokens || 0, total: json.usage.total_tokens || 0 } : null,
+  }
+}
+
+export async function callMinimaxWithTools(
+  apiKey: string,
+  model: string,
+  messages: { role: string; content: string | null }[],
+  tools: any[],
+): Promise<ToolUseResponse> {
+  const response = await fetch('https://api.minimax.io/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ model, messages, tools, tool_choice: 'auto', temperature: 0.3, max_tokens: 4096 }),
+  })
+
+  if (!response.ok) {
+    const err = await response.text()
+    console.error(`MiniMax tool-use error: ${response.status}`, err)
+    throw createError({ statusCode: 500, message: response.status === 401 ? 'MiniMax API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'MiniMax rate limit reached. Wait a moment or try a different model.' : `MiniMax API error: ${response.status}` })
+  }
+
+  const json = await response.json()
+  const choice = json.choices?.[0]
+  const message = choice?.message
+
+  return {
+    content: message?.content || '',
+    toolCalls: (message?.tool_calls || []).map((tc: any) => ({
+      id: tc.id,
+      type: 'function' as const,
+      function: { name: tc.function.name, arguments: tc.function.arguments },
+    })),
+    usage: json.usage ? { prompt: json.usage.prompt_tokens || 0, completion: json.usage.completion_tokens || 0, total: json.usage.total_tokens || 0 } : null,
   }
 }

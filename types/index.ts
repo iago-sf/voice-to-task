@@ -50,6 +50,7 @@ export interface AppConfig {
   customPrompt: string
   selectedLabelIds: string[]
   selectedProjectId: string
+  activeProjectContextIds: number[]
 }
 
 export interface Context {
@@ -82,6 +83,14 @@ export interface LinearProject {
   id: string
   name: string
   color: string
+}
+
+export interface ProjectContext {
+  id: number
+  name: string
+  folder_path: string
+  created_at: string
+  updated_at: string
 }
 
 export interface Toast {

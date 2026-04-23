@@ -16,6 +16,7 @@
       </div>
 
       <a
+        v-if="!isDesktop"
         href="/auth/google"
         class="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-900 text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors font-medium"
       >
@@ -27,6 +28,14 @@
         </svg>
         {{ t('login.google') }}
       </a>
+
+      <button
+        v-if="isDesktop"
+        @click="skipLogin"
+        class="flex items-center justify-center gap-3 w-full px-4 py-3 rounded-lg border border-accent-300 dark:border-accent-700 bg-accent-50 dark:bg-accent-900/20 text-accent-700 dark:text-accent-300 hover:bg-accent-100 dark:hover:bg-accent-900/30 transition-colors font-medium cursor-pointer"
+      >
+        Start using the app
+      </button>
     </div>
   </div>
 </template>
@@ -39,4 +48,16 @@ definePageMeta({
 const { t } = useI18n()
 const route = useRoute()
 const authError = computed(() => route.query.error === 'auth')
+
+const config = useRuntimeConfig()
+const isDesktop = ref(config.public.desktopMode === true)
+
+onMounted(() => {
+  if (isDesktop.value) { skipLogin(); return }
+  if ((window as any).__electron?.isDesktop) isDesktop.value = true
+})
+
+function skipLogin() {
+  navigateTo('/', { replace: true })
+}
 </script>

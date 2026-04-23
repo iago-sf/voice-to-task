@@ -27,6 +27,7 @@ async function getUserLimit(email: string): Promise<number> {
 }
 
 export async function checkUsage(email: string): Promise<void> {
+  if (process.env.NUXT_DESKTOP_MODE === 'true') return
   const db = await ensureDB()
   const month = currentMonth()
   const limit = await getUserLimit(email)
@@ -60,6 +61,7 @@ export async function checkUsage(email: string): Promise<void> {
 }
 
 export async function getUsage(email: string): Promise<{ used: number; limit: number; month: string }> {
+  if (process.env.NUXT_DESKTOP_MODE === 'true') return { used: 0, limit: Infinity, month: currentMonth() }
   const db = await ensureDB()
   const month = currentMonth()
   const limit = await getUserLimit(email)

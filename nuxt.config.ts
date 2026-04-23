@@ -6,6 +6,10 @@ export default defineNuxtConfig({
   modules: ["nuxt-auth-utils"],
 
   runtimeConfig: {
+    desktopMode: process.env.NUXT_DESKTOP_MODE === "true",
+    public: {
+      desktopMode: process.env.NUXT_DESKTOP_MODE === "true",
+    },
     turso: {
       url: process.env.TURSO_DATABASE_URL || "file:data/voice-linear.db",
       authToken: process.env.TURSO_AUTH_TOKEN || "",
@@ -23,6 +27,7 @@ export default defineNuxtConfig({
 
   hooks: {
     ready: () => {
+      if (process.env.NUXT_DESKTOP_MODE === "true") return
       const missing: string[] = []
       if (!process.env.NUXT_SESSION_PASSWORD) missing.push("NUXT_SESSION_PASSWORD")
       if (!process.env.NUXT_OAUTH_GOOGLE_CLIENT_ID) missing.push("NUXT_OAUTH_GOOGLE_CLIENT_ID")
@@ -35,6 +40,10 @@ export default defineNuxtConfig({
         process.exit(1)
       }
     },
+  },
+
+  nitro: {
+    preset: process.env.NUXT_DESKTOP_MODE === "true" ? "node-server" : undefined,
   },
 
   app: {

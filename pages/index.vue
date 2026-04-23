@@ -167,7 +167,10 @@
               </div>
 
               <!-- Token usage + actions row -->
-              <div v-if="msg.role === 'system' && msg.content && !msg.generating && !msg.error" class="mt-1.5 flex items-center gap-1.5 flex-wrap">
+              <div v-if="msg.role === 'system' && msg.content && !msg.generating" class="mt-1.5 flex items-center gap-1.5 flex-wrap">
+                <span class="text-[10px] text-gray-400 dark:text-gray-500 font-mono">
+                  {{ msg.elapsed || '...' }}s
+                </span>
                 <span v-if="msg.usage" class="text-[10px] text-gray-400 dark:text-gray-500 font-mono">
                   {{ msg.usage.prompt }}↑ {{ msg.usage.completion }}↓ {{ msg.usage.total }} tokens
                 </span>
@@ -245,10 +248,15 @@
         :selected-label-ids="config.selectedLabelIds || []"
         :projects="linearProjects"
         :selected-project-id="config.selectedProjectId || ''"
+        :project-contexts="projectContexts"
+        :active-project-context-ids="config.activeProjectContextIds || []"
         @toggle-auto="config.autoMode = !config.autoMode; saveConfig()"
         @toggle-context="toggleContextActive"
         @toggle-label="toggleLabel"
         @toggle-project="toggleProject"
+        @toggle-project-context="toggleProjectContextActive"
+        @update:project-contexts="projectContexts = $event"
+        @update:active-project-context-ids="config.activeProjectContextIds = $event; saveConfig()"
       />
     </div>
   </div>
@@ -271,6 +279,8 @@ interface ChatMessage {
   createdIssue?: { identifier: string; url: string }
   usage?: TokenUsage
   error?: boolean
+  toolsUsed?: { name: string; args: Record<string, any> }[]
+  elapsed?: string
 }
 
 const { config, isConfigured, loadConfig, saveConfig } = useConfig()
@@ -296,6 +306,8 @@ function reset() { stt.value.reset() }
 const linearLabels = ref<import('~/types').LinearLabel[]>([])
 const linearProjects = ref<import('~/types').LinearProject[]>([])
 
+const projectContexts = ref<import('~/types').ProjectContext[]>([])
+
 async function fetchLinearMeta() {
   const teamId = config.value.teamId
   if (!teamId) {
@@ -314,6 +326,23 @@ async function fetchLinearMeta() {
     linearLabels.value = []
     linearProjects.value = []
   }
+}
+
+async function fetchProjectContexts() {
+  if (config.value.llmEngine === undefined) return
+  try {
+    projectContexts.value = await $fetch<import('~/types').ProjectContext[]>('/api/project-contexts')
+  } catch {
+    projectContexts.value = []
+  }
+}
+
+function toggleProjectContextActive(id: number) {
+  if (!config.value.activeProjectContextIds) config.value.activeProjectContextIds = []
+  const idx = config.value.activeProjectContextIds.indexOf(id)
+  if (idx === -1) config.value.activeProjectContextIds.push(id)
+  else config.value.activeProjectContextIds.splice(idx, 1)
+  saveConfig()
 }
 
 function toggleLabel(id: string) {
@@ -356,6 +385,7 @@ const sending = ref(false)
 const generatingPlan = ref(false)
 const summarizing = ref(false)
 const conversationSummary = ref('')
+const conversationId = ref<number | null>(null)
 const chatContainer = ref<HTMLElement | null>(null)
 const scrollAnchor = ref<HTMLElement | null>(null)
 const inputRef = ref<HTMLTextAreaElement | null>(null)
@@ -439,6 +469,7 @@ watch(() => config.value.teamId, (newTeamId, oldTeamId) => {
 onMounted(async () => {
   loadConfig()
   fetchLinearMeta()
+  fetchProjectContexts()
 
   try {
     allContexts.value = await $fetch<{ id: number; name: string }[]>('/api/contexts')
@@ -450,6 +481,22 @@ onMounted(async () => {
     conversationSummary.value = recoverEntry.value.conversation_summary || ''
     recoverEntry.value = null
     nextTick(() => autoResize())
+  }
+
+  const recoverConversation = useState<{ id: number; messages: any[]; conversation_summary: string } | null>('recover-conversation', () => null)
+  if (recoverConversation.value) {
+    const conv = recoverConversation.value
+    conversationId.value = conv.id
+    conversationSummary.value = conv.conversation_summary || ''
+    for (const m of conv.messages) {
+      messages.value.push({ role: m.role, content: m.content })
+    }
+    recoverConversation.value = null
+    scrollToBottom()
+  }
+
+  if (import.meta.client && 'Notification' in window && Notification.permission !== 'granted') {
+    Notification.requestPermission()
   }
 
   document.addEventListener('keydown', (e: KeyboardEvent) => {
@@ -515,6 +562,42 @@ function getLLMBody(text: string) {
     contextIds: config.value.activeContextIds || [],
     customPrompt: config.value.customPrompt || undefined,
     conversationSummary: conversationSummary.value || undefined,
+    projectContextIds: config.value.activeProjectContextIds || [],
+  }
+}
+
+async function saveConversation() {
+  if (messages.value.length === 0) return
+
+  const title = messages.value.find(m => m.role === 'user')?.content?.slice(0, 100) || 'Untitled'
+  const msgs = messages.value.map(m => ({ role: m.role, content: m.content }))
+
+  try {
+    if (conversationId.value) {
+      await $fetch(`/api/conversations/${conversationId.value}`, {
+        method: 'PATCH',
+        body: {
+          title,
+          messages: msgs,
+          conversation_summary: conversationSummary.value,
+          status: 'draft',
+        },
+      })
+    } else {
+      const result = await $fetch<{ id: number }>('/api/conversations', {
+        method: 'POST',
+        body: {
+          title,
+          messages: msgs,
+          conversation_summary: conversationSummary.value,
+          project_context_ids: config.value.activeProjectContextIds || [],
+          context_ids: config.value.activeContextIds || [],
+        },
+      })
+      conversationId.value = result.id
+    }
+  } catch (err: any) {
+    console.error('Failed to save conversation:', err)
   }
 }
 
@@ -551,6 +634,7 @@ async function summarizeConversation() {
 async function streamPlan(text: string, msgIndex: number) {
   generatingPlan.value = true
   let receivedChunks = false
+  const startTime = Date.now()
 
   const getMsg = () => messages.value[msgIndex]
   if (!getMsg()) return
@@ -592,8 +676,14 @@ async function streamPlan(text: string, msgIndex: number) {
             getMsg()!.content += json.chunk
           } else if (json.usage && getMsg()) {
             getMsg()!.usage = json.usage
-          } else if (json.error) {
-            toastError(`${t('index.errorPlan')}: ${json.error}`)
+          } else if (json.tool && getMsg()) {
+            if (!getMsg()!.toolsUsed) getMsg()!.toolsUsed = []
+            getMsg()!.toolsUsed.push(json.tool)
+            const toolNames = { list_files: 'Listing files', read_file: 'Reading file', git_log: 'Checking git log', git_diff: 'Checking changes', git_branch: 'Checking branch', search_files: 'Searching code' }
+            getMsg()!.autoStep = `${toolNames[json.tool.name] || json.tool.name}: ${json.tool.args.path || json.tool.args.query || json.tool.args.count || ''}`
+          } else if (json.error && getMsg()) {
+            getMsg()!.content = json.error
+            getMsg()!.error = true
           }
         } catch {}
       }
@@ -614,7 +704,7 @@ async function streamPlan(text: string, msgIndex: number) {
       }
     }
 
-    if (!receivedChunks && getMsg()) {
+    if (!receivedChunks && getMsg() && !getMsg()!.error) {
       getMsg()!.content = t('index.errorPlan')
       getMsg()!.error = true
     }
@@ -626,12 +716,30 @@ async function streamPlan(text: string, msgIndex: number) {
   } finally {
     if (getMsg()) {
       getMsg()!.generating = false
+      getMsg()!.autoStep = ''
+      const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
+      getMsg()!.elapsed = elapsed
     }
     generatingPlan.value = false
     scrollToBottom()
 
     if (!messages.value[msgIndex]?.error) {
       summarizeConversation()
+    }
+    saveConversation()
+
+    {
+      const isError = messages.value[msgIndex]?.error
+      const body = isError ? 'Error generating response' : 'Response ready'
+      const electron = (window as any).__electron
+      if (electron?.notify) {
+        electron.notify('Voice to Task', body)
+      } else if ('Notification' in window && Notification.permission === 'granted') {
+        try {
+          const notif = new Notification('Voice to Task', { body })
+          notif.onclick = () => { window.focus(); notif.close() }
+        } catch {}
+      }
     }
   }
 }
@@ -685,6 +793,7 @@ async function handleSendFromChat(msgIndex: number, actionId: string) {
     try {
       await navigator.clipboard.writeText(msg.content)
       toastSuccess(t('index.copied'))
+      await saveConversation()
     } catch {
       toastError('Clipboard error')
     }

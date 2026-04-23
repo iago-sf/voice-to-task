@@ -15,6 +15,52 @@
         </button>
       </div>
 
+      <!-- Project contexts (desktop only) -->
+      <div v-if="isDesktop">
+        <p class="text-xs text-gray-400 dark:text-gray-600 mb-1.5 font-medium uppercase tracking-wider">Projects</p>
+        <div class="flex flex-wrap gap-1.5">
+          <button
+            v-for="pc in activeProjectContexts"
+            :key="pc.id"
+            class="px-3 py-1.5 text-xs rounded-full border transition-colors flex items-center gap-1.5 whitespace-nowrap bg-blue-50 dark:bg-blue-950 border-blue-400 dark:border-blue-600 text-blue-700 dark:text-blue-300"
+            @click="toggleProjectContext(pc.id)"
+          >
+            <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
+            </svg>
+            {{ pc.name }}
+            <svg class="w-3 h-3 ml-0.5 opacity-60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+          <button
+            class="px-3 py-1.5 text-xs rounded-full border border-dashed border-gray-300 dark:border-gray-700 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300 transition-colors"
+            @click="showProjectContextPicker = !showProjectContextPicker"
+          >
+            + Add
+          </button>
+        </div>
+        <div v-if="showProjectContextPicker" class="mt-2 max-h-40 overflow-y-auto space-y-1">
+          <button
+            v-for="pc in inactiveProjectContexts"
+            :key="pc.id"
+            class="w-full px-3 py-1.5 text-xs rounded-lg border transition-colors text-left hover:bg-gray-100 dark:hover:bg-gray-800 border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400"
+            @click="toggleProjectContext(pc.id); showProjectContextPicker = false"
+          >
+            {{ pc.name }}
+          </button>
+          <button
+            class="w-full px-3 py-1.5 text-xs rounded-lg border border-dashed border-blue-300 dark:border-blue-700 text-blue-500 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors text-left flex items-center gap-1.5"
+            @click="addProjectFolder"
+          >
+            <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            New folder...
+          </button>
+        </div>
+      </div>
+
       <!-- Quick contexts -->
       <div v-if="favoriteContexts.length > 0">
         <p class="text-xs text-gray-400 dark:text-gray-600 mb-1.5 font-medium uppercase tracking-wider">{{ t('index.favoriteContexts') }}</p>
@@ -85,7 +131,7 @@
         </div>
       </div>
 
-      <!-- Project -->
+      <!-- Linear Project -->
       <div v-if="projects.length > 0">
         <p class="text-xs text-gray-400 dark:text-gray-600 mb-1.5 font-medium uppercase tracking-wider">{{ t('index.project') }}</p>
         <div class="flex flex-wrap gap-1.5">
@@ -123,7 +169,10 @@
 </template>
 
 <script setup lang="ts">
+import type { ProjectContext } from '~/types'
+
 const { t } = useI18n()
+const { success: toastSuccess, error: toastError } = useToast()
 
 const props = defineProps<{
   autoMode: boolean
@@ -133,18 +182,27 @@ const props = defineProps<{
   selectedLabelIds: string[]
   projects: { id: string; name: string }[]
   selectedProjectId: string
+  projectContexts: ProjectContext[]
+  activeProjectContextIds: number[]
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   'toggle-auto': []
   'toggle-context': [id: number]
   'toggle-label': [id: string]
   'toggle-project': [id: string]
+  'toggle-project-context': [id: number]
+  'update:project-contexts': [contexts: ProjectContext[]]
+  'update:active-project-context-ids': [ids: number[]]
 }>()
+
+const config = useRuntimeConfig()
+const isDesktop = computed(() => config.public.desktopMode === true)
 
 const showContextPicker = ref(false)
 const showLabelPicker = ref(false)
 const showProjectPicker = ref(false)
+const showProjectContextPicker = ref(false)
 
 const activeFavoriteContexts = computed(() =>
   props.favoriteContexts.filter(c => props.activeContextIds.includes(c.id))
@@ -164,4 +222,34 @@ const selectedProjects = computed(() =>
 const unselectedProjects = computed(() =>
   props.projects.filter(p => props.selectedProjectId !== p.id)
 )
+const activeProjectContexts = computed(() =>
+  props.projectContexts.filter(pc => props.activeProjectContextIds.includes(pc.id))
+)
+const inactiveProjectContexts = computed(() =>
+  props.projectContexts.filter(pc => !props.activeProjectContextIds.includes(pc.id))
+)
+
+function toggleProjectContext(id: number) {
+  emit('toggle-project-context', id)
+}
+
+async function addProjectFolder() {
+  try {
+    const folderPath = await (window as any).__electron?.selectFolder()
+    if (!folderPath) return
+
+    const name = folderPath.split('/').pop() || folderPath
+    const result = await $fetch<{ id: number; name: string; folder_path: string }>('/api/project-contexts', {
+      method: 'POST',
+      body: { name, folder_path: folderPath },
+    })
+
+    emit('update:project-contexts', [...props.projectContexts, { ...result, created_at: new Date().toISOString(), updated_at: new Date().toISOString() }])
+    emit('update:active-project-context-ids', [...props.activeProjectContextIds, result.id])
+    showProjectContextPicker.value = false
+    toastSuccess(`Project "${result.name}" added`)
+  } catch (err: any) {
+    toastError(`Error adding project: ${err.data?.message || err.message}`)
+  }
+}
 </script>

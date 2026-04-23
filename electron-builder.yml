@@ -1,0 +1,26 @@
+appId: com.voicetotask.app
+productName: "Voice to Task"
+directories:
+  output: dist-electron
+files:
+  - electron/**/*
+  - package.json
+extraResources:
+  - from: .output
+    to: .output
+mac:
+  target:
+    - dmg
+    - zip
+  category: public.app-category.productivity
+  hardenedRuntime: true
+win:
+  target:
+    - nsis
+linux:
+  target:
+    - AppImage
+publish:
+  provider: github
+  owner: anomalyco
+  repo: voice-to-task
