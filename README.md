@@ -37,7 +37,7 @@ Built with **Nuxt 4**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SD
 ### 1. Clone the repository
 
 ```bash
-git clone git@github.com:iago-sf/voice-to-linear-task.git
+git clone git@github.com:iago-sf/voice-to-task.git
 cd voice-to-linear-task
 ```
 
