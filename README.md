@@ -1,5 +1,7 @@
 # Voice to Task
 
+[![Documentation](https://img.shields.io/badge/docs-zread.ai-blue?style=flat-square&logo=read-the-docs)](https://zread.ai/iago-sf/voice-to-task)
+
 App that captures voice via the browser microphone, transcribes it to text, and creates tasks in [Linear](https://linear.app). Optionally generates an AI-powered action plan before sending. Runs as both a web app and an **Electron desktop app**. All data is stored in a SQLite-compatible database (local file or [Turso](https://turso.tech) for cloud/serverless deployment) with direct links to the created Linear issues.
 
 Built with **Nuxt 4**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SDK**, **Groq API**, **Z.ai API**, **MiniMax API**, **marked**, **DOMPurify**, **nuxt-auth-utils**, and **Electron**.
