@@ -2,6 +2,15 @@ import { OhVueIcon, addIcons } from 'oh-vue-icons'
 import {
   AiHal,
   BiRobot,
+  BiArrowUpRight,
+  BiClipboard,
+  BiTerminal,
+  BiFolder,
+  BiSearch,
+  BiFileEarmarkCode,
+  BiGit,
+  BiCodeSlash,
+  
   MdSaveOutlined,
   MdDeleteoutlineOutlined,
   RiLightbulbFlashLine,
@@ -13,6 +22,15 @@ import {
 addIcons(
   AiHal,
   BiRobot,
+  BiArrowUpRight,
+  BiClipboard,
+  BiTerminal,
+  BiFolder,
+  BiSearch,
+  BiFileEarmarkCode,
+  BiGit,
+  BiCodeSlash,
+  
   MdSaveOutlined,
   MdDeleteoutlineOutlined,
   RiLightbulbFlashLine,

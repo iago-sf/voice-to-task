@@ -1,20 +1,6 @@
 <template>
   <div class="hidden sm:flex flex-col w-72 shrink-0 border-l border-gray-200 dark:border-gray-800 bg-gray-50 dark:bg-gray-900/50 overflow-y-auto">
     <div class="p-4 space-y-5 flex-1">
-      <!-- Auto mode -->
-      <div>
-        <button
-          class="w-full flex items-center gap-2 px-3 py-2 rounded-lg text-xs transition-colors border"
-          :class="autoMode ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300' : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'"
-          @click="$emit('toggle-auto')"
-        >
-          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-          </svg>
-          {{ autoMode ? t('index.autoModeOn') : t('index.autoMode') }}
-        </button>
-      </div>
-
       <!-- Project contexts (desktop only) -->
       <div v-if="isDesktop">
         <p class="text-xs text-gray-400 dark:text-gray-600 mb-1.5 font-medium uppercase tracking-wider">Projects</p>
@@ -22,7 +8,7 @@
           <button
             v-for="pc in activeProjectContexts"
             :key="pc.id"
-            class="px-3 py-1.5 text-xs rounded-full border transition-colors flex items-center gap-1.5 whitespace-nowrap bg-blue-50 dark:bg-blue-950 border-blue-400 dark:border-blue-600 text-blue-700 dark:text-blue-300"
+            class="px-3 py-1.5 text-xs rounded-full border transition-colors flex items-center gap-1.5 whitespace-nowrap bg-accent-50 dark:bg-accent-950 border-accent-400 dark:border-accent-600 text-accent-700 dark:text-accent-300"
             @click="toggleProjectContext(pc.id)"
           >
             <svg class="w-3 h-3 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -50,7 +36,7 @@
             {{ pc.name }}
           </button>
           <button
-            class="w-full px-3 py-1.5 text-xs rounded-lg border border-dashed border-blue-300 dark:border-blue-700 text-blue-500 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950 transition-colors text-left flex items-center gap-1.5"
+            class="w-full px-3 py-1.5 text-xs rounded-lg border border-dashed border-accent-300 dark:border-accent-700 text-accent-500 dark:text-accent-400 hover:bg-accent-50 dark:hover:bg-accent-950 transition-colors text-left flex items-center gap-1.5"
             @click="addProjectFolder"
           >
             <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -175,7 +161,6 @@ const { t } = useI18n()
 const { success: toastSuccess, error: toastError } = useToast()
 
 const props = defineProps<{
-  autoMode: boolean
   favoriteContexts: { id: number; name: string }[]
   activeContextIds: number[]
   labels: { id: string; name: string; color: string }[]
@@ -187,7 +172,6 @@ const props = defineProps<{
 }>()
 
 const emit = defineEmits<{
-  'toggle-auto': []
   'toggle-context': [id: number]
   'toggle-label': [id: string]
   'toggle-project': [id: string]

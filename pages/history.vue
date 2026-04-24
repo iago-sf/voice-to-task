@@ -35,7 +35,7 @@
               </span>
               <span
                 class="text-xs px-1.5 py-0.5 rounded"
-                :class="conv.status === 'sent' ? 'bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'"
+                :class="conv.status === 'sent' ? 'bg-accent-50 dark:bg-accent-950 text-accent-600 dark:text-accent-400' : 'bg-gray-100 dark:bg-gray-800 text-gray-500'"
               >
                 {{ conv.status }}
               </span>
@@ -103,7 +103,8 @@ async function fetchConversations() {
 async function openConversation(conv: ConversationSummary) {
   try {
     const full = await $fetch<any>(`/api/conversations/${conv.id}`)
-    useState('recover-conversation', () => null).value = {
+    const state = useState<{ id: number; messages: any[]; conversation_summary: string } | null>('recover-conversation', () => null)
+    state.value = {
       id: full.id,
       messages: full.messages,
       conversation_summary: full.conversation_summary || '',

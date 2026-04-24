@@ -116,17 +116,35 @@ export async function toolListFiles(
   }
 }
 
-export async function toolReadFile(projectPath: string, filePath: string): Promise<string> {
+export async function toolReadFile(
+  projectPath: string,
+  filePath: string,
+  startLine?: number,
+  endLine?: number,
+): Promise<string> {
   const fullPath = join(projectPath, filePath)
   const resolved = fullPath.startsWith(projectPath) ? fullPath : join(projectPath, filePath)
 
   try {
     const s = await stat(resolved)
+    let content: string
     if (s.size > MAX_FILE_SIZE) {
-      const content = await readFile(resolved, 'utf-8')
-      return content.slice(0, MAX_FILE_SIZE) + '\n\n... (truncated, file is too large)'
+      content = (await readFile(resolved, 'utf-8')).slice(0, MAX_FILE_SIZE)
+    } else {
+      content = await readFile(resolved, 'utf-8')
     }
-    return await readFile(resolved, 'utf-8')
+
+    if (startLine || endLine) {
+      const lines = content.split('\n')
+      const start = Math.max(1, startLine || 1) - 1
+      const end = Math.min(lines.length, endLine || lines.length)
+      return lines.slice(start, end).join('\n')
+    }
+
+    if (s.size > MAX_FILE_SIZE) {
+      return content + '\n\n... (truncated, file is too large)'
+    }
+    return content
   } catch (err: any) {
     return `Error reading file: ${err.message}`
   }
@@ -165,14 +183,26 @@ export async function toolGitBranch(projectPath: string): Promise<string> {
   }
 }
 
-export async function toolSearchFiles(projectPath: string, query: string): Promise<string> {
+export async function toolSearchFiles(
+  projectPath: string,
+  query: string,
+  filePattern?: string,
+  caseInsensitive: boolean = true,
+): Promise<string> {
   try {
-    const { stdout } = await execFileAsync('grep', [
-      '-rn', '--include=*.{ts,tsx,js,jsx,vue,py,rs,go,java,md,json,yaml,yml,toml}',
-      '--max-count=3',
-      query, projectPath,
-    ], { cwd: projectPath, timeout: 15000 })
-    const lines = stdout.split('\n').slice(0, 50)
+    const grepArgs = ['-rn', '--max-count=5']
+    if (caseInsensitive) grepArgs.push('-i')
+    if (filePattern) {
+      grepArgs.push('--include', filePattern)
+    } else {
+      grepArgs.push('--include=*.{ts,tsx,js,jsx,vue,py,rs,go,java,md,json,yaml,yml,toml,css,html,sh,sql}')
+    }
+    grepArgs.push('-E', query, projectPath)
+
+    const { stdout } = await execFileAsync('grep', grepArgs, {
+      cwd: projectPath, timeout: 15000, maxBuffer: 500 * 1024,
+    })
+    const lines = stdout.split('\n').filter(Boolean).slice(0, 80)
     return lines.join('\n') || '(no matches found)'
   } catch {
     return '(no matches found)'
@@ -199,18 +229,41 @@ export async function discoverContextFiles(projectPath: string): Promise<Record<
   return results
 }
 
+
+export async function toolGrepCode(projectPath: string, pattern: string, glob?: string): Promise<string> {
+  try {
+    const args = ['-rn', '--max-count=10', '-E', pattern, projectPath]
+    if (glob) {
+      args.splice(0, 0, '--include', glob)
+    } else {
+      args.splice(0, 0, '--include', '*.{ts,tsx,js,jsx,vue,py,rs,go,java,css,html,sh}')
+    }
+    const { stdout } = await execFileAsync('grep', args, {
+      cwd: projectPath, timeout: 15000, maxBuffer: 500 * 1024,
+    })
+    const lines = stdout.split('\n').filter(Boolean).slice(0, 60)
+    return lines.join('\n') || '(no matches found)'
+  } catch {
+    return '(no matches found)'
+  }
+}
+
 export const TOOL_DEFINITIONS = [
   {
     type: 'function' as const,
     function: {
       name: 'list_files',
-      description: 'List files and directories in a project path. Respects .gitignore but always includes .claude/, .github/, .cursor/ and key config files like CONTEXT.md, claude.md, memory.md, README.md.',
+      description: 'List files and directories in a project path. Use max_depth=1 for a quick overview before diving deeper. Respects .gitignore but always includes .claude/, .github/, .cursor/ and key config files.',
       parameters: {
         type: 'object' as const,
         properties: {
           path: {
             type: 'string' as const,
             description: 'Subdirectory path relative to the project root. Use empty string or "." for root.',
+          },
+          max_depth: {
+            type: 'number' as const,
+            description: 'Maximum directory depth to traverse (default 4, use 1-2 for quick overview).',
           },
         },
         required: ['path'],
@@ -221,13 +274,21 @@ export const TOOL_DEFINITIONS = [
     type: 'function' as const,
     function: {
       name: 'read_file',
-      description: 'Read the full contents of a file. Files larger than 50KB are truncated.',
+      description: 'Read file contents. Use start_line/end_line to read specific sections instead of the whole file — this saves tokens. First use search_files to find relevant line numbers, then read only the needed range.',
       parameters: {
         type: 'object' as const,
         properties: {
           path: {
             type: 'string' as const,
             description: 'File path relative to the project root.',
+          },
+          start_line: {
+            type: 'number' as const,
+            description: 'Start line number (1-based). Omit to read from the beginning.',
+          },
+          end_line: {
+            type: 'number' as const,
+            description: 'End line number inclusive (1-based). Omit to read to the end.',
           },
         },
         required: ['path'],
@@ -276,16 +337,45 @@ export const TOOL_DEFINITIONS = [
     type: 'function' as const,
     function: {
       name: 'search_files',
-      description: 'Search for a text pattern across project files (code and config). Returns matching lines with file paths and line numbers.',
+      description: 'Search for text or regex pattern across project files via grep -E. ALWAYS prefer this over reading multiple files. One search saves many read_file calls. Use file_pattern to narrow scope.',
       parameters: {
         type: 'object' as const,
         properties: {
           query: {
             type: 'string' as const,
-            description: 'Text pattern to search for.',
+            description: 'Extended regex pattern to search for. Supports full ERE syntax: | for alternation, () for groups, \\b for word boundaries, etc.',
+          },
+          file_pattern: {
+            type: 'string' as const,
+            description: 'Glob to filter files, e.g. "*.vue", "*.ts", "*.{js,ts}". Defaults to common code files.',
+          },
+          case_insensitive: {
+            type: 'boolean' as const,
+            description: 'Case-insensitive search (default true).',
           },
         },
         required: ['query'],
+      },
+    },
+  },
+  {
+    type: 'function' as const,
+    function: {
+      name: 'grep_code',
+      description: 'Fast targeted search for symbol definitions, references, or patterns in code. Use this BEFORE read_file to locate relevant code. Supports regex. Much more efficient than reading files blindly.',
+      parameters: {
+        type: 'object' as const,
+        properties: {
+          pattern: {
+            type: 'string' as const,
+            description: 'Regex pattern to search for. Examples: "class MyComponent", "export function handleAuth", "router\\.(get|post)"',
+          },
+          glob: {
+            type: 'string' as const,
+            description: 'File glob to search in. Defaults to all code files. Examples: "*.vue", "*.ts", "*.{js,jsx}"',
+          },
+        },
+        required: ['pattern'],
       },
     },
   },
@@ -300,9 +390,9 @@ export async function executeTool(
 ): Promise<string> {
   switch (toolName) {
     case 'list_files':
-      return toolListFiles(projectPath, args.path || '')
+      return toolListFiles(projectPath, args.path || '', args.max_depth)
     case 'read_file':
-      return toolReadFile(projectPath, args.path || '')
+      return toolReadFile(projectPath, args.path || '', args.start_line, args.end_line)
     case 'git_log':
       return toolGitLog(projectPath, args.count || 15)
     case 'git_diff':
@@ -310,7 +400,9 @@ export async function executeTool(
     case 'git_branch':
       return toolGitBranch(projectPath)
     case 'search_files':
-      return toolSearchFiles(projectPath, args.query || '')
+      return toolSearchFiles(projectPath, args.query || '', args.file_pattern, args.case_insensitive !== false)
+    case 'grep_code':
+      return toolGrepCode(projectPath, args.pattern || '', args.glob)
     default:
       return `Unknown tool: ${toolName}`
   }

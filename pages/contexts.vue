@@ -190,13 +190,13 @@
     <div v-if="isDesktop" class="mt-10">
       <div class="flex items-center justify-between mb-4">
         <h2 class="text-lg font-semibold text-gray-800 dark:text-gray-200 flex items-center gap-2">
-          <svg class="w-5 h-5 text-blue-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <svg class="w-5 h-5 text-accent-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 7v10a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-6l-2-2H5a2 2 0 00-2 2z" />
           </svg>
           Projects
         </h2>
         <button
-          class="flex items-center gap-2 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-sm font-medium transition-colors"
+          class="flex items-center gap-2 px-3 py-2 bg-accent-600 hover:bg-accent-700 text-white rounded-lg text-sm font-medium transition-colors"
           @click="addProjectFolder"
         >
           <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -219,12 +219,12 @@
           v-for="pc in projectContexts"
           :key="'project-' + pc.id"
           class="bg-white dark:bg-gray-900 border rounded-lg overflow-hidden transition-colors"
-          :class="isProjectActive(pc.id) ? 'border-blue-400 dark:border-blue-700' : 'border-gray-200 dark:border-gray-800'"
+          :class="isProjectActive(pc.id) ? 'border-accent-400 dark:border-accent-700' : 'border-gray-200 dark:border-gray-800'"
         >
           <div class="flex items-center gap-3 px-4 py-3">
             <button
               class="relative w-9 h-5 rounded-full transition-colors shrink-0"
-              :class="isProjectActive(pc.id) ? 'bg-blue-600' : 'bg-gray-300 dark:bg-gray-700'"
+              :class="isProjectActive(pc.id) ? 'bg-accent-600' : 'bg-gray-300 dark:bg-gray-700'"
               @click="toggleProjectActive(pc.id)"
             >
               <div
@@ -238,7 +238,7 @@
             </div>
             <span
               v-if="isProjectActive(pc.id)"
-              class="text-xs px-2 py-0.5 bg-blue-50 dark:bg-blue-950 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800 rounded shrink-0"
+              class="text-xs px-2 py-0.5 bg-accent-50 dark:bg-accent-950 text-accent-600 dark:text-accent-300 border border-accent-200 dark:border-accent-800 rounded shrink-0"
             >
               Active
             </span>

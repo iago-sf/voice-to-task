@@ -73,7 +73,7 @@ const containerRef = ref<HTMLElement | null>(null)
 
 onClickOutside(containerRef, () => { open.value = false })
 
-const primaryAction = computed(() => props.actions.find(a => a.id === props.activeId) || props.actions[0])
+const primaryAction = computed(() => (props.actions || []).find(a => a.id === props.activeId) || (props.actions || [])[0])
 
 function selectAction(id: string) {
   emit('update:activeId', id)

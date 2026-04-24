@@ -1,10 +1,12 @@
 import { app, BrowserWindow, dialog, ipcMain, Notification } from 'electron'
 import { fileURLToPath } from 'node:url'
 import { dirname, join } from 'node:path'
-import { spawn } from 'node:child_process'
+import { spawn, execFile, execFileSync } from 'node:child_process'
 import { createRequire } from 'node:module'
 import { randomBytes } from 'node:crypto'
-import { readdir, readFile, writeFile, mkdir } from 'node:fs/promises'
+import { readdir, readFile, writeFile, mkdir, unlink } from 'node:fs/promises'
+import { writeFileSync } from 'node:fs'
+import { tmpdir } from 'node:os'
 
 const require = createRequire(import.meta.url)
 const { autoUpdater } = require('electron-updater')
@@ -52,6 +54,109 @@ ipcMain.on('notify', (_event, { title, body }) => {
   } catch (err) {
     console.error('[Notify] Error:', err)
   }
+})
+
+
+ipcMain.handle('launch-terminal-agent', async (_event, opts) => {
+  const { planText, agent, cwd, terminalApp, terminalPath } = opts
+  if (!planText) return { success: false, error: 'No plan text' }
+
+  try {
+    const ts = Date.now()
+    const tempPlan = join(tmpdir(), `vtt-plan-${ts}.md`)
+    writeFileSync(tempPlan, planText, 'utf-8')
+
+    const binary = terminalPath || (agent === 'claude-code' ? 'claude' : 'opencode')
+    const cdLine = cwd ? `cd "${cwd}"` : ''
+    const agentLine = agent === 'claude-code'
+      ? `${binary} -p "$(cat '${tempPlan}')" --no-input`
+      : `${binary} run "$(cat '${tempPlan}')"`
+
+    const pathSetup = 'export PATH="/Users/iago/.opencode/bin:/Users/iago/.local/bin:/usr/local/bin:/opt/homebrew/bin:$PATH"'
+    const shellCmd = [pathSetup, cdLine, agentLine].filter(Boolean).join('\n')
+    const tempScript = join(tmpdir(), `vtt-run-${ts}.sh`)
+    writeFileSync(tempScript, `#!/bin/bash\n${shellCmd}\n`, 'utf-8')
+    execFileSync('chmod', ['+x', tempScript])
+
+    const platform = process.platform
+    console.log('[Terminal] Launching:', terminalApp, 'script:', tempScript, 'cwd:', cwd)
+
+    if (platform === 'darwin') {
+      const app = (terminalApp || 'terminal').toLowerCase()
+
+      if (app === 'cmux') {
+        // cmux has its own CLI with new-workspace command
+        const cmuxBin = terminalPath || 'cmux'
+        const cmd = `${cmuxBin} new-workspace --cwd "${cwd || process.env.HOME}" --command "bash ${tempScript}"`
+        spawn('sh', ['-c', cmd], { detached: true, stdio: 'ignore' }).unref()
+      } else if (app === 'warp') {
+        // Warp URL scheme for reliable command execution
+        const encoded = encodeURIComponent(`bash ${tempScript}`)
+        spawn('open', [`warp://action/new_tab?command=${encoded}`], { detached: true, stdio: 'ignore' }).unref()
+      } else if (app === 'ghostty') {
+        // Ghostty: open app then use osascript with System Events
+        spawn('open', ['-a', 'Ghostty'], { detached: true, stdio: 'ignore' }).unref()
+        await new Promise(r => setTimeout(r, 500))
+        const osaScript = [
+          'tell application "System Events"',
+          '  keystroke "t" using command down',
+          '  delay 0.3',
+          `  keystroke "bash ${tempScript}"`,
+          '  key code 36',
+          'end tell',
+        ].join('\n')
+        spawn('osascript', ['-e', osaScript], { detached: true, stdio: 'ignore' }).unref()
+      } else if (app === 'iterm') {
+        // iTerm2: AppleScript with proper newlines
+        const osaScript = [
+          'tell application "iTerm"',
+          '  activate',
+          '  set newWindow to (create window with default profile)',
+          '  set newSession to current session of newWindow',
+          `  write text "bash ${tempScript}" to newSession`,
+          'end tell',
+        ].join('\n')
+        spawn('osascript', ['-e', osaScript], { detached: true, stdio: 'ignore' }).unref()
+      } else {
+        // Default: macOS Terminal.app
+        const osaScript = [
+          'tell application "Terminal"',
+          '  activate',
+          `  do script "bash ${tempScript}"`,
+          'end tell',
+        ].join('\n')
+        spawn('osascript', ['-e', osaScript], { detached: true, stdio: 'ignore' }).unref()
+      }
+    } else if (platform === 'win32') {
+      spawn('cmd', ['/c', 'start', 'cmd', '/k', `bash "${tempScript}"`], { detached: true, stdio: 'ignore' }).unref()
+    } else {
+      spawn('sh', ['-c', `chmod +x "${tempScript}" && (gnome-terminal -- bash "${tempScript}" || konsole -e bash "${tempScript}" || xterm -e bash "${tempScript}")`], { detached: true, stdio: 'ignore' }).unref()
+    }
+
+    setTimeout(() => {
+      unlink(tempPlan).catch(() => {})
+      unlink(tempScript).catch(() => {})
+    }, 15000)
+    return { success: true }
+  } catch (err) {
+    console.error('[Terminal] Error:', err.message)
+    return { success: false, error: err.message }
+  }
+})
+
+ipcMain.handle('test-terminal-binary', async (_event, { binary }) => {
+  return new Promise((resolve) => {
+    const child = execFile(binary, ['--version'], { timeout: 5000 }, (error, stdout) => {
+      if (error) {
+        resolve({ success: false, error: error.message })
+      } else {
+        resolve({ success: true, version: stdout.trim() })
+      }
+    })
+    child.on('error', (err) => {
+      resolve({ success: false, error: err.message })
+    })
+  })
 })
 
 let mainWindow = null

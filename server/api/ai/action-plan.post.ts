@@ -150,15 +150,20 @@ ${contextBlock}`
       for (const p of projects) {
         projectPrompt += `\n- Project "${p.name}" at path: ${p.folder_path}`
       }
-      projectPrompt += `\n\nTOOL USAGE RULES:\n`
-      projectPrompt += `- You have a LIMITED number of tool calls. Be efficient — aim for 5-8 tool calls total.\n`
-      projectPrompt += `- Start with list_files to understand the project structure, then use search_files strategically to find relevant code.\n`
-      projectPrompt += `- Only read_file for files that are clearly relevant to the user's request.\n`
-      projectPrompt += `- Avoid repeating similar searches. If a search returns no results, try a different approach instead of slight variations.\n`
-      projectPrompt += `- Always call git_branch and git_log once to understand the current state.\n`
-      projectPrompt += `- After gathering context, immediately produce your final answer. Do NOT keep searching.\n`
-      projectPrompt += `- Tool results may be truncated. Work with what you have.\n`
-      projectPrompt += `\nThe tool paths are relative to the project root folder. Do NOT include the project folder path in tool arguments — use paths relative to the project root.`
+      projectPrompt += '\n\nTOOL USAGE STRATEGY (be token-efficient):\n'
+      projectPrompt += '1. FIRST: call git_branch + git_log to understand current state (2 calls).\n'
+      projectPrompt += '2. THEN: list_files with max_depth=1-2 to get project overview (1 call). Only go deeper if needed.\n'
+      projectPrompt += '3. THEN: use search_files or grep_code with specific patterns to locate relevant code. These support regex — use it wisely.\n'
+      projectPrompt += '4. FINALLY: use read_file with start_line/end_line on ONLY the files/sections search found relevant.\n'
+      projectPrompt += '\nEFFICIENCY RULES:\n'
+      projectPrompt += '- ALWAYS prefer search_files/grep_code over reading multiple files. One good search > 5 file reads.\n'
+      projectPrompt += '- Use file_pattern in search_files to narrow results (e.g. "*.vue", "*.ts").\n'
+      projectPrompt += '- Use start_line/end_line in read_file to read only the relevant section, not the whole file.\n'
+      projectPrompt += '- Use regex in search_files: "class|interface|type" for definitions, "export\\s+(default\\s+)?function\\s+\\w+" for functions, etc.\n'
+      projectPrompt += '- Target 5-8 tool calls total. Stop searching once you have enough context.\n'
+      projectPrompt += '- Do NOT repeat similar searches. If a search fails, change approach entirely.\n'
+      projectPrompt += '- Tool results may be truncated. Work with what you have.\n'
+      projectPrompt += '\nThe tool paths are relative to the project root folder. Do NOT include the project folder path in tool arguments.'
 
       // Discover auto-context files
       for (const p of projects) {
@@ -247,7 +252,7 @@ ${contextBlock}`
 
           toolMessages.push({
             role: 'tool' as any,
-            content: toolResult.length > 8000 ? toolResult.slice(0, 8000) + '\n... (truncated)' : toolResult,
+            content: toolResult.length > 5000 ? toolResult.slice(0, 5000) + '\n... (truncated)' : toolResult,
             tool_call_id: tc.id,
           } as any)
         }

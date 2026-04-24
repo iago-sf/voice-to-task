@@ -14,14 +14,14 @@ Built with **Nuxt 4**, **Vue 3**, **@libsql/client** (Turso/libSQL), **Linear SD
 - **AI action plan generation** — turns raw voice notes into structured task plans with a summary title, questions for the developer when info is missing, and a reusable context document for future tasks (powered by Groq, Z.ai GLM, or MiniMax, model configurable)
 - **Independent STT and LLM engine selection** — choose one engine for audio transcription and a different one for text generation (e.g., browser STT + Groq LLM, or Groq Whisper + MiniMax)
 - **Chat-based UI** — conversational interface with streaming AI responses, bottom input bar, and right sidebar for contexts/labels/projects
-- **Auto mode** — record, generate plan, and send to Linear in one step
+- **Project contexts** — link local project folders; the AI uses MCP-style tools (list files, search code, read files, git log) to explore the codebase and generate context-aware plans
 - **Contexts** — create multiple markdown documents (project info, conventions, stack details) that get injected into the LLM prompt for more relevant plans
 - **Task status tracking** — entries have a task status (Triage / TODO / In Progress / Done) with colored badges and filters in history
 - **Configurable Linear state mapping** — map each task status to a Linear workflow state type (triage, backlog, unstarted, started, completed, canceled) from the config UI
 - **Agent Task API** — REST endpoints for AI agents to discover, claim, and update tasks with automatic Linear sync
 - **History** in SQLite/Turso with status tracking, Linear issue links, and retry for failed sends
 - **Theme support** — system, light, and dark mode
-- **Accent color customization** — choose from 6 accent colors (indigo, blue, violet, rose, emerald, amber) to personalize the interface
+- **Accent color customization** — choose from 6 accent colors (indigo, blue, violet, rose, emerald, amber) that propagate across all interactive elements via CSS custom properties. Developers must use `accent-*` Tailwind classes for any new UI components.
 - **i18n** — English and Spanish UI
 - **Editable custom prompt** — the default plan generation prompt is shown as editable text, so users can make small tweaks without rewriting from scratch
 

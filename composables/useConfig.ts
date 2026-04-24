@@ -11,7 +11,6 @@ const defaultConfig: AppConfig = {
   groqModel: 'openai/gpt-oss-120b',
   zaiModel: 'glm-5.1',
   minimaxModel: 'MiniMax-M2.7',
-  autoMode: false,
   activeContextIds: [],
   favoriteContextIds: [],
   uiLanguage: 'en',
@@ -19,11 +18,15 @@ const defaultConfig: AppConfig = {
   accentColor: 'indigo',
   audioDeviceId: '',
   linearStateMap: { TRIAGE: 'triage', TODO: 'unstarted', IN_PROGRESS: 'started', DONE: 'completed' },
-  lastSendAction: 'linear',
   customPrompt: '__DEFAULT__',
   selectedLabelIds: [],
   selectedProjectId: '',
   activeProjectContextIds: [],
+  terminalAgent: '',
+  terminalPath: '',
+  projectPath: '',
+  terminalApp: 'terminal',
+  lastSendAction: 'linear',
 }
 
 export function useConfig() {

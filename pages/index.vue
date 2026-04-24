@@ -55,18 +55,7 @@
             <p class="mt-1 text-xs text-gray-400 dark:text-gray-600">
               {{ config.sttEngine === 'groq' ? 'Groq Whisper' : 'Web Speech API' }}
             </p>
-            <div class="mt-4 flex items-center gap-3">
-              <button
-                class="flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs transition-colors border"
-                :class="config.autoMode ? 'bg-emerald-50 dark:bg-emerald-950 border-emerald-300 dark:border-emerald-700 text-emerald-700 dark:text-emerald-300' : 'bg-white dark:bg-gray-900 border-gray-300 dark:border-gray-700 text-gray-500 hover:text-gray-600 dark:hover:text-gray-400'"
-                @click="config.autoMode = !config.autoMode; saveConfig()"
-              >
-                <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z" />
-                </svg>
-                {{ config.autoMode ? t('index.autoModeOn') : t('index.autoMode') }}
-              </button>
-            </div>
+
           </div>
 
           <!-- Listening bubble -->
@@ -104,14 +93,6 @@
                   {{ t('index.generating') }}
                 </div>
 
-                <div v-if="msg.autoStep" class="flex items-center gap-2 text-accent-600 dark:text-accent-400 mb-2 text-xs">
-                  <svg class="w-3.5 h-3.5 animate-spin" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
-                  </svg>
-                  {{ msg.autoStep }}
-                </div>
-
                 <template v-if="msg.role === 'user'">
                   <p class="whitespace-pre-wrap">{{ msg.content }}</p>
                 </template>
@@ -133,6 +114,14 @@
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
                   </svg>
                   {{ t('index.generating') }}
+                </div>
+
+                <div v-if="msg.role === 'system' && msg.toolsUsed?.length" class="mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                  <div v-for="(tool, ti) in msg.toolsUsed" :key="ti" class="flex items-center gap-1.5 text-xs text-accent-500 dark:text-accent-400">
+                    <v-icon :name="toolIcons[tool.name] || 'bi-search'" scale="0.7" />
+                    <span>{{ toolLabels[tool.name] || tool.name }}</span>
+                    <span v-if="tool.args?.path || tool.args?.query" class="text-gray-400 dark:text-gray-500 truncate max-w-[200px]">{{ tool.args.path || tool.args.query }}</span>
+                  </div>
                 </div>
 
                 <div
@@ -190,7 +179,7 @@
 
           <!-- Summarizing indicator -->
           <div v-if="summarizing" class="flex justify-center">
-            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-blue-50 dark:bg-blue-950 border border-blue-200 dark:border-blue-800 text-xs text-blue-600 dark:text-blue-400">
+            <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-accent-50 dark:bg-accent-950 border border-accent-200 dark:border-accent-800 text-xs text-accent-600 dark:text-accent-400">
               <svg class="w-3 h-3 animate-spin" fill="none" viewBox="0 0 24 24">
                 <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
                 <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
@@ -241,7 +230,6 @@
       <!-- Right sidebar (desktop only) -->
       <ChatSidebar
         v-if="showSidebar"
-        :auto-mode="config.autoMode"
         :favorite-contexts="favoriteContexts"
         :active-context-ids="config.activeContextIds || []"
         :labels="linearLabels"
@@ -250,7 +238,6 @@
         :selected-project-id="config.selectedProjectId || ''"
         :project-contexts="projectContexts"
         :active-project-context-ids="config.activeProjectContextIds || []"
-        @toggle-auto="config.autoMode = !config.autoMode; saveConfig()"
         @toggle-context="toggleContextActive"
         @toggle-label="toggleLabel"
         @toggle-project="toggleProject"
@@ -275,7 +262,6 @@ interface ChatMessage {
   role: 'user' | 'system'
   content: string
   generating?: boolean
-  autoStep?: string
   createdIssue?: { identifier: string; url: string }
   usage?: TokenUsage
   error?: boolean
@@ -382,6 +368,22 @@ function toggleContextActive(id: number) {
 const messages = ref<ChatMessage[]>([])
 const inputText = ref('')
 const sending = ref(false)
+
+const sendActions = computed(() => {
+  const actions = [
+    { id: 'linear', icon: 'bi-arrow-up-right', label: 'Linear' },
+    { id: 'copy', icon: 'bi-clipboard', label: 'Copy' },
+  ]
+  if (isDesktop.value) {
+    actions.push({ id: 'terminal', icon: 'bi-terminal', label: 'Terminal' })
+  }
+  return actions
+})
+
+function updateLastSendAction(id: string) {
+  config.value.lastSendAction = id
+  saveConfig()
+}
 const generatingPlan = ref(false)
 const summarizing = ref(false)
 const conversationSummary = ref('')
@@ -390,8 +392,10 @@ const chatContainer = ref<HTMLElement | null>(null)
 const scrollAnchor = ref<HTMLElement | null>(null)
 const inputRef = ref<HTMLTextAreaElement | null>(null)
 const showSidebar = ref(true)
+const runtimeConfig = useRuntimeConfig()
+const isDesktop = computed(() => runtimeConfig.public.desktopMode === true)
 
-const isBusy = computed(() => generatingPlan.value || summarizing.value)
+const isBusy = computed(() => generatingPlan.value)
 
 const purify = ref<{ sanitize: (html: string) => string } | null>(null)
 const purifyReady = ref(false)
@@ -401,6 +405,9 @@ if (import.meta.client) {
     purifyReady.value = true
   })
 }
+
+const toolIcons: Record<string, string> = { list_files: 'bi-folder', read_file: 'bi-file-earmark-code', git_log: 'bi-git', git_diff: 'bi-code-slash', git_branch: 'bi-git', search_files: 'bi-search' }
+const toolLabels: Record<string, string> = { list_files: 'Listing files', read_file: 'Reading file', git_log: 'Git log', git_diff: 'Git diff', git_branch: 'Git branch', search_files: 'Searching' }
 
 function renderMarkdown(text: string): string {
   if (!text) return ''
@@ -656,9 +663,16 @@ async function streamPlan(text: string, msgIndex: number) {
 
     const decoder = new TextDecoder()
     let buffer = ''
+    const READ_TIMEOUT = 90_000
+    let lastChunkTime = Date.now()
 
     while (true) {
-      const { done, value } = await reader.read()
+      const readPromise = reader.read()
+      const timeoutPromise = new Promise<never>((_, reject) =>
+        setTimeout(() => reject(new Error('Stream timed out')), READ_TIMEOUT - (Date.now() - lastChunkTime))
+      )
+      const { done, value } = await Promise.race([readPromise, timeoutPromise])
+      lastChunkTime = Date.now()
       if (done) break
 
       buffer += decoder.decode(value, { stream: true })
@@ -677,10 +691,10 @@ async function streamPlan(text: string, msgIndex: number) {
           } else if (json.usage && getMsg()) {
             getMsg()!.usage = json.usage
           } else if (json.tool && getMsg()) {
-            if (!getMsg()!.toolsUsed) getMsg()!.toolsUsed = []
-            getMsg()!.toolsUsed.push(json.tool)
+            if (!getMsg()?.toolsUsed) getMsg()!.toolsUsed = []
+            getMsg()!.toolsUsed!.push(json.tool)
+            receivedChunks = true
             const toolNames = { list_files: 'Listing files', read_file: 'Reading file', git_log: 'Checking git log', git_diff: 'Checking changes', git_branch: 'Checking branch', search_files: 'Searching code' }
-            getMsg()!.autoStep = `${toolNames[json.tool.name] || json.tool.name}: ${json.tool.args.path || json.tool.args.query || json.tool.args.count || ''}`
           } else if (json.error && getMsg()) {
             getMsg()!.content = json.error
             getMsg()!.error = true
@@ -704,7 +718,7 @@ async function streamPlan(text: string, msgIndex: number) {
       }
     }
 
-    if (!receivedChunks && getMsg() && !getMsg()!.error) {
+    if (!receivedChunks && getMsg() && !getMsg()?.error) {
       getMsg()!.content = t('index.errorPlan')
       getMsg()!.error = true
     }
@@ -716,7 +730,6 @@ async function streamPlan(text: string, msgIndex: number) {
   } finally {
     if (getMsg()) {
       getMsg()!.generating = false
-      getMsg()!.autoStep = ''
       const elapsed = ((Date.now() - startTime) / 1000).toFixed(1)
       getMsg()!.elapsed = elapsed
     }
@@ -724,11 +737,11 @@ async function streamPlan(text: string, msgIndex: number) {
     scrollToBottom()
 
     if (!messages.value[msgIndex]?.error) {
-      summarizeConversation()
+      summarizeConversation().catch(() => {})
     }
-    saveConversation()
+    saveConversation().catch(() => {})
 
-    {
+    if (!document.hasFocus()) {
       const isError = messages.value[msgIndex]?.error
       const body = isError ? 'Error generating response' : 'Response ready'
       const electron = (window as any).__electron
@@ -751,39 +764,6 @@ async function generatePlanForMessage(text: string) {
   await streamPlan(text, messages.value.length - 1)
 }
 
-async function runAutoFlow() {
-  await new Promise(resolve => setTimeout(resolve, 100))
-
-  const userMsgs = messages.value.filter(m => m.role === 'user')
-  const lastUserMsg = userMsgs[userMsgs.length - 1]
-  if (!lastUserMsg) return
-
-  const autoMsg: ChatMessage = { role: 'system', content: '', generating: true, autoStep: t('index.generatingPlan') }
-  messages.value.push(autoMsg)
-  scrollToBottom()
-
-  const autoMsgIndex = messages.value.length - 1
-  await streamPlan(lastUserMsg.content, autoMsgIndex)
-
-  if (messages.value[autoMsgIndex]) {
-    messages.value[autoMsgIndex].autoStep = t('index.sendingLinear')
-  }
-  await handleSendFromChat(autoMsgIndex, config.value.lastSendAction || 'linear')
-  if (messages.value[autoMsgIndex]) {
-    messages.value[autoMsgIndex].autoStep = ''
-  }
-}
-
-const sendActions = computed(() => [
-  { id: 'linear', icon: 'ai-hal', label: t('index.sendLinear') },
-  { id: 'copy', icon: 'bi-robot', label: t('index.copyPrompt') },
-  { id: 'save', icon: 'md-save-outlined', label: t('index.saveLocal') },
-])
-
-function updateLastSendAction(id: string) {
-  config.value.lastSendAction = id as 'linear' | 'copy' | 'save'
-  saveConfig()
-}
 
 async function handleSendFromChat(msgIndex: number, actionId: string) {
   const msg = messages.value[msgIndex]
@@ -793,23 +773,35 @@ async function handleSendFromChat(msgIndex: number, actionId: string) {
     try {
       await navigator.clipboard.writeText(msg.content)
       toastSuccess(t('index.copied'))
-      await saveConversation()
+      saveConversation().catch(() => {})
     } catch {
       toastError('Clipboard error')
     }
     return
   }
 
-  if (actionId === 'save') {
+  if (actionId === 'terminal') {
     sending.value = true
     try {
-      await $fetch('/api/entries', {
-        method: 'POST',
-        body: { text: msg.content, conversation_summary: conversationSummary.value },
+      const electron = (window as any).__electron
+      if (!electron?.launchTerminalAgent) {
+        toastError('Terminal agent only available in desktop app')
+        return
+      }
+      const result = await electron.launchTerminalAgent({
+        planText: msg.content,
+        agent: config.value.terminalAgent || 'opencode',
+        cwd: config.value.projectPath || '',
+        terminalApp: config.value.terminalApp || 'terminal',
+        terminalPath: config.value.terminalPath || '',
       })
-      toastSuccess(t('index.saved'))
+      if (result.success) {
+        toastSuccess('Terminal agent launched')
+      } else {
+        toastError(`Terminal error: ${result.error}`)
+      }
     } catch (err: any) {
-      toastError(`${t('index.errorSave')}: ${err.data?.message || err.message || 'Unknown'}`)
+      toastError(`Terminal error: ${err.message}`)
     } finally {
       sending.value = false
     }
@@ -867,9 +859,5 @@ async function handleSendFromChat(msgIndex: number, actionId: string) {
   }
 }
 
-onBeforeRouteLeave(() => {
-  if (messages.value.length > 0) {
-    return confirm(t('index.unsavedWarning'))
-  }
-})
+onBeforeRouteLeave(() => {})
 </script>

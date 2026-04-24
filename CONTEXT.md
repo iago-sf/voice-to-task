@@ -131,9 +131,16 @@ API keys (Linear, Groq, ZAI) are per-user and managed through the Config > API K
   3. LLM responds with full conversation context
   4. After streaming completes, frontend calls `/api/ai/summarize` in the background
   5. The summary updates `conversationSummary` ref in memory
-  6. Frontend blocks new messages (`isBusy = generatingPlan || summarizing`) until summary completes
+  6. Summarization runs in the background (does not block the user; `isBusy = generatingPlan` only)
   7. When saving/sending to Linear, `conversation_summary` is persisted in the `entries` table
   8. When recovering an entry from history, `conversation_summary` is restored to allow continuing the conversation
 - **Endpoint**: `server/api/ai/summarize.post.ts` — non-streaming, accepts `messages[]`, `existingSummary`, `engine`, `model`; returns `{ summary }`
 - **Database**: `entries.conversation_summary TEXT DEFAULT ''` column (idempotent migration in `db.ts`)
 - **Entry type**: `conversation_summary: string` field on `Entry` interface
+
+### Accent Color System
+- **Composable**: `composables/useTheme.ts` — defines 6 accent palettes (indigo, blue, violet, rose, emerald, amber) with 11 shades each (50–950). On change, sets CSS custom properties `--accent-{shade}` on `<html>`.
+- **Tailwind CDN config**: `tailwind.config.js` maps the `accent` key to reference these CSS vars. All `bg-accent-*`, `text-accent-*`, `border-accent-*` classes resolve to the user's chosen color.
+- **Rule**: ALL interactive UI elements (buttons, pills, badges, toggles, selected states, borders) MUST use `accent-*` Tailwind classes. Never use hardcoded color names like `blue-`, `indigo-`, etc. in user-facing interactive elements.
+- **Exceptions**: Only functional/semantic colors remain hardcoded — `amber`/`yellow` for warnings, `red` for errors, `green`/`emerald` for success, `blue` for informational toasts and HTTP method badges.
+- **Icons**: Registered in `plugins/oh-vue-icons.ts`. When adding new icons, import and `addIcons()` them there. Icon names use PascalCase (e.g., `BiArrowUpRight` → `name="bi-arrow-up-right"`).

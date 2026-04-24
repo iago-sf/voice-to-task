@@ -38,7 +38,7 @@
         :class="activeTab === tab.value
           ? 'text-accent-600 dark:text-accent-400'
           : 'text-gray-500 hover:text-gray-700 dark:hover:text-gray-300'"
-        @click="activeTab = tab.value"
+        @click="activeTab = tab.value as TabValue"
       >
         {{ tab.label }}
         <div
@@ -184,7 +184,7 @@
       <div v-if="isConfigured" class="mt-6 p-4 bg-green-50 dark:bg-green-950 border border-green-200 dark:border-green-800 rounded-lg text-green-700 dark:text-green-200 text-sm flex items-center gap-2">
         <span>&#10003;</span>
         {{ t('config.configured') }}: {{ config.teamName }} / {{ config.assigneeName }}
-        <span v-if="config.autoMode" class="ml-2 px-2 py-0.5 bg-emerald-100 dark:bg-emerald-900 border border-emerald-300 dark:border-emerald-700 rounded text-xs text-emerald-700 dark:text-emerald-300">{{ t('config.auto') }}</span>
+
       </div>
     </div>
 
@@ -345,6 +345,49 @@
       </div>
     </div>
 
+
+    <!-- ═══════ TERMINAL TAB ═══════ -->
+    <div v-if="activeTab === 'terminal'">
+      <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Configure a CLI agent to execute plans directly in your terminal.</p>
+
+      <!-- Agent selector -->
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Agent</label>
+      <select v-model="config.terminalAgent" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500 mb-4" @change="saveConfig()">
+        <option value="">Not configured</option>
+        <option value="opencode">OpenCode</option>
+        <option value="claude-code">Claude Code</option>
+      </select>
+
+      <!-- Binary path -->
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Binary path</label>
+      <p class="text-xs text-gray-400 mb-1">Full path to the agent binary. Leave empty to use default (claude / opencode from PATH).</p>
+      <div class="flex gap-2 mb-4">
+        <input v-model="config.terminalPath" type="text" placeholder="/usr/local/bin/opencode" class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500 font-mono" @blur="saveConfig()" />
+        <button class="px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition-colors whitespace-nowrap disabled:opacity-40" :disabled="terminalTesting || !config.terminalAgent" @click="testTerminal">
+          {{ terminalTesting ? 'Testing...' : 'Test' }}
+        </button>
+      </div>
+      <div v-if="terminalTestResult" class="mb-4 text-xs p-2 rounded-lg" :class="terminalTestResult.success ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300' : 'bg-red-50 dark:bg-red-950 text-red-700 dark:text-red-300'">
+        {{ terminalTestResult.success ? terminalTestResult.version : terminalTestResult.error }}
+      </div>
+
+      <!-- Terminal app -->
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Terminal app</label>
+      <select v-model="config.terminalApp" class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500 mb-4" @change="saveConfig()">
+        <option v-for="app in terminalApps" :key="app.value" :value="app.value">{{ app.label }}</option>
+      </select>
+
+      <!-- Project path -->
+      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Project directory</label>
+      <p class="text-xs text-gray-400 mb-1">Working directory for the terminal agent.</p>
+      <div class="flex gap-2 mb-4">
+        <input v-model="config.projectPath" type="text" placeholder="/path/to/project" class="flex-1 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-800 dark:text-gray-200 outline-none focus:border-accent-500 font-mono" @blur="saveConfig()" />
+        <button class="px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-300 rounded-lg text-sm transition-colors whitespace-nowrap" @click="selectProjectFolder()">
+          Browse
+        </button>
+      </div>
+    </div>
+
     <!-- ═══════ TOKENS TAB ═══════ -->
     <div v-if="activeTab === 'tokens'">
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">{{ t('config.apiTokensDesc') }}</p>
@@ -419,22 +462,7 @@
       <div class="space-y-4">
         <!-- Automation -->
         <div class="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg p-4">
-          <label class="flex items-center justify-between cursor-pointer">
-            <div>
-              <div class="text-sm text-gray-800 dark:text-gray-200 font-medium">{{ t('config.autoMode') }}</div>
-              <div class="text-xs text-gray-500 mt-0.5">{{ t('config.autoModeDesc') }}</div>
-            </div>
-            <div
-              class="relative w-11 h-6 rounded-full transition-colors"
-              :class="config.autoMode ? 'bg-emerald-600' : 'bg-gray-300 dark:bg-gray-700'"
-              @click="config.autoMode = !config.autoMode; saveConfig()"
-            >
-              <div
-                class="absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform"
-                :class="config.autoMode ? 'translate-x-5' : ''"
-              />
-            </div>
-          </label>
+
         </div>
 
         <!-- UI Language -->
@@ -535,8 +563,8 @@ const { t } = useI18n()
 const { success: toastSuccess, error: toastError } = useToast()
 const { applyTheme, applyAccentColor } = useTheme()
 
-type TabValue = 'keys' | 'linear' | 'ai' | 'user' | 'tokens'
-const validTabs: TabValue[] = ['keys', 'linear', 'ai', 'user', 'tokens']
+type TabValue = 'keys' | 'linear' | 'ai' | 'user' | 'terminal' | 'tokens'
+const validTabs: TabValue[] = ['keys', 'linear', 'ai', 'user', 'terminal', 'tokens']
 const route = useRoute()
 const router = useRouter()
 
@@ -598,13 +626,58 @@ watch(activeTab, (tab) => {
   if (tab === 'tokens') loadTokens()
 })
 
-const tabs = computed(() => [
-  { value: 'keys' as const, label: t('config.apiKeys') },
-  { value: 'linear' as const, label: t('config.linear') },
-  { value: 'ai' as const, label: t('config.aiModels') },
-  { value: 'user' as const, label: t('config.userConfig') },
-  { value: 'tokens' as const, label: t('config.apiTokens') },
-])
+const tabs = computed(() => {
+  const list: { value: string; label: string }[] = [
+    { value: 'keys', label: t('config.apiKeys') },
+    { value: 'linear', label: t('config.linear') },
+    { value: 'ai', label: t('config.aiModels') },
+    { value: 'user', label: t('config.userConfig') },
+  ]
+  if (isDesktopMode) list.push({ value: 'terminal', label: 'Terminal' })
+  list.push({ value: 'tokens', label: t('config.apiTokens') })
+  return list
+})
+
+const terminalTestResult = ref<{ success: boolean; version?: string; error?: string } | null>(null)
+const terminalTesting = ref(false)
+
+async function testTerminal() {
+  terminalTesting.value = true
+  terminalTestResult.value = null
+  try {
+    const binary = config.value.terminalPath || (config.value.terminalAgent === 'claude-code' ? 'claude' : 'opencode')
+    const electron = (window as any).__electron
+    if (electron?.testTerminalBinary) {
+      terminalTestResult.value = await electron.testTerminalBinary(binary)
+    }
+  } catch (err) {
+    terminalTestResult.value = { success: false, error: String(err) }
+  } finally {
+    terminalTesting.value = false
+  }
+}
+
+const terminalApps = computed(() => {
+  const platform = (window as any).__electron?.platform || 'darwin'
+  const apps: { value: string; label: string }[] = []
+  if (platform === 'darwin') {
+    apps.push({ value: 'terminal', label: 'Terminal.app' })
+    apps.push({ value: 'iterm', label: 'iTerm2' })
+    apps.push({ value: 'warp', label: 'Warp' })
+    apps.push({ value: 'ghostty', label: 'Ghostty' })
+    apps.push({ value: 'alacritty', label: 'Alacritty' })
+    apps.push({ value: 'cmux', label: 'cmux' })
+    apps.push({ value: 'tmux', label: 'tmux' })
+  } else if (platform === 'win32') {
+    apps.push({ value: 'windows-terminal', label: 'Windows Terminal' })
+    apps.push({ value: 'cmd', label: 'cmd' })
+  } else {
+    apps.push({ value: 'gnome-terminal', label: 'GNOME Terminal' })
+    apps.push({ value: 'konsole', label: 'Konsole' })
+    apps.push({ value: 'tmux', label: 'tmux' })
+  }
+  return apps
+})
 
 // ── API Keys ──
 const keyStatus = ref<Record<string, boolean>>({
@@ -849,4 +922,9 @@ onMounted(async () => {
   }
   loadingUser.value = false
 })
+async function selectProjectFolder() {
+  const electron = (window as any).__electron
+  const p = await electron?.selectFolder?.()
+  if (p) { config.value.projectPath = p; saveConfig() }
+}
 </script>

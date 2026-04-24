@@ -38,7 +38,6 @@ export interface AppConfig {
   groqModel: string
   zaiModel: string
   minimaxModel: string
-  autoMode: boolean
   activeContextIds: number[]
   favoriteContextIds: number[]
   uiLanguage: 'en' | 'es'
@@ -46,11 +45,15 @@ export interface AppConfig {
   accentColor: string
   audioDeviceId: string
   linearStateMap: Record<TaskStatus, LinearStateType>
-  lastSendAction?: 'linear' | 'copy' | 'save'
   customPrompt: string
   selectedLabelIds: string[]
   selectedProjectId: string
   activeProjectContextIds: number[]
+  terminalAgent: '' | 'claude-code' | 'opencode'
+  terminalPath: string
+  projectPath: string
+  terminalApp: 'terminal' | 'iterm' | 'warp' | 'ghostty' | 'alacritty' | 'cmux' | 'tmux' | 'windows-terminal' | 'cmd' | 'gnome-terminal' | 'konsole'
+  lastSendAction: string
 }
 
 export interface Context {
