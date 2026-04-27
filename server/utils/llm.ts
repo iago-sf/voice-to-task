@@ -303,32 +303,40 @@ export async function callGroqWithTools(
   messages: { role: string; content: string | null }[],
   tools: any[],
 ): Promise<ToolUseResponse> {
-  const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, tools, tool_choice: 'auto', temperature: 0.3, max_tokens: 4096 }),
-  })
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 300_000)
+  try {
+    const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, messages, tools, tool_choice: 'auto', temperature: 0.3, max_tokens: 4096 }),
+      signal: controller.signal,
+    })
 
-  if (!response.ok) {
-    const err = await response.text()
-    console.error(`Groq tool-use error: ${response.status}`, err)
-    throw createError({ statusCode: 500, message: response.status === 401 ? 'Groq API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'Groq rate limit reached. Wait a moment or try a different model.' : response.status === 402 ? 'Groq quota exceeded. Check your plan at console.groq.com' : `Groq API error: ${response.status}` })
-  }
+    if (!response.ok) {
+      const err = await response.text()
+      console.error(`Groq tool-use error: ${response.status}`, err)
+      throw createError({ statusCode: 500, message: response.status === 401 ? 'Groq API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'Groq rate limit reached. Wait a moment or try a different model.' : response.status === 402 ? 'Groq quota exceeded. Check your plan at console.groq.com' : `Groq API error: ${response.status}` })
+    }
 
-  const json = await response.json()
-  const choice = json.choices?.[0]
-  const message = choice?.message
+    const json = await response.json()
+    const choice = json.choices?.[0]
+    const message = choice?.message
 
-  return {
-    content: message?.content || '',
-    toolCalls: (message?.tool_calls || []).map((tc: any) => ({
-      id: tc.id,
-      type: 'function' as const,
-      function: { name: tc.function.name, arguments: tc.function.arguments },
-    })),
-    usage: json.usage ? { prompt: json.usage.prompt_tokens || 0, completion: json.usage.completion_tokens || 0, total: json.usage.total_tokens || 0 } : null,
+    return {
+      content: message?.content || '',
+      toolCalls: (message?.tool_calls || []).map((tc: any) => ({
+        id: tc.id,
+        type: 'function' as const,
+        function: { name: tc.function.name, arguments: tc.function.arguments },
+      })),
+      usage: json.usage ? { prompt: json.usage.prompt_tokens || 0, completion: json.usage.completion_tokens || 0, total: json.usage.total_tokens || 0 } : null,
+    }
+  } finally {
+    clearTimeout(timeout)
   }
 }
+
 
 export async function callZaiWithTools(
   apiKey: string,
@@ -336,30 +344,37 @@ export async function callZaiWithTools(
   messages: { role: string; content: string | null }[],
   tools: any[],
 ): Promise<ToolUseResponse> {
-  const response = await fetch('https://api.z.ai/api/coding/paas/v4/chat/completions', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, tools, tool_choice: 'auto', temperature: 0.3, max_tokens: 4096 }),
-  })
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 300_000)
+  try {
+    const response = await fetch('https://api.z.ai/api/coding/paas/v4/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, messages, tools, tool_choice: 'auto', temperature: 0.3, max_tokens: 4096 }),
+      signal: controller.signal,
+    })
 
-  if (!response.ok) {
-    const err = await response.text()
-    console.error(`ZAI tool-use error: ${response.status}`, err)
-    throw createError({ statusCode: 500, message: response.status === 401 ? 'ZAI API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'ZAI rate limit reached. Wait a moment or try a different model.' : `ZAI API error: ${response.status}` })
-  }
+    if (!response.ok) {
+      const err = await response.text()
+      console.error(`ZAI tool-use error: ${response.status}`, err)
+      throw createError({ statusCode: 500, message: response.status === 401 ? 'ZAI API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'ZAI rate limit reached. Wait a moment or try a different model.' : `ZAI API error: ${response.status}` })
+    }
 
-  const json = await response.json()
-  const choice = json.choices?.[0]
-  const message = choice?.message
+    const json = await response.json()
+    const choice = json.choices?.[0]
+    const message = choice?.message
 
-  return {
-    content: message?.content || '',
-    toolCalls: (message?.tool_calls || []).map((tc: any) => ({
-      id: tc.id,
-      type: 'function' as const,
-      function: { name: tc.function.name, arguments: tc.function.arguments },
-    })),
-    usage: json.usage ? { prompt: json.usage.prompt_tokens || 0, completion: json.usage.completion_tokens || 0, total: json.usage.total_tokens || 0 } : null,
+    return {
+      content: message?.content || '',
+      toolCalls: (message?.tool_calls || []).map((tc: any) => ({
+        id: tc.id,
+        type: 'function' as const,
+        function: { name: tc.function.name, arguments: tc.function.arguments },
+      })),
+      usage: json.usage ? { prompt: json.usage.prompt_tokens || 0, completion: json.usage.completion_tokens || 0, total: json.usage.total_tokens || 0 } : null,
+    }
+  } finally {
+    clearTimeout(timeout)
   }
 }
 
@@ -369,29 +384,36 @@ export async function callMinimaxWithTools(
   messages: { role: string; content: string | null }[],
   tools: any[],
 ): Promise<ToolUseResponse> {
-  const response = await fetch('https://api.minimax.io/v1/chat/completions', {
-    method: 'POST',
-    headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
-    body: JSON.stringify({ model, messages, tools, tool_choice: 'auto', temperature: 0.3, max_tokens: 4096 }),
-  })
+  const controller = new AbortController()
+  const timeout = setTimeout(() => controller.abort(), 300_000)
+  try {
+    const response = await fetch('https://api.minimax.io/v1/chat/completions', {
+      method: 'POST',
+      headers: { 'Authorization': `Bearer ${apiKey}`, 'Content-Type': 'application/json' },
+      body: JSON.stringify({ model, messages, tools, tool_choice: 'auto', temperature: 0.3, max_tokens: 4096 }),
+      signal: controller.signal,
+    })
 
-  if (!response.ok) {
-    const err = await response.text()
-    console.error(`MiniMax tool-use error: ${response.status}`, err)
-    throw createError({ statusCode: 500, message: response.status === 401 ? 'MiniMax API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'MiniMax rate limit reached. Wait a moment or try a different model.' : `MiniMax API error: ${response.status}` })
-  }
+    if (!response.ok) {
+      const err = await response.text()
+      console.error(`MiniMax tool-use error: ${response.status}`, err)
+      throw createError({ statusCode: 500, message: response.status === 401 ? 'MiniMax API key is invalid or missing. Go to Config > API Keys to set it.' : response.status === 429 ? 'MiniMax rate limit reached. Wait a moment or try a different model.' : `MiniMax API error: ${response.status}` })
+    }
 
-  const json = await response.json()
-  const choice = json.choices?.[0]
-  const message = choice?.message
+    const json = await response.json()
+    const choice = json.choices?.[0]
+    const message = choice?.message
 
-  return {
-    content: message?.content || '',
-    toolCalls: (message?.tool_calls || []).map((tc: any) => ({
-      id: tc.id,
-      type: 'function' as const,
-      function: { name: tc.function.name, arguments: tc.function.arguments },
-    })),
-    usage: json.usage ? { prompt: json.usage.prompt_tokens || 0, completion: json.usage.completion_tokens || 0, total: json.usage.total_tokens || 0 } : null,
+    return {
+      content: message?.content || '',
+      toolCalls: (message?.tool_calls || []).map((tc: any) => ({
+        id: tc.id,
+        type: 'function' as const,
+        function: { name: tc.function.name, arguments: tc.function.arguments },
+      })),
+      usage: json.usage ? { prompt: json.usage.prompt_tokens || 0, completion: json.usage.completion_tokens || 0, total: json.usage.total_tokens || 0 } : null,
+    }
+  } finally {
+    clearTimeout(timeout)
   }
 }

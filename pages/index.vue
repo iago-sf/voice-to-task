@@ -663,7 +663,7 @@ async function streamPlan(text: string, msgIndex: number) {
 
     const decoder = new TextDecoder()
     let buffer = ''
-    const READ_TIMEOUT = 90_000
+    const READ_TIMEOUT = 180_000
     let lastChunkTime = Date.now()
 
     while (true) {

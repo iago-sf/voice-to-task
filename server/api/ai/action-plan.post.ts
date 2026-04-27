@@ -128,6 +128,10 @@ ${contextBlock}`
   const hasProjects = projectContextIds.length > 0 && process.env.NUXT_DESKTOP_MODE === 'true'
 
   if (hasProjects) {
+    const heartbeatInterval = setInterval(() => {
+      try { event.node.res.write(': heartbeat\n\n') } catch {}
+    }, 25_000)
+
     try {
       const db = await ensureDB()
       const placeholders = projectContextIds.map(() => '?').join(',')
@@ -283,6 +287,7 @@ ${contextBlock}`
     } catch (err: any) {
       send(JSON.stringify({ error: err.message || 'Tool-use error' }))
     } finally {
+      clearInterval(heartbeatInterval)
       event.node.res.end()
     }
     return
